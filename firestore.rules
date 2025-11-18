@@ -7,13 +7,27 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Allow authenticated users to create orders
+    // Allow authenticated users to manage the 'orders' collection.
+    // This allows admins to view all orders.
+    // WARNING: This rule is permissive. In a production environment, you should
+    // implement more granular access control, such as using custom claims to
+    // verify admin status.
     match /orders/{orderId} {
-      allow create: if request.auth != null;
-      // You might want to restrict read/update/delete access further,
-      // for example, only allowing the user who created the order or an admin to read/update it.
-      // For now, let's keep it simple.
-      allow read, update, delete: if request.auth != null;
+      allow read, write: if request.auth != null;
+    }
+    match /orders {
+        allow list: if request.auth != null;
+    }
+
+    // Allow users to create and manage their own user documents.
+    match /users/{userId} {
+      allow read, create, update: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Allow admins (any authenticated user in this insecure setup) to list all users.
+    // WARNING: This is not secure. In production, check for an admin custom claim.
+    match /users {
+        allow list: if request.auth != null;
     }
   }
 }
