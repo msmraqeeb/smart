@@ -1,13 +1,11 @@
 "use client";
 
 import { useCart } from "@/context/cart-context";
-import Link from "next/link";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,12 +15,24 @@ import { formatCurrency } from "@/lib/utils";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useAuth, useFirestore } from "@/firebase";
+import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const router = useRouter();
   const { toast } = useToast();
+  const firestore = useFirestore();
+  const { user } = useAuth();
+  const [customerInfo, setCustomerInfo] = useState({
+    firstName: '',
+    lastName: '',
+    address: '',
+    city: '',
+    zip: '',
+    email: '',
+  });
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -30,19 +40,50 @@ export default function CheckoutPage() {
     }
   }, [cartItems, router]);
 
-  if (cartItems.length === 0) {
-    return null; // or a loading indicator
-  }
-  
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { id, value } = e.target;
+    setCustomerInfo(prev => ({ ...prev, [id]: value }));
+  };
+
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock order placement
-    toast({
+    if (!firestore) return;
+
+    try {
+      const orderData = {
+        customer: customerInfo,
+        items: cartItems.map(item => ({
+          id: item.product.id,
+          name: item.product.name,
+          quantity: item.quantity,
+          price: item.product.price,
+        })),
+        total: cartTotal,
+        status: "Processing",
+        createdAt: serverTimestamp(),
+        userId: user?.uid || null,
+      };
+
+      await addDoc(collection(firestore, "orders"), orderData);
+
+      toast({
         title: "Order Placed!",
         description: "Thank you for your purchase. Your order is being processed.",
-    });
-    clearCart();
-    router.push("/");
+      });
+      clearCart();
+      router.push("/");
+    } catch (error) {
+      console.error("Error placing order:", error);
+      toast({
+        variant: "destructive",
+        title: "Order Failed",
+        description: "There was an issue placing your order. Please try again.",
+      });
+    }
+  }
+
+  if (cartItems.length === 0) {
+    return null;
   }
 
   return (
@@ -57,30 +98,30 @@ export default function CheckoutPage() {
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" placeholder="John" required />
+                <Input id="firstName" placeholder="John" value={customerInfo.firstName} onChange={handleInputChange} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" placeholder="Doe" required />
+                <Input id="lastName" placeholder="Doe" value={customerInfo.lastName} onChange={handleInputChange} required />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
-              <Input id="address" placeholder="123 Main St" required />
+              <Input id="address" placeholder="123 Main St" value={customerInfo.address} onChange={handleInputChange} required />
             </div>
             <div className="grid sm:grid-cols-3 gap-4">
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="city">City</Label>
-                <Input id="city" placeholder="Anytown" required />
+                <Input id="city" placeholder="Anytown" value={customerInfo.city} onChange={handleInputChange} required />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="zip">ZIP Code</Label>
-                <Input id="zip" placeholder="12345" required />
+                <Input id="zip" placeholder="12345" value={customerInfo.zip} onChange={handleInputChange} required />
               </div>
             </div>
              <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
-              <Input id="email" type="email" placeholder="you@example.com" required />
+              <Input id="email" type="email" placeholder="you@example.com" value={customerInfo.email} onChange={handleInputChange} required />
             </div>
           </CardContent>
            <CardHeader className="pt-0">
