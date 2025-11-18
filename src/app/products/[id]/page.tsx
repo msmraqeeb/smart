@@ -2,33 +2,9 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getProductById } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { AIRecommendations } from "@/components/ai-recommendations";
-import { useCart } from "@/context/cart-context";
-import { useState } from "react";
-
-// Client component to handle adding to cart
-function AddToCartButton({ product }: { product: Awaited<ReturnType<typeof getProductById>> }) {
-    "use client";
-    const { addToCart } = useCart();
-    const [quantity, setQuantity] = useState(1);
-
-    if (!product) return null;
-
-    return (
-        <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-                <Button variant="outline" size="icon" onClick={() => setQuantity(q => Math.max(1, q - 1))}>-</Button>
-                <span className="w-12 text-center text-lg font-semibold">{quantity}</span>
-                <Button variant="outline" size="icon" onClick={() => setQuantity(q => q + 1)}>+</Button>
-            </div>
-            <Button size="lg" onClick={() => addToCart(product, quantity)}>
-                Add to Cart
-            </Button>
-        </div>
-    );
-}
+import { AddToCartButton } from "@/components/add-to-cart-button";
 
 
 export default async function ProductDetailPage({
