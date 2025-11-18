@@ -5,13 +5,14 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from '@/lib/utils';
 import withAdminAuth from '@/components/withAdminAuth';
 import { useCollection } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, query, type DocumentData } from "firebase/firestore";
 import { useFirestore } from "@/firebase";
 import React from "react";
 
 function AdminOrdersPage() {
     const firestore = useFirestore();
     
+    // Defer collection creation until firestore is available
     const ordersCollection = React.useMemo(() => {
         if (!firestore) return null;
         return collection(firestore, 'orders');
@@ -43,7 +44,7 @@ function AdminOrdersPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {orders?.map(order => (
+                            {orders?.map((order: any) => (
                                 <TableRow key={order.id}>
                                     <TableCell className="font-medium truncate max-w-xs">{order.id}</TableCell>
                                     <TableCell>{order.customer.firstName} {order.customer.lastName}</TableCell>

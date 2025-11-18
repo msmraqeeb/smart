@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Auth, onAuthStateChanged, User } from 'firebase/auth';
+import { Auth, onAuthStateChanged, User, signInAnonymously } from 'firebase/auth';
 import { Firestore } from 'firebase/firestore';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
@@ -41,7 +41,14 @@ export function FirebaseProvider({
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+      if (user) {
+        setUser(user);
+      } else {
+        // If no user is signed in, sign in anonymously.
+        signInAnonymously(auth).catch((error) => {
+          console.error("Anonymous sign-in failed:", error);
+        });
+      }
     });
     return () => unsubscribe();
   }, [auth]);
