@@ -90,9 +90,12 @@ export default function CheckoutPage() {
     const orderData = {
       id: orderId,
       customer: {
-        firstName: customerInfo.fullName.split(' ')[0] || '',
-        lastName: customerInfo.fullName.split(' ').slice(1).join(' ') || '',
-        ...customerInfo
+        fullName: customerInfo.fullName,
+        address: customerInfo.address,
+        city: customerInfo.city,
+        district: customerInfo.district,
+        mobileNumber: customerInfo.mobileNumber,
+        email: customerInfo.email,
       },
       items: cartItems.map(item => ({
         id: item.product.id,
@@ -140,10 +143,10 @@ export default function CheckoutPage() {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
                  <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
+                    <Label htmlFor="city">District/Zilla</Label>
                     <Select onValueChange={(value) => handleSelectChange('city', value)} value={customerInfo.city}>
                         <SelectTrigger id="city">
-                            <SelectValue placeholder="Select a city" />
+                            <SelectValue placeholder="Select a District/Zilla" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="dhaka">Dhaka</SelectItem>
@@ -153,10 +156,10 @@ export default function CheckoutPage() {
                     </Select>
                  </div>
                  <div className="space-y-2">
-                    <Label htmlFor="district">District</Label>
+                    <Label htmlFor="district">Area</Label>
                     <Select onValueChange={(value) => handleSelectChange('district', value)} value={customerInfo.district}>
                         <SelectTrigger id="district">
-                            <SelectValue placeholder="Select a district" />
+                            <SelectValue placeholder="Select an Area" />
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="dhaka">Dhaka</SelectItem>
