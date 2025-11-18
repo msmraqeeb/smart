@@ -1,3 +1,100 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "fresh-vegetables",
+      "description": "A vibrant assortment of fresh vegetables on a rustic wooden table.",
+      "imageUrl": "https://images.unsplash.com/photo-1592924802543-809bfeee53fb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxmcmVzaCUyMHZlZ2V0YWJsZXN8ZW58MHx8fHwxNzYzNDM2MTEwfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fresh vegetables"
+    },
+    {
+      "id": "organic-fruits",
+      "description": "A colorful collection of organic fruits including berries, oranges, and apples.",
+      "imageUrl": "https://images.unsplash.com/photo-1629367308496-a2496ba22f88?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxvcmdhbmljJTIwZnJ1aXRzfGVufDB8fHx8MTc2MzQ1NzMyM3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "organic fruits"
+    },
+    {
+      "id": "artisan-bakery",
+      "description": "A warm, inviting shot of freshly baked artisan bread.",
+      "imageUrl": "https://images.unsplash.com/photo-1534620808146-d33bb39128b2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxhcnRpc2FuJTIwYnJlYWR8ZW58MHx8fHwxNzYzMzkxNDc5fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "artisan bread"
+    },
+    {
+      "id": "dairy-and-eggs",
+      "description": "A selection of farm-fresh dairy products and eggs.",
+      "imageUrl": "https://images.unsplash.com/photo-1710389205434-1ecc531d364d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxkYWlyeSUyMGVnZ3N8ZW58MHx8fHwxNzYzNDU3MzIzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dairy eggs"
+    },
+    {
+      "id": "organic-apples",
+      "description": "Crisp and juicy organic apples.",
+      "imageUrl": "https://images.unsplash.com/photo-1501925654609-7b41cf395eb8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxvcmdhbmljJTIwYXBwbGVzfGVufDB8fHx8MTc2MzQ1NzMyM3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "organic apples"
+    },
+    {
+      "id": "avocado-toast-kit",
+      "description": "Everything you need for the perfect avocado toast.",
+      "imageUrl": "https://images.unsplash.com/photo-1603046891726-36bfd957e0bf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxhdm9jYWRvJTIwdG9hc3R8ZW58MHx8fHwxNzYzMzc5OTUxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "avocado toast"
+    },
+    {
+      "id": "sourdough-loaf",
+      "description": "A freshly baked loaf of sourdough bread.",
+      "imageUrl": "https://images.unsplash.com/photo-1591458736923-c06a260e3412?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzb3VyZG91Z2glMjBicmVhZHxlbnwwfHx8fDE3NjM0MjIxNjZ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sourdough bread"
+    },
+    {
+      "id": "free-range-eggs",
+      "description": "A dozen free-range eggs.",
+      "imageUrl": "https://images.unsplash.com/photo-1630310841896-9258909102ec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxkb3plbiUyMGVnZ3N8ZW58MHx8fHwxNzYzNDU3MzIzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "dozen eggs"
+    },
+    {
+      "id": "heirloom-tomatoes",
+      "description": "A variety of colorful heirloom tomatoes.",
+      "imageUrl": "https://images.unsplash.com/photo-1689512613052-873d2b4295ae?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxoZWlybG9vbSUyMHRvbWF0b2VzfGVufDB8fHx8MTc2MzQ1NzMyM3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "heirloom tomatoes"
+    },
+    {
+      "id": "fresh-strawberries",
+      "description": "A punnet of fresh, ripe strawberries.",
+      "imageUrl": "https://images.unsplash.com/photo-1710528184650-fc75ae862c13?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxmcmVzaCUyMHN0cmF3YmVycmllc3xlbnwwfHx8fDE3NjMzODgzNzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fresh strawberries"
+    },
+    {
+      "id": "almond-milk",
+      "description": "A carton of unsweetened almond milk.",
+      "imageUrl": "https://images.unsplash.com/photo-1647786028279-58e5a9669f6d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxhbG1vbmQlMjBtaWxrfGVufDB8fHx8MTc2MzQ1NzMyM3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "almond milk"
+    },
+    {
+      "id": "whole-wheat-baguette",
+      "description": "A crispy whole wheat baguette.",
+      "imageUrl": "https://images.unsplash.com/photo-1679673987713-54f809ce417d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx3aGVhdCUyMGJhZ3VldHRlfGVufDB8fHx8MTc2MzQ1NzMyM3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "wheat baguette"
+    },
+    {
+      "id": "organic-bananas",
+      "description": "A bunch of organic bananas.",
+      "imageUrl": "https://images.unsplash.com/photo-1760000622151-f51b5f94661b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxvcmdhbmljJTIwYmFuYW5hc3xlbnwwfHx8fDE3NjMzODkxMjV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "organic bananas"
+    },
+    {
+      "id": "greek-yogurt",
+      "description": "A tub of plain Greek yogurt.",
+      "imageUrl": "https://images.unsplash.com/photo-1510081893571-639c2cb7f2ed?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxncmVlayUyMHlvZ3VydHxlbnwwfHx8fDE3NjMzNzc2Nzh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "greek yogurt"
+    },
+    {
+      "id": "kale-bunch",
+      "description": "A fresh bunch of organic kale.",
+      "imageUrl": "https://images.unsplash.com/photo-1624806992456-788a660584c4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxmcmVzaCUyMGthbGV8ZW58MHx8fHwxNzYzMzc4NzU3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fresh kale"
+    },
+    {
+      "id": "blueberries",
+      "description": "A container of fresh blueberries.",
+      "imageUrl": "https://images.unsplash.com/photo-1746733808329-09e04c988562?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxmcmVzaCUyMGJsdWViZXJyaWVzfGVufDB8fHx8MTc2MzQ1MDg0OHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fresh blueberries"
+    }
+  ]
 }
