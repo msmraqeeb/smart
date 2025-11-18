@@ -17,18 +17,21 @@ import { formatCurrency } from "@/lib/utils";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
   const router = useRouter();
   const { toast } = useToast();
 
-  if (cartItems.length === 0) {
-    // Redirect to home if cart is empty, maybe show a message
-    if (typeof window !== "undefined") {
+  useEffect(() => {
+    if (cartItems.length === 0) {
       router.push("/");
     }
-    return null;
+  }, [cartItems, router]);
+
+  if (cartItems.length === 0) {
+    return null; // or a loading indicator
   }
   
   const handlePlaceOrder = (e: React.FormEvent) => {
