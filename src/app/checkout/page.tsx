@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useCart } from "@/context/cart-context";
@@ -18,23 +19,22 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { useAuth, useFirestore } from "@/firebase";
-import { addDoc, collection, serverTimestamp, type Firestore } from "firebase/firestore";
+import { doc, setDoc, collection, serverTimestamp, type Firestore } from "firebase/firestore";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import { format } from 'date-fns';
 
 
-const saveOrder = (db: Firestore, orderData: any) => {
-  const ordersCollection = collection(db, "orders");
-  addDoc(ordersCollection, orderData)
+const saveOrder = (db: Firestore, orderId: string, orderData: any) => {
+  const orderRef = doc(db, "orders", orderId);
+  setDoc(orderRef, orderData)
     .then(() => {
         // This part runs on success.
-        // We can clear the cart and redirect from here if needed,
-        // but we'll rely on the component's state for that.
     })
     .catch(async (serverError) => {
       // Create the rich, contextual error asynchronously.
       const permissionError = new FirestorePermissionError({
-        path: ordersCollection.path,
+        path: orderRef.path,
         operation: 'create',
         requestResourceData: orderData,
       } satisfies SecurityRuleContext);
@@ -75,7 +75,14 @@ export default function CheckoutPage() {
     e.preventDefault();
     if (!firestore) return;
 
+    // Generate the custom order ID
+    const datePrefix = format(new Date(), 'yyMMdd');
+    // Using a random 4-digit number for simplicity. A sequential number would require a transaction or a Cloud Function to be safe from race conditions.
+    const sequenceNumber = Math.floor(1000 + Math.random() * 9000).toString();
+    const orderId = `${datePrefix}${sequenceNumber}`;
+
     const orderData = {
+      id: orderId, // Storing the ID in the document as well
       customer: customerInfo,
       items: cartItems.map(item => ({
         id: item.product.id,
@@ -89,7 +96,7 @@ export default function CheckoutPage() {
       userId: user?.uid || null,
     };
 
-    saveOrder(firestore, orderData);
+    saveOrder(firestore, orderId, orderData);
 
     toast({
       title: "Order Placed!",

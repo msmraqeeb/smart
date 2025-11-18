@@ -46,7 +46,7 @@ function AdminOrdersPage() {
                         <TableBody>
                             {orders?.map((order: any) => (
                                 <TableRow key={order.id}>
-                                    <TableCell className="font-medium truncate max-w-xs">{order.id}</TableCell>
+                                    <TableCell className="font-medium">{order.id}</TableCell>
                                     <TableCell>{order.customer.firstName} {order.customer.lastName}</TableCell>
                                     <TableCell>{order.createdAt?.toDate().toLocaleDateString()}</TableCell>
                                     <TableCell>{formatCurrency(order.total)}</TableCell>
