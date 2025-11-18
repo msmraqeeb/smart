@@ -25,6 +25,7 @@ import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/e
 import { format } from 'date-fns';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { locations } from "@/lib/locations";
 
 
 const saveOrder = (db: Firestore, orderId: string, orderData: any) => {
@@ -75,7 +76,12 @@ export default function CheckoutPage() {
   };
   
   const handleSelectChange = (id: string, value: string) => {
-    setCustomerInfo(prev => ({ ...prev, [id]: value }));
+    setCustomerInfo(prev => ({ 
+        ...prev, 
+        [id]: value,
+        // Reset area when district changes
+        ...(id === 'city' && { district: '' })
+    }));
   }
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
@@ -120,6 +126,8 @@ export default function CheckoutPage() {
     router.push("/");
   }
 
+  const selectedDistrict = locations.find(loc => loc.district === customerInfo.city);
+
   if (cartItems.length === 0) {
     return null;
   }
@@ -144,27 +152,27 @@ export default function CheckoutPage() {
             <div className="grid sm:grid-cols-2 gap-4">
                  <div className="space-y-2">
                     <Label htmlFor="city">District/Zilla</Label>
-                    <Select onValueChange={(value) => handleSelectChange('city', value)} value={customerInfo.city}>
+                    <Select onValueChange={(value) => handleSelectChange('city', value)} value={customerInfo.city} required>
                         <SelectTrigger id="city">
                             <SelectValue placeholder="Select a District/Zilla" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="dhaka">Dhaka</SelectItem>
-                            <SelectItem value="chittagong">Chittagong</SelectItem>
-                            <SelectItem value="sylhet">Sylhet</SelectItem>
+                            {locations.map(loc => (
+                                <SelectItem key={loc.district} value={loc.district}>{loc.district}</SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                  </div>
                  <div className="space-y-2">
                     <Label htmlFor="district">Area</Label>
-                    <Select onValueChange={(value) => handleSelectChange('district', value)} value={customerInfo.district}>
+                    <Select onValueChange={(value) => handleSelectChange('district', value)} value={customerInfo.district} required disabled={!customerInfo.city}>
                         <SelectTrigger id="district">
                             <SelectValue placeholder="Select an Area" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="dhaka">Dhaka</SelectItem>
-                            <SelectItem value="gazipur">Gazipur</SelectItem>
-                            <SelectItem value="narayanganj">Narayanganj</SelectItem>
+                           {selectedDistrict?.areas.map(area => (
+                               <SelectItem key={area} value={area}>{area}</SelectItem>
+                           ))}
                         </SelectContent>
                     </Select>
                  </div>
