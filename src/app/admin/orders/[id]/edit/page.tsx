@@ -22,9 +22,13 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import React, { useEffect, useState } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { Trash2 } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
-
+import { getProducts } from '@/lib/data';
+import type { Product } from '@/lib/types';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import Image from 'next/image';
 
 const updateOrder = (db: Firestore, orderId: string, data: any) => {
   const orderRef = doc(db, 'orders', orderId);
@@ -53,12 +57,18 @@ function EditOrderPage() {
 
   const { data: initialOrder, loading } = useDoc(orderRef);
   const [order, setOrder] = useState<any | null>(null);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
 
   useEffect(() => {
     if (initialOrder) {
       setOrder(initialOrder);
     }
   }, [initialOrder]);
+
+  useEffect(() => {
+    getProducts().then(setAllProducts);
+  }, []);
   
   const handleCustomerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!order) return;
@@ -103,6 +113,41 @@ function EditOrderPage() {
         items: newItems,
         total: newTotal,
     });
+  };
+
+  const addItem = (product: Product) => {
+    if (!order) return;
+    
+    // Check if item already exists
+    const existingItem = order.items.find((item: any) => item.id === product.id);
+    if(existingItem) {
+        toast({
+            variant: "destructive",
+            title: "Item already in order",
+            description: `${product.name} is already part of this order.`
+        });
+        return;
+    }
+
+    const newItem = {
+        id: product.id,
+        name: product.name,
+        quantity: 1,
+        price: product.price
+    };
+    const newItems = [...order.items, newItem];
+    const newTotal = newItems.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+
+    setOrder({
+        ...order,
+        items: newItems,
+        total: newTotal,
+    });
+    setIsAddProductDialogOpen(false);
+    toast({
+        title: "Item Added",
+        description: `${product.name} has been added to the order.`
+    })
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -170,7 +215,39 @@ function EditOrderPage() {
 
             {/* Order Items */}
             <section>
-                <h3 className="font-headline text-xl mb-4">Order Items</h3>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-headline text-xl">Order Items</h3>
+                     <Dialog open={isAddProductDialogOpen} onOpenChange={setIsAddProductDialogOpen}>
+                        <DialogTrigger asChild>
+                            <Button type="button" variant="outline">
+                                <Plus className="mr-2 h-4 w-4" /> Add Item
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-3xl">
+                            <DialogHeader>
+                                <DialogTitle>Add Product to Order</DialogTitle>
+                            </DialogHeader>
+                            <ScrollArea className="h-[60vh]">
+                                <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4'>
+                                    {allProducts.map(product => (
+                                        <Card key={product.id}>
+                                            <CardHeader className="p-0">
+                                                <Image src={product.imageUrl} alt={product.name} width={200} height={200} className="w-full aspect-square object-cover rounded-t-lg" />
+                                            </CardHeader>
+                                            <CardContent className="p-4">
+                                                <h4 className='font-semibold'>{product.name}</h4>
+                                                <p className='text-sm text-muted-foreground'>{formatCurrency(product.price)}</p>
+                                            </CardContent>
+                                            <CardFooter className="p-4 pt-0">
+                                                <Button className="w-full" type="button" onClick={() => addItem(product)}>Add to Order</Button>
+                                            </CardFooter>
+                                        </Card>
+                                    ))}
+                                </div>
+                            </ScrollArea>
+                        </DialogContent>
+                    </Dialog>
+                </div>
                 <div className="space-y-4">
                     {order.items.map((item: any, index: number) => (
                         <div key={item.id} className="flex flex-col md:flex-row items-center gap-4 rounded-md border p-4">
@@ -207,6 +284,11 @@ function EditOrderPage() {
                             </div>
                         </div>
                     ))}
+                    {order.items.length === 0 && (
+                        <div className='text-center text-muted-foreground border-2 border-dashed rounded-lg p-8'>
+                            <p>No items in this order. Click "Add Item" to begin.</p>
+                        </div>
+                    )}
                 </div>
                  <div className="mt-4 text-right">
                     <p className="text-lg font-bold">Total: {formatCurrency(order.total)}</p>
