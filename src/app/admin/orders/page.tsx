@@ -7,10 +7,16 @@ import withAdminAuth from '@/components/withAdminAuth';
 import { useCollection } from "@/firebase";
 import { collection } from "firebase/firestore";
 import { useFirestore } from "@/firebase";
+import React from "react";
 
 function AdminOrdersPage() {
     const firestore = useFirestore();
-    const ordersCollection = firestore ? collection(firestore, 'orders') : null;
+    
+    const ordersCollection = React.useMemo(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'orders');
+    }, [firestore]);
+
     const { data: orders, loading } = useCollection(ordersCollection);
 
     if (loading) {
