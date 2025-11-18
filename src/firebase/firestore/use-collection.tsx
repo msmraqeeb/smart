@@ -1,22 +1,11 @@
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import {
   onSnapshot,
-  collection,
-  query,
-  where,
-  orderBy,
-  limit,
-  startAfter,
-  endBefore,
-  limitToLast,
-  doc,
-  getDoc,
-  DocumentData,
   Query,
-  CollectionReference,
 } from 'firebase/firestore';
-import { useAuth, useFirestore } from '../provider';
+import { errorEmitter } from '../error-emitter';
+import { FirestorePermissionError } from '../errors';
 
 interface Options {
   idField?: string;
@@ -54,10 +43,21 @@ export function useCollection<T>(
         );
         setData(docs);
         setLoading(false);
+        setError(null);
       },
       (err) => {
-        console.error(err);
-        setError(err);
+        if (err.code === 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+                // @ts-ignore internal property
+                path: query.path,
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            setError(permissionError);
+        } else {
+            console.error(err);
+            setError(err);
+        }
         setLoading(false);
       }
     );
