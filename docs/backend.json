@@ -39,7 +39,7 @@
     }
   },
   "auth": {
-    "providers": ["anonymous"]
+    "providers": ["anonymous", "email"]
   },
   "firestore": {
     "/orders/{orderId}": {

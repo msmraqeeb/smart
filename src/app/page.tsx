@@ -1,20 +1,12 @@
 import Image from "next/image";
 import Link from "next/link";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { getFeaturedProducts, getCategories } from "@/lib/data";
-import { ProductCard } from "@/components/product-card";
+import { getCategories } from "@/lib/data";
+import { FeaturedProducts } from "@/components/featured-products";
 import { ArrowRight } from "lucide-react";
 
 export default async function Home() {
-  const featuredProducts = await getFeaturedProducts();
   const categories = await getCategories();
 
   return (
@@ -32,33 +24,7 @@ export default async function Home() {
         </Button>
       </section>
 
-      <section className="mb-16">
-        <h2 className="font-headline mb-8 text-3xl font-bold text-center">
-          Featured Products
-        </h2>
-        <Carousel
-          opts={{
-            align: "start",
-            loop: true,
-          }}
-          className="w-full"
-        >
-          <CarouselContent>
-            {featuredProducts.map((product) => (
-              <CarouselItem
-                key={product.id}
-                className="md:basis-1/2 lg:basis-1/3"
-              >
-                <div className="p-1">
-                  <ProductCard product={product} />
-                </div>
-              </CarouselItem>
-            ))}
-          </CarouselContent>
-          <CarouselPrevious className="hidden sm:flex" />
-          <CarouselNext className="hidden sm:flex" />
-        </Carousel>
-      </section>
+      <FeaturedProducts />
 
       <section>
         <h2 className="font-headline mb-8 text-3xl font-bold text-center">

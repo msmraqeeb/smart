@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Card,
   CardContent,
@@ -8,6 +10,10 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ListOrdered, MapPin, User, LogOut } from "lucide-react";
+import { useAuth } from "@/firebase";
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
 
 const dashboardLinks = [
     {
@@ -31,11 +37,36 @@ const dashboardLinks = [
 ]
 
 export default function AccountPage() {
+  const { auth, user } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleSignOut = async () => {
+    if (!auth) return;
+    try {
+      await signOut(auth);
+      toast({
+        title: "Signed Out",
+        description: "You have been successfully signed out.",
+      });
+      router.push('/');
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast({
+        variant: "destructive",
+        title: "Sign Out Failed",
+        description: "There was an error signing you out. Please try again.",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
         <h1 className="font-headline text-4xl font-bold">My Account</h1>
-        <p className="text-muted-foreground mt-2">Welcome back, User!</p>
+        <p className="text-muted-foreground mt-2">
+          Welcome back, {user?.isAnonymous ? 'Guest' : user?.email || 'User'}!
+        </p>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -52,14 +83,16 @@ export default function AccountPage() {
                 </Card>
             </Link>
         ))}
-        <Card className="h-full hover:bg-card/95 hover:shadow-md transition-all">
-            <CardHeader>
-                 <Button variant="destructive" className="w-full">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                </Button>
-            </CardHeader>
-        </Card>
+        {!user?.isAnonymous && (
+          <Card className="h-full hover:bg-card/95 hover:shadow-md transition-all">
+              <CardHeader>
+                  <Button variant="destructive" className="w-full" onClick={handleSignOut}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Sign Out
+                  </Button>
+              </CardHeader>
+          </Card>
+        )}
       </div>
     </div>
   );
