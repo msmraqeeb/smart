@@ -14,6 +14,7 @@ import { useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import React from "react";
 
 const dashboardLinks = [
     {
@@ -41,6 +42,12 @@ export default function AccountPage() {
   const router = useRouter();
   const { toast } = useToast();
 
+  React.useEffect(() => {
+    if (user === null) {
+      router.push('/auth/login');
+    }
+  }, [user, router]);
+
   const handleSignOut = async () => {
     if (!auth) return;
     try {
@@ -59,6 +66,14 @@ export default function AccountPage() {
       });
     }
   };
+
+  if (!user) {
+    return (
+        <div className="container mx-auto px-4 py-8 text-center">
+            <p>Loading...</p>
+        </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

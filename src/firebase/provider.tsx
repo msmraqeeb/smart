@@ -9,7 +9,7 @@ import {
   useState,
 } from 'react';
 import { FirebaseApp } from 'firebase/app';
-import { Auth, onAuthStateChanged, User, signInAnonymously } from 'firebase/auth';
+import { Auth, onAuthStateChanged, User } from 'firebase/auth';
 import { Firestore } from 'firebase/firestore';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
@@ -42,24 +42,7 @@ export function FirebaseProvider({
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      // If no user is signed in after state change, sign in anonymously.
-      // This handles the initial load and sign-out cases.
-      if (!currentUser) {
-        signInAnonymously(auth).catch((error) => {
-          console.error("Anonymous sign-in failed on state change:", error);
-        });
-      }
     });
-
-    // Check initial state
-    if (auth.currentUser) {
-      setUser(auth.currentUser);
-    } else {
-      // If there's no current user on initial check, sign in anonymously.
-      signInAnonymously(auth).catch((error) => {
-        console.error("Initial anonymous sign-in failed:", error);
-      });
-    }
 
     return () => unsubscribe();
   }, [auth]);
