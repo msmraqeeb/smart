@@ -1,41 +1,41 @@
 'use client';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { ListOrdered, MapPin, User, LogOut } from "lucide-react";
+import {
+  User,
+  LogOut,
+  LayoutDashboard,
+  Package,
+  Download,
+  MapPin,
+  CreditCard,
+  Settings,
+  GitCompare,
+  Heart,
+} from "lucide-react";
 import { useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import React from "react";
+import { cn } from "@/lib/utils";
 
-const dashboardLinks = [
-    {
-        href: "/account/orders",
-        icon: ListOrdered,
-        title: "My Orders",
-        description: "View your order history and track shipments."
-    },
-    {
-        href: "/account/addresses",
-        icon: MapPin,
-        title: "My Addresses",
-        description: "Manage your saved shipping and billing addresses."
-    },
-     {
-        href: "/account/profile",
-        icon: User,
-        title: "Profile Settings",
-        description: "Update your personal information and password."
-    }
-]
+const navLinks = [
+  {
+    href: "/account",
+    icon: LayoutDashboard,
+    label: "Dashboard",
+    active: true,
+  },
+  { href: "/account/orders", icon: Package, label: "Orders" },
+  { href: "#", icon: Download, label: "Downloads" },
+  { href: "/account/addresses", icon: MapPin, label: "Addresses" },
+  { href: "#", icon: CreditCard, label: "Payment methods" },
+  { href: "/account/profile", icon: Settings, label: "Account details" },
+  { href: "#", icon: GitCompare, label: "Compare" },
+  { href: "#", icon: Heart, label: "Wishlist" },
+];
 
 export default function AccountPage() {
   const { auth, user } = useAuth();
@@ -74,40 +74,68 @@ export default function AccountPage() {
         </div>
     );
   }
+  
+  const userName = user?.isAnonymous ? 'Guest' : user?.displayName || user?.email?.split('@')[0] || 'User';
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="font-headline text-4xl font-bold">My Account</h1>
-        <p className="text-muted-foreground mt-2">
-          Welcome back, {user?.isAnonymous ? 'Guest' : user?.email || 'User'}!
-        </p>
-      </div>
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        {/* Right Column (Navigation) */}
+        <div className="md:col-span-1">
+          <div className="border rounded-lg">
+            <div className="p-4 border-b flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                <User className="w-6 h-6 text-muted-foreground" />
+              </div>
+              <span className="font-semibold">{userName}</span>
+            </div>
+            <nav className="flex flex-col">
+              {navLinks.map((link) => (
+                <Link
+                  href={link.href}
+                  key={link.label}
+                  className={cn(
+                    "flex items-center gap-3 px-4 py-3 text-sm text-muted-foreground hover:bg-muted/50 border-b",
+                    link.active && "bg-muted/80 text-primary font-semibold border-l-4 border-l-primary"
+                  )}
+                >
+                  <link.icon className="w-4 h-4" />
+                  <span>{link.label}</span>
+                </Link>
+              ))}
+              <Button
+                variant="ghost"
+                onClick={handleSignOut}
+                className="flex items-center justify-start gap-3 px-4 py-3 text-sm text-muted-foreground hover:bg-muted/50"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Log out</span>
+              </Button>
+            </nav>
+          </div>
+        </div>
 
-      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {dashboardLinks.map(link => (
-            <Link href={link.href} key={link.href}>
-                <Card className="h-full hover:bg-card/95 hover:shadow-md transition-all">
-                    <CardHeader className="flex flex-row items-center gap-4">
-                        <link.icon className="h-8 w-8 text-primary" />
-                        <div>
-                            <CardTitle className="font-headline text-xl">{link.title}</CardTitle>
-                            <CardDescription>{link.description}</CardDescription>
-                        </div>
-                    </CardHeader>
-                </Card>
+        {/* Left Column (Main Content) */}
+        <div className="md:col-span-3">
+          <p className="mb-6">
+            Hello <span className="font-semibold">{userName}</span> (not <span className="font-semibold">{userName}</span>? <button onClick={handleSignOut} className="text-primary hover:underline">Log out</button>)
+          </p>
+          <p className="text-muted-foreground">
+            From your account dashboard you can view your recent{" "}
+            <Link href="/account/orders" className="text-primary hover:underline">
+              orders
             </Link>
-        ))}
-        {!user?.isAnonymous && (
-          <Card className="h-full hover:bg-card/95 hover:shadow-md transition-all">
-              <CardHeader>
-                  <Button variant="destructive" className="w-full" onClick={handleSignOut}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
-                  </Button>
-              </CardHeader>
-          </Card>
-        )}
+            , manage your{" "}
+            <Link href="/account/addresses" className="text-primary hover:underline">
+              shipping and billing addresses
+            </Link>
+            , and{" "}
+            <Link href="/account/profile" className="text-primary hover:underline">
+              edit your password and account details
+            </Link>
+            .
+          </p>
+        </div>
       </div>
     </div>
   );
