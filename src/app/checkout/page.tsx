@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useCart } from "@/context/cart-context";
@@ -17,7 +18,32 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { useAuth, useFirestore } from "@/firebase";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
+import { addDoc, collection, serverTimestamp, type Firestore } from "firebase/firestore";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+
+
+const saveOrder = (db: Firestore, orderData: any) => {
+  const ordersCollection = collection(db, "orders");
+  addDoc(ordersCollection, orderData)
+    .then(() => {
+        // This part runs on success.
+        // We can clear the cart and redirect from here if needed,
+        // but we'll rely on the component's state for that.
+    })
+    .catch(async (serverError) => {
+      // Create the rich, contextual error asynchronously.
+      const permissionError = new FirestorePermissionError({
+        path: ordersCollection.path,
+        operation: 'create',
+        requestResourceData: orderData,
+      } satisfies SecurityRuleContext);
+
+      // Emit the error with the global error emitter
+      errorEmitter.emit('permission-error', permissionError);
+    });
+};
+
 
 export default function CheckoutPage() {
   const { cartItems, cartTotal, clearCart } = useCart();
@@ -49,37 +75,28 @@ export default function CheckoutPage() {
     e.preventDefault();
     if (!firestore) return;
 
-    try {
-      const orderData = {
-        customer: customerInfo,
-        items: cartItems.map(item => ({
-          id: item.product.id,
-          name: item.product.name,
-          quantity: item.quantity,
-          price: item.product.price,
-        })),
-        total: cartTotal,
-        status: "Processing",
-        createdAt: serverTimestamp(),
-        userId: user?.uid || null,
-      };
+    const orderData = {
+      customer: customerInfo,
+      items: cartItems.map(item => ({
+        id: item.product.id,
+        name: item.product.name,
+        quantity: item.quantity,
+        price: item.product.price,
+      })),
+      total: cartTotal,
+      status: "Processing",
+      createdAt: serverTimestamp(),
+      userId: user?.uid || null,
+    };
 
-      await addDoc(collection(firestore, "orders"), orderData);
+    saveOrder(firestore, orderData);
 
-      toast({
-        title: "Order Placed!",
-        description: "Thank you for your purchase. Your order is being processed.",
-      });
-      clearCart();
-      router.push("/");
-    } catch (error) {
-      console.error("Error placing order:", error);
-      toast({
-        variant: "destructive",
-        title: "Order Failed",
-        description: "There was an issue placing your order. Please try again.",
-      });
-    }
+    toast({
+      title: "Order Placed!",
+      description: "Thank you for your purchase. Your order is being processed.",
+    });
+    clearCart();
+    router.push("/");
   }
 
   if (cartItems.length === 0) {
