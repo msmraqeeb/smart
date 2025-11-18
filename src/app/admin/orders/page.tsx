@@ -4,13 +4,14 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from '@/lib/utils';
 import withAdminAuth from '@/components/withAdminAuth';
-import { useCollection } from "@/firebase/firestore/use-collection";
+import { useCollection } from "@/firebase";
 import { collection } from "firebase/firestore";
 import { useFirestore } from "@/firebase";
 
 function AdminOrdersPage() {
     const firestore = useFirestore();
-    const { data: orders, loading } = useCollection(firestore ? collection(firestore, 'orders') : null);
+    const ordersCollection = firestore ? collection(firestore, 'orders') : null;
+    const { data: orders, loading } = useCollection(ordersCollection);
 
     if (loading) {
         return <div className="container mx-auto px-4 py-8">Loading orders...</div>;
