@@ -2,12 +2,11 @@
 // This file is used to store the Firebase configuration.
 // It is used by the Firebase provider to initialize the Firebase app.
 
-// TODO: Replace with your actual Firebase project configuration
 export const firebaseConfig = {
-  apiKey: "REPLACE_WITH_YOUR_API_KEY",
-  authDomain: "REPLACE_WITH_YOUR_AUTH_DOMAIN",
-  projectId: "REPLACE_WITH_YOUR_PROJECT_ID",
-  storageBucket: "REPLACE_WITH_YOUR_STORAGE_BUCKET",
-  messagingSenderId: "REPLACE_WITH_YOUR_MESSAGING_SENDER_ID",
-  appId: "REPLACE_WITH_YOUR_APP_ID",
+  apiKey: "AIzaSyCSymPvXpmGzKf6QN3TElnwxUJrxpn_RAc",
+  authDomain: "studio-6611125951-c9751.firebaseapp.com",
+  projectId: "studio-6611125951-c9751",
+  storageBucket: "studio-6611125951-c9751.appspot.com",
+  messagingSenderId: "410436937582",
+  appId: "1:410436937582:web:c7decf391fe93b2f7bc37f",
 };
