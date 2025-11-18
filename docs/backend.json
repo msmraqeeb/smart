@@ -8,14 +8,14 @@
         "customer": {
           "type": "object",
           "properties": {
-            "firstName": { "type": "string" },
-            "lastName": { "type": "string" },
+            "fullName": { "type": "string" },
             "address": { "type": "string" },
             "city": { "type": "string" },
-            "zip": { "type": "string" },
+            "district": { "type": "string" },
+            "mobileNumber": { "type": "string" },
             "email": { "type": "string", "format": "email" }
           },
-          "required": ["firstName", "lastName", "address", "city", "zip", "email"]
+          "required": ["fullName", "address", "city", "district", "mobileNumber", "email"]
         },
         "items": {
           "type": "array",
@@ -33,9 +33,10 @@
         "total": { "type": "number" },
         "status": { "type": "string", "enum": ["Processing", "Shipped", "Delivered", "Cancelled"] },
         "createdAt": { "type": "string", "format": "date-time" },
-        "userId": { "type": "string" }
+        "userId": { "type": "string" },
+        "paymentMethod": { "type": "string", "enum": ["cod", "online"] }
       },
-      "required": ["customer", "items", "total", "status", "createdAt"]
+      "required": ["customer", "items", "total", "status", "createdAt", "paymentMethod"]
     }
   },
   "auth": {

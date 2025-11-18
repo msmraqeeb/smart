@@ -19,10 +19,12 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { useAuth, useFirestore } from "@/firebase";
-import { doc, setDoc, collection, serverTimestamp, type Firestore } from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, type Firestore } from "firebase/firestore";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { format } from 'date-fns';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 
 const saveOrder = (db: Firestore, orderId: string, orderData: any) => {
@@ -52,13 +54,14 @@ export default function CheckoutPage() {
   const firestore = useFirestore();
   const { user } = useAuth();
   const [customerInfo, setCustomerInfo] = useState({
-    firstName: '',
-    lastName: '',
+    fullName: '',
     address: '',
     city: '',
-    zip: '',
+    district: '',
+    mobileNumber: '',
     email: '',
   });
+  const [paymentMethod, setPaymentMethod] = useState('cod');
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -70,6 +73,10 @@ export default function CheckoutPage() {
     const { id, value } = e.target;
     setCustomerInfo(prev => ({ ...prev, [id]: value }));
   };
+  
+  const handleSelectChange = (id: string, value: string) => {
+    setCustomerInfo(prev => ({ ...prev, [id]: value }));
+  }
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,13 +84,16 @@ export default function CheckoutPage() {
 
     // Generate the custom order ID
     const datePrefix = format(new Date(), 'yyMMdd');
-    // Using a random 4-digit number for simplicity. A sequential number would require a transaction or a Cloud Function to be safe from race conditions.
     const sequenceNumber = Math.floor(1000 + Math.random() * 9000).toString();
     const orderId = `${datePrefix}${sequenceNumber}`;
 
     const orderData = {
-      id: orderId, // Storing the ID in the document as well
-      customer: customerInfo,
+      id: orderId,
+      customer: {
+        firstName: customerInfo.fullName.split(' ')[0] || '',
+        lastName: customerInfo.fullName.split(' ').slice(1).join(' ') || '',
+        ...customerInfo
+      },
       items: cartItems.map(item => ({
         id: item.product.id,
         name: item.product.name,
@@ -94,6 +104,7 @@ export default function CheckoutPage() {
       status: "Processing",
       createdAt: serverTimestamp(),
       userId: user?.uid || null,
+      paymentMethod,
     };
 
     saveOrder(firestore, orderId, orderData);
@@ -119,29 +130,45 @@ export default function CheckoutPage() {
             <CardTitle className="font-headline text-2xl">Shipping Information</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" placeholder="John" value={customerInfo.firstName} onChange={handleInputChange} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" placeholder="Doe" value={customerInfo.lastName} onChange={handleInputChange} required />
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="fullName">Full Name</Label>
+              <Input id="fullName" placeholder="John Doe" value={customerInfo.fullName} onChange={handleInputChange} required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
               <Input id="address" placeholder="123 Main St" value={customerInfo.address} onChange={handleInputChange} required />
             </div>
-            <div className="grid sm:grid-cols-3 gap-4">
-              <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="city">City</Label>
-                <Input id="city" placeholder="Anytown" value={customerInfo.city} onChange={handleInputChange} required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="zip">ZIP Code</Label>
-                <Input id="zip" placeholder="12345" value={customerInfo.zip} onChange={handleInputChange} required />
-              </div>
+            <div className="grid sm:grid-cols-2 gap-4">
+                 <div className="space-y-2">
+                    <Label htmlFor="city">City</Label>
+                    <Select onValueChange={(value) => handleSelectChange('city', value)} value={customerInfo.city}>
+                        <SelectTrigger id="city">
+                            <SelectValue placeholder="Select a city" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="dhaka">Dhaka</SelectItem>
+                            <SelectItem value="chittagong">Chittagong</SelectItem>
+                            <SelectItem value="sylhet">Sylhet</SelectItem>
+                        </SelectContent>
+                    </Select>
+                 </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="district">District</Label>
+                    <Select onValueChange={(value) => handleSelectChange('district', value)} value={customerInfo.district}>
+                        <SelectTrigger id="district">
+                            <SelectValue placeholder="Select a district" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="dhaka">Dhaka</SelectItem>
+                            <SelectItem value="gazipur">Gazipur</SelectItem>
+                            <SelectItem value="narayanganj">Narayanganj</SelectItem>
+                        </SelectContent>
+                    </Select>
+                 </div>
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="mobileNumber">Mobile Number</Label>
+              <Input id="mobileNumber" type="tel" placeholder="+8801234567890" value={customerInfo.mobileNumber} onChange={handleInputChange} required />
             </div>
              <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
@@ -152,20 +179,35 @@ export default function CheckoutPage() {
             <CardTitle className="font-headline text-2xl">Payment Details</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="card-number">Card Number</Label>
-                <Input id="card-number" placeholder="**** **** **** 1234" required />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                    <Label htmlFor="expiry-date">Expiry Date</Label>
-                    <Input id="expiry-date" placeholder="MM / YY" required />
-                </div>
-                <div className="space-y-2">
-                    <Label htmlFor="cvc">CVC</Label>
-                    <Input id="cvc" placeholder="123" required />
-                </div>
-              </div>
+                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="cod" id="cod" />
+                        <Label htmlFor="cod">Cash on Delivery</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="online" id="online" />
+                        <Label htmlFor="online">Online Payment</Label>
+                    </div>
+                </RadioGroup>
+
+                {paymentMethod === 'online' && (
+                     <div className="space-y-4 rounded-lg border bg-muted/30 p-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="card-number">Card Number</Label>
+                            <Input id="card-number" placeholder="**** **** **** 1234" required={paymentMethod === 'online'} />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="expiry-date">Expiry Date</Label>
+                                <Input id="expiry-date" placeholder="MM / YY" required={paymentMethod === 'online'} />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="cvc">CVC</Label>
+                                <Input id="cvc" placeholder="123" required={paymentMethod === 'online'} />
+                            </div>
+                        </div>
+                    </div>
+                )}
           </CardContent>
         </Card>
 
