@@ -1,6 +1,10 @@
+'use client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ListOrdered, Package, Users } from "lucide-react";
+import { ListOrdered, Package, Users, LogOut } from "lucide-react";
 import Link from "next/link";
+import withAdminAuth from "@/components/withAdminAuth";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 const adminLinks = [
     {
@@ -21,14 +25,27 @@ const adminLinks = [
         title: "Manage Users",
         description: "View and manage customer accounts."
     }
-]
+];
 
-export default function AdminPage() {
+function AdminPage() {
+  const router = useRouter();
+
+  const handleSignOut = () => {
+    localStorage.removeItem('admin_logged_in');
+    router.push('/admin/login');
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="font-headline text-4xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground mt-2">Welcome to the GetMart control center.</p>
+      <div className="mb-8 flex justify-between items-center">
+        <div>
+            <h1 className="font-headline text-4xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground mt-2">Welcome to the GetMart control center.</p>
+        </div>
+        <Button variant="outline" onClick={handleSignOut}>
+            <LogOut className="mr-2 h-4 w-4" />
+            Sign Out
+        </Button>
       </div>
 
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -51,3 +68,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
+export default withAdminAuth(AdminPage);
