@@ -1,0 +1,104 @@
+'use client';
+import { useRouter, useParams } from 'next/navigation';
+import { useDoc } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { formatCurrency } from '@/lib/utils';
+import Image from 'next/image';
+import { Badge } from '@/components/ui/badge';
+import React from 'react';
+
+export default function OrderDetailsPage() {
+  const params = useParams();
+  const { id } = params;
+
+  const firestore = useFirestore();
+  const orderRef = React.useMemo(() => {
+    if (!firestore || typeof id !== 'string') return null;
+    return doc(firestore, 'orders', id);
+  }, [firestore, id]);
+
+  const { data: order, loading } = useDoc(orderRef);
+
+  if (loading) {
+    return <div>Loading order details...</div>;
+  }
+
+  if (!order) {
+    return <div>Order not found.</div>;
+  }
+
+  return (
+    <Card>
+        <CardHeader>
+            <div className="flex flex-col md:flex-row justify-between md:items-center gap-2">
+                <div>
+                    <CardTitle>Order Details</CardTitle>
+                    <CardDescription>Order ID: #{order.id} - Placed on {order.createdAt?.toDate().toLocaleDateString()}</CardDescription>
+                </div>
+                <div>
+                     <Badge 
+                        variant={
+                            order.status === 'Shipped' ? 'default' : 
+                            order.status === 'Processing' ? 'secondary' :
+                            order.status === 'Delivered' ? 'outline' :
+                            'destructive'
+                        }
+                        className="text-base"
+                    >
+                        {order.status}
+                    </Badge>
+                </div>
+            </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+            <div className="space-y-4">
+                {order.items.map((item: any) => (
+                    <div key={item.id} className="flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div>
+                                <p className="font-medium">{item.name}</p>
+                                <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
+                            </div>
+                        </div>
+                        <p>{formatCurrency(item.price * item.quantity)}</p>
+                    </div>
+                ))}
+            </div>
+            <Separator />
+            <div className="space-y-2">
+                 <div className="flex justify-between">
+                    <p className="text-muted-foreground">Subtotal</p>
+                    <p>{formatCurrency(order.total)}</p>
+                </div>
+                 <div className="flex justify-between">
+                    <p className="text-muted-foreground">Shipping</p>
+                    <p>FREE</p>
+                </div>
+                <Separator />
+                 <div className="flex justify-between font-bold text-lg">
+                    <p>Total</p>
+                    <p>{formatCurrency(order.total)}</p>
+                </div>
+            </div>
+            <Separator />
+            <div>
+                <h3 className="font-semibold mb-2">Shipping Address</h3>
+                <address className="not-italic text-muted-foreground">
+                    {order.customer.firstName} {order.customer.lastName}<br/>
+                    {order.customer.address}<br/>
+                    {order.customer.city}, {order.customer.zip}
+                </address>
+            </div>
+        </CardContent>
+    </Card>
+  );
+}
