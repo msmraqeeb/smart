@@ -16,13 +16,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { useCart } from "@/context/cart-context";
 import { formatCurrency } from "@/lib/utils";
-import { ShoppingCart, Trash2, X } from "lucide-react";
+import { ShoppingCart, X } from "lucide-react";
 
 export function CartSheet() {
-  const { cartItems, removeFromCart, cartTotal, itemCount } = useCart();
+  const { cartItems, removeFromCart, cartTotal, itemCount, isCartOpen, setIsCartOpen } = useCart();
 
   return (
-    <Sheet>
+    <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
       <SheetTrigger asChild>
         <Button variant="ghost" size="icon" className="relative">
           <ShoppingCart className="h-5 w-5" />
@@ -80,10 +80,10 @@ export function CartSheet() {
                   <span>Total</span>
                   <span>{formatCurrency(cartTotal)}</span>
                 </div>
-                <Button asChild className="w-full" size="lg">
+                <Button asChild className="w-full" size="lg" onClick={() => setIsCartOpen(false)}>
                   <Link href="/cart">View Full Cart</Link>
                 </Button>
-                 <Button asChild className="w-full" size="lg" variant="default">
+                 <Button asChild className="w-full" size="lg" variant="default" onClick={() => setIsCartOpen(false)}>
                   <Link href="/checkout">Proceed to Checkout</Link>
                 </Button>
               </div>
@@ -94,9 +94,9 @@ export function CartSheet() {
             <ShoppingCart className="h-16 w-16 text-muted-foreground/50" />
             <p className="text-muted-foreground">Your cart is empty.</p>
             <SheetTrigger asChild>
-              <Button asChild variant="outline">
-                <Link href="/products">Continue Shopping</Link>
-              </Button>
+                <Button asChild variant="outline" onClick={() => setIsCartOpen(false)}>
+                    <Link href="/products">Continue Shopping</Link>
+                </Button>
             </SheetTrigger>
           </div>
         )}

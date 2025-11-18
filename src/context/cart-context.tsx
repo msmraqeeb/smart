@@ -12,12 +12,15 @@ interface CartContextType {
   clearCart: () => void;
   cartTotal: number;
   itemCount: number;
+  isCartOpen: boolean;
+  setIsCartOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const { toast } = useToast();
 
   const addToCart = (product: Product, quantity: number) => {
@@ -38,6 +41,7 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
       title: "Item added to cart",
       description: `${quantity} x ${product.name}`,
     });
+    setIsCartOpen(true);
   };
 
   const removeFromCart = (productId: string) => {
@@ -86,6 +90,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         clearCart,
         cartTotal,
         itemCount,
+        isCartOpen,
+        setIsCartOpen,
       }}
     >
       {children}
