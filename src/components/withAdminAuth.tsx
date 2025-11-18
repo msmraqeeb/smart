@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 
@@ -8,9 +8,9 @@ const withAdminAuth = <P extends object>(WrappedComponent: React.ComponentType<P
   const Wrapper = (props: P) => {
     const router = useRouter();
     const { toast } = useToast();
+    const [isAdmin, setIsAdmin] = useState(false);
 
     useEffect(() => {
-      // Since this is a client component, we can check for localStorage.
       const isAdminLoggedIn = localStorage.getItem('admin_logged_in') === 'true';
 
       if (!isAdminLoggedIn) {
@@ -20,13 +20,12 @@ const withAdminAuth = <P extends object>(WrappedComponent: React.ComponentType<P
           description: 'You must be logged in as an admin to view this page.',
         });
         router.replace('/admin/login');
+      } else {
+        setIsAdmin(true);
       }
     }, [router, toast]);
 
-    const isAdminLoggedIn = typeof window !== 'undefined' && localStorage.getItem('admin_logged_in') === 'true';
-
-    // Render a loading state or null while checking auth status
-    if (!isAdminLoggedIn) {
+    if (!isAdmin) {
       return (
         <div className="flex h-screen items-center justify-center">
             <p>Loading...</p>
