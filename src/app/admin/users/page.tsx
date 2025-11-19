@@ -14,6 +14,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
+import { deleteUser as deleteAuthUser } from '@/ai/flows/delete-user';
 
 type User = {
     id: string;
@@ -23,7 +24,7 @@ type User = {
     role: string;
 };
 
-const deleteUser = (db: Firestore, userId: string) => {
+const deleteUserDocument = (db: Firestore, userId: string) => {
     const userRef = doc(db, 'users', userId);
     deleteDoc(userRef)
       .catch(async (serverError) => {
@@ -58,22 +59,7 @@ function AdminUsersPage() {
         if (!userProfiles && !orders) return [];
 
         const userMap = new Map<string, User>();
-        const deletedUserIds = new Set<string>();
-
-        // Identify deleted users first (present in orders but not in profiles)
-        const profileIds = new Set(userProfiles?.map(p => p.id));
-        orders?.forEach((order: any) => {
-            if (order.userId && !profileIds.has(order.userId)) {
-                 // This check is important. If a user exists in orders but not in profiles,
-                 // it might be a new user who hasn't saved an address yet.
-                 // We only consider them 'deleted' if they *once* had a profile.
-                 // For this logic, we will assume if they are not in userProfiles they might be deleted
-                 // or just haven't saved a profile. The current structure makes it hard to be certain.
-                 // A better approach would be a `deleted` flag.
-                 // For now, we'll rely on the `userProfiles` as the source of truth for active users.
-            }
-        });
-
+        
         // Add admin user
         userMap.set('admin_user', { 
             id: 'admin_user', 
@@ -88,7 +74,7 @@ function AdminUsersPage() {
             userMap.set(profile.id, {
                 id: profile.id,
                 name: profile.billingAddress?.name || profile.shippingAddress?.name || 'N/A',
-                email: 'N/A', // Will be updated from orders if available
+                email: 'N/A', 
                 joinDate: 'N/A', 
                 role: 'Customer',
             });
@@ -99,7 +85,6 @@ function AdminUsersPage() {
             if (order.userId) {
                 const existingUser = userMap.get(order.userId);
                 if (existingUser) {
-                    // Update user with info from their most recent order if it's more complete
                     if (order.customer.email && (existingUser.email === 'N/A' || !existingUser.email)) {
                         existingUser.email = order.customer.email;
                     }
@@ -114,7 +99,6 @@ function AdminUsersPage() {
                         }
                     }
                 } else if (!userMap.has(order.userId)) {
-                    // This user only exists in orders, create a record for them
                      userMap.set(order.userId, {
                         id: order.userId,
                         name: order.customer.fullName,
@@ -126,7 +110,6 @@ function AdminUsersPage() {
             }
         });
 
-        // If userProfiles are loaded, only show users that are in that list (plus admin)
         if (userProfiles) {
             const activeUserIds = new Set(userProfiles.map(p => p.id));
             activeUserIds.add('admin_user');
@@ -144,7 +127,7 @@ function AdminUsersPage() {
 
     }, [orders, userProfiles]);
     
-    const handleDelete = () => {
+    const handleDelete = async () => {
         if (!userToDelete || !firestore) return;
 
         if (userToDelete.id === 'admin_user') {
@@ -157,13 +140,26 @@ function AdminUsersPage() {
             return;
         }
         
-        deleteUser(firestore, userToDelete.id);
-        
-        toast({
-            title: 'User Deleted',
-            description: `${userToDelete.name} has been deleted.`
-        });
-        setUserToDelete(null);
+        try {
+            // Delete from Firebase Auth
+            await deleteAuthUser({ uid: userToDelete.id });
+
+            // Delete from Firestore 'users' collection
+            deleteUserDocument(firestore, userToDelete.id);
+            
+            toast({
+                title: 'User Deleted',
+                description: `${userToDelete.name} has been deleted from Authentication and Firestore.`
+            });
+        } catch(e: any) {
+            toast({
+                variant: 'destructive',
+                title: 'Error deleting user',
+                description: e.message || 'Could not delete user.'
+            });
+        } finally {
+            setUserToDelete(null);
+        }
     }
 
     const loading = ordersLoading || usersLoading;
@@ -175,12 +171,12 @@ function AdminUsersPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete the user's profile data (like saved addresses). It will not delete their orders. This action cannot be undone.
+                            This will permanently delete the user account and all associated data (profile, etc.). This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                        <AlertDialogAction onClick={handleDelete}>Delete User</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
