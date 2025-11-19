@@ -37,6 +37,31 @@
         "paymentMethod": { "type": "string", "enum": ["cod", "online"] }
       },
       "required": ["customer", "items", "total", "status", "createdAt", "paymentMethod"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user-specific information like addresses.",
+      "type": "object",
+      "properties": {
+        "billingAddress": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "address": { "type": "string" },
+            "mobile": { "type": "string" }
+          },
+          "required": ["name", "address", "mobile"]
+        },
+        "shippingAddress": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "address": { "type": "string" },
+            "mobile": { "type": "string" }
+          },
+          "required": ["name", "address", "mobile"]
+        }
+      }
     }
   },
   "auth": {
@@ -46,6 +71,10 @@
     "/orders/{orderId}": {
       "schema": { "$ref": "#/entities/Order" },
       "description": "Stores individual customer orders."
+    },
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Stores user profile information, including addresses."
     }
   }
 }

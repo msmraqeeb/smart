@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
 import type { CartItem, Product } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,10 +18,31 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const getInitialCartState = (): CartItem[] => {
+    try {
+        if (typeof window !== "undefined") {
+            const savedCart = window.localStorage.getItem('getmart-cart');
+            return savedCart ? JSON.parse(savedCart) : [];
+        }
+    } catch (error) {
+        console.error("Failed to read cart from localStorage", error);
+    }
+    return [];
+};
+
+
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(getInitialCartState);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    try {
+        window.localStorage.setItem('getmart-cart', JSON.stringify(cartItems));
+    } catch (error) {
+        console.error("Failed to save cart to localStorage", error);
+    }
+  }, [cartItems]);
 
   const addToCart = (product: Product, quantity: number) => {
     setCartItems((prevItems) => {

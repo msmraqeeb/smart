@@ -3,7 +3,12 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter }
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
+import { useAuth, useFirestore, useDoc } from "@/firebase";
+import { doc, setDoc, type Firestore } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 type Address = {
     name: string;
@@ -11,17 +16,39 @@ type Address = {
     mobile: string;
 };
 
+const defaultAddress: Address = {
+    name: '',
+    address: '',
+    mobile: ''
+};
+
+const saveUserAddresses = (db: Firestore, userId: string, data: any) => {
+  const userRef = doc(db, 'users', userId);
+  setDoc(userRef, data, { merge: true })
+    .catch(async (serverError) => {
+      const permissionError = new FirestorePermissionError({
+        path: userRef.path,
+        operation: 'update',
+        requestResourceData: data,
+      } satisfies SecurityRuleContext);
+      errorEmitter.emit('permission-error', permissionError);
+    });
+};
+
 export default function AccountAddressesPage() {
-    const [billingAddress, setBillingAddress] = useState<Address>({
-        name: 'John Doe',
-        address: '123 Main St, Anytown, USA 12345',
-        mobile: '+1 (555) 123-4567'
-    });
-    const [shippingAddress, setShippingAddress] = useState<Address>({
-        name: 'John Doe',
-        address: '123 Main St, Anytown, USA 12345',
-        mobile: '+1 (555) 555-5555'
-    });
+    const { user } = useAuth();
+    const firestore = useFirestore();
+    const { toast } = useToast();
+
+    const userProfileRef = useMemo(() => {
+        if (!firestore || !user) return null;
+        return doc(firestore, 'users', user.uid);
+    }, [firestore, user]);
+
+    const { data: userProfile, loading } = useDoc(userProfileRef);
+
+    const [billingAddress, setBillingAddress] = useState<Address>(defaultAddress);
+    const [shippingAddress, setShippingAddress] = useState<Address>(defaultAddress);
 
     const [editBilling, setEditBilling] = useState(false);
     const [editShipping, setEditShipping] = useState(false);
@@ -29,9 +56,21 @@ export default function AccountAddressesPage() {
     const [tempBilling, setTempBilling] = useState<Address>(billingAddress);
     const [tempShipping, setTempShipping] = useState<Address>(shippingAddress);
 
+    useEffect(() => {
+        if (userProfile) {
+            setBillingAddress(userProfile.billingAddress || defaultAddress);
+            setShippingAddress(userProfile.shippingAddress || defaultAddress);
+            setTempBilling(userProfile.billingAddress || defaultAddress);
+            setTempShipping(userProfile.shippingAddress || defaultAddress);
+        }
+    }, [userProfile]);
+
     const handleSaveBilling = () => {
+        if (!firestore || !user) return;
+        saveUserAddresses(firestore, user.uid, { billingAddress: tempBilling });
         setBillingAddress(tempBilling);
         setEditBilling(false);
+        toast({ title: "Billing address saved!" });
     };
 
     const handleCancelBilling = () => {
@@ -40,8 +79,11 @@ export default function AccountAddressesPage() {
     };
     
     const handleSaveShipping = () => {
+        if (!firestore || !user) return;
+        saveUserAddresses(firestore, user.uid, { shippingAddress: tempShipping });
         setShippingAddress(tempShipping);
         setEditShipping(false);
+        toast({ title: "Shipping address saved!" });
     };
 
     const handleCancelShipping = () => {
@@ -49,6 +91,19 @@ export default function AccountAddressesPage() {
         setEditShipping(false);
     };
 
+    if (loading) {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Your Addresses</CardTitle>
+                    <CardDescription>Manage your shipping and billing addresses.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <p>Loading addresses...</p>
+                </CardContent>
+            </Card>
+        )
+    }
 
     return (
         <Card>
@@ -85,11 +140,15 @@ export default function AccountAddressesPage() {
                         </>
                     ) : (
                         <CardContent>
-                            <address className="not-italic text-muted-foreground">
-                                {billingAddress.name}<br/>
-                                {billingAddress.address}<br/>
-                                {billingAddress.mobile}
-                            </address>
+                            {billingAddress.name ? (
+                                <address className="not-italic text-muted-foreground">
+                                    {billingAddress.name}<br/>
+                                    {billingAddress.address}<br/>
+                                    {billingAddress.mobile}
+                                </address>
+                            ) : (
+                                <p className="text-muted-foreground">You have not set up a billing address yet.</p>
+                            )}
                         </CardContent>
                     )}
                 </Card>
@@ -122,11 +181,15 @@ export default function AccountAddressesPage() {
                         </>
                     ) : (
                         <CardContent>
-                            <address className="not-italic text-muted-foreground">
-                                {shippingAddress.name}<br/>
-                                {shippingAddress.address}<br/>
-                                {shippingAddress.mobile}
-                            </address>
+                             {shippingAddress.name ? (
+                                <address className="not-italic text-muted-foreground">
+                                    {shippingAddress.name}<br/>
+                                    {shippingAddress.address}<br/>
+                                    {shippingAddress.mobile}
+                                </address>
+                             ) : (
+                                <p className="text-muted-foreground">You have not set up a shipping address yet.</p>
+                             )}
                         </CardContent>
                     )}
                 </Card>
