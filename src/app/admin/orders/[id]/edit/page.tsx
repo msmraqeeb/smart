@@ -202,8 +202,8 @@ function EditOrderPage() {
                   <Input id="address" value={order.customer.address} onChange={handleCustomerChange} />
                 </div>
                  <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Input id="city" value={order.customer.city} onChange={handleCustomerChange} />
+                  <Label htmlFor="district">District/Zilla</Label>
+                  <Input id="district" value={order.customer.district} onChange={handleCustomerChange} />
                 </div>
                  <div className="space-y-2">
                   <Label htmlFor="area">Area</Label>
@@ -330,3 +330,5 @@ function EditOrderPage() {
 }
 
 export default withAdminAuth(EditOrderPage);
+
+    
