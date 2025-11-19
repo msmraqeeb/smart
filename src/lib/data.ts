@@ -8,14 +8,9 @@ const { firestore } = initializeFirebase();
 
 const reviews: Review[] = [];
 
-export async function getProducts(filters?: { category?: string }): Promise<Product[]> {
+export async function getProducts(): Promise<Product[]> {
     const productsCollection = collection(firestore, 'products');
-    let q = query(productsCollection);
-    // This client-side filtering is now handled in the products page component
-    // if (filters?.category && filters.category !== 'all') {
-    //     q = query(productsCollection, where("category", "==", filters.category));
-    // }
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(productsCollection);
     if (snapshot.empty) {
         return [];
     }
@@ -32,6 +27,7 @@ export async function getProductById(id: string): Promise<Product | undefined> {
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | undefined> {
+    if (!slug) return undefined;
     const productsCollection = collection(firestore, 'products');
     const q = query(productsCollection, where("slug", "==", slug));
     const snapshot = await getDocs(q);
