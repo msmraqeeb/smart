@@ -50,14 +50,14 @@ function AdminUsersPage() {
 
         // Process users from user profiles (users who have saved addresses)
         userProfiles?.forEach((profile: any) => {
-             // A real app would have email on the user profile object
-            const userEmail = profile.billingAddress?.email || profile.shippingAddress?.email || `${profile.id.substring(0,5)}@example.com`;
-            if (!userMap.has(userEmail)) {
-                 userMap.set(userEmail, {
+            // Placeholder email, might be overwritten by order data
+            const userEmail = `${profile.id.substring(0,8)}@example.com`;
+            if (!userMap.has(profile.id)) {
+                 userMap.set(profile.id, {
                     id: profile.id,
                     name: profile.billingAddress?.name || profile.shippingAddress?.name || 'N/A',
-                    email: userEmail,
-                    joinDate: 'N/A', // Join date isn't stored on profile, would need backend logic
+                    email: userEmail, // This might be a placeholder
+                    joinDate: 'N/A', 
                     role: 'Customer',
                 });
             }
@@ -66,18 +66,31 @@ function AdminUsersPage() {
         // Process users from orders, adding or updating info
         orders?.forEach((order: any) => {
             const customerEmail = order.customer?.email;
-            if (customerEmail) {
-                const existingUser = userMap.get(customerEmail);
+            const userId = order.userId;
+
+            if (userId) {
+                const existingUser = userMap.get(userId);
                 if (existingUser) {
-                    // If user exists, update join date if it's from an earlier order
-                     const orderDate = order.createdAt?.toDate();
-                     if (orderDate && (existingUser.joinDate === 'N/A' || new Date(existingUser.joinDate) > orderDate)) {
-                        userMap.set(customerEmail, { ...existingUser, joinDate: orderDate.toLocaleDateString() });
+                    // Update existing user with more accurate info from order
+                    const orderDate = order.createdAt?.toDate();
+                    const updatedUser = { ...existingUser };
+
+                    if (customerEmail) {
+                        updatedUser.email = customerEmail;
                     }
-                } else {
-                     // Add new user from order if not present
-                    userMap.set(customerEmail, {
-                        id: order.userId || customerEmail,
+                     if (order.customer.fullName && (updatedUser.name === 'N/A' || !updatedUser.name)) {
+                        updatedUser.name = order.customer.fullName;
+                    }
+
+                    if (orderDate && (updatedUser.joinDate === 'N/A' || new Date(updatedUser.joinDate) > orderDate)) {
+                        updatedUser.joinDate = orderDate.toLocaleDateString();
+                    }
+                    userMap.set(userId, updatedUser);
+
+                } else if(customerEmail) {
+                     // Add new user from order if not present in profiles
+                    userMap.set(userId, {
+                        id: userId,
                         name: order.customer.fullName,
                         email: customerEmail,
                         joinDate: order.createdAt?.toDate().toLocaleDateString() || 'N/A',
@@ -87,7 +100,20 @@ function AdminUsersPage() {
             }
         });
 
-        return Array.from(userMap.values());
+        // Re-key by email to remove duplicates from profiles that now have a real email from orders
+        const finalUserMap = new Map<string, User>();
+        userMap.forEach(user => {
+            // The admin user doesn't have a normal UID, so we key it by its email
+            const key = user.role === 'Admin' ? user.email : user.id;
+            // Prioritize users who have a real email and name
+            const existing = finalUserMap.get(key);
+            if (!existing || (user.email.includes('@') && !existing.email.includes('@'))) {
+                finalUserMap.set(key, user);
+            }
+        });
+
+
+        return Array.from(finalUserMap.values());
 
     }, [orders, userProfiles]);
 
