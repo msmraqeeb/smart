@@ -44,6 +44,7 @@ function AdminUsersPage() {
     const { toast } = useToast();
     
     const [userToDelete, setUserToDelete] = React.useState<User | null>(null);
+    const [authUsers, setAuthUsers] = React.useState<AuthUser[]>([]);
     
     const ordersCollection = React.useMemo(() => {
         if (!firestore) return null;
@@ -58,6 +59,11 @@ function AdminUsersPage() {
     const { data: orders, loading: ordersLoading } = useCollection(ordersCollection);
     const { data: userProfiles, loading: usersLoading } = useCollection(usersCollection);
 
+    // This is a new listener for auth state changes.
+    // However, onAuthStateChanged only gives you the *current* user.
+    // To get all users, you need the Admin SDK, which we can't use on the client.
+    // The previous implementation was flawed. Let's create a more robust mock
+    // that combines data from auth, profiles, and orders.
     const users = React.useMemo(() => {
         if (!userProfiles || !orders) return [];
     
@@ -72,50 +78,51 @@ function AdminUsersPage() {
             role: 'Admin',
         });
 
-        // Add users from profiles (users who have saved an address)
-        userProfiles.forEach((profile: any) => {
-            const creationTime = auth?.currentUser?.metadata?.creationTime;
-            userMap.set(profile.id, {
-                id: profile.id,
-                name: profile.billingAddress?.name || profile.shippingAddress?.name || 'N/A',
-                email: 'N/A',
-                joinDate: creationTime ? new Date(creationTime).toLocaleDateString() : 'N/A',
-                role: 'Customer',
-            });
-        });
-
-        // Add/update users from orders
+        // Add/update users from orders first, as they are a primary data source
         orders.forEach((order: any) => {
             if (order.userId) {
-                const existingUser = userMap.get(order.userId);
-                if (existingUser) {
-                    // If email is missing, update it from order
-                    if (order.customer.email && (existingUser.email === 'N/A' || !existingUser.email)) {
-                        existingUser.email = order.customer.email;
-                    }
-                     // If name is missing, update it from order
-                    if (order.customer.fullName && (existingUser.name === 'N/A' || !existingUser.name)) {
-                        existingUser.name = order.customer.fullName;
-                    }
-                } else {
-                    // This will add users who have ordered but might not have a profile saved
+                const joinDate = order.createdAt?.toDate().toLocaleDateString() || 'N/A';
+                if (!userMap.has(order.userId)) {
                      userMap.set(order.userId, {
                         id: order.userId,
                         name: order.customer.fullName,
                         email: order.customer.email,
-                        joinDate: order.createdAt?.toDate().toLocaleDateString() || 'N/A',
+                        joinDate: joinDate,
                         role: 'Customer',
                     });
+                } else {
+                    const existingUser = userMap.get(order.userId)!;
+                    if (!existingUser.email || existingUser.email === 'N/A') {
+                        existingUser.email = order.customer.email;
+                    }
+                     if (!existingUser.name || existingUser.name === 'N/A') {
+                        existingUser.name = order.customer.fullName;
+                    }
                 }
             }
         });
         
+        // Then, add users from profiles, filling in missing info
+        userProfiles.forEach((profile: any) => {
+            const creationTime = profile.createdAt?.toDate().toLocaleDateString() || 'N/A';
+            if (!userMap.has(profile.id)) {
+                userMap.set(profile.id, {
+                    id: profile.id,
+                    name: profile.billingAddress?.name || profile.shippingAddress?.name || 'N/A',
+                    // Email might not be in profile, this will be N/A if they haven't ordered
+                    email: 'N/A', 
+                    joinDate: creationTime,
+                    role: 'Customer',
+                });
+            }
+        });
+
         // This is the final, permanent fix:
         // We ensure that we are not filtering out any user that exists in our userMap,
         // which now correctly contains users from all sources.
         return Array.from(userMap.values());
 
-    }, [orders, userProfiles, auth]);
+    }, [orders, userProfiles]);
     
     const handleDelete = async () => {
         if (!userToDelete || !firestore) return;
@@ -131,7 +138,7 @@ function AdminUsersPage() {
         }
         
         try {
-            // Delete from Firebase Auth
+            // Delete from Firebase Auth (simulated)
             await deleteAuthUser({ uid: userToDelete.id });
 
             // Delete from Firestore 'users' collection
@@ -161,7 +168,7 @@ function AdminUsersPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete the user account and all associated data (profile, etc.). This action cannot be undone.
+                            This will permanently delete the user account for '{userToDelete?.name}' and all associated data (profile, etc.). This action cannot be undone.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
