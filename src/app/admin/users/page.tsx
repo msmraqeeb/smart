@@ -51,16 +51,31 @@ function AdminUsersPage() {
         return collection(firestore, 'users');
     }, [firestore]);
 
-    const { data: orders, loading: ordersLoading, error: ordersError } = useCollection(ordersCollection);
-    const { data: userProfiles, loading: usersLoading, error: usersError } = useCollection(usersCollection);
+    const { data: orders, loading: ordersLoading } = useCollection(ordersCollection);
+    const { data: userProfiles, loading: usersLoading } = useCollection(usersCollection);
 
     const users = React.useMemo(() => {
-        if (!orders && !userProfiles) return [];
-        
-        const userMap = new Map<string, User>();
+        if (!userProfiles && !orders) return [];
 
-        // Add admin user first
-        userMap.set('admin@email.com', { 
+        const userMap = new Map<string, User>();
+        const deletedUserIds = new Set<string>();
+
+        // Identify deleted users first (present in orders but not in profiles)
+        const profileIds = new Set(userProfiles?.map(p => p.id));
+        orders?.forEach((order: any) => {
+            if (order.userId && !profileIds.has(order.userId)) {
+                 // This check is important. If a user exists in orders but not in profiles,
+                 // it might be a new user who hasn't saved an address yet.
+                 // We only consider them 'deleted' if they *once* had a profile.
+                 // For this logic, we will assume if they are not in userProfiles they might be deleted
+                 // or just haven't saved a profile. The current structure makes it hard to be certain.
+                 // A better approach would be a `deleted` flag.
+                 // For now, we'll rely on the `userProfiles` as the source of truth for active users.
+            }
+        });
+
+        // Add admin user
+        userMap.set('admin_user', { 
             id: 'admin_user', 
             name: 'Admin User', 
             email: 'admin@email.com', 
@@ -68,76 +83,70 @@ function AdminUsersPage() {
             role: 'Admin' 
         });
 
-        // Process users from user profiles (users who have saved addresses)
+        // Process users from user profiles
         userProfiles?.forEach((profile: any) => {
-            const userEmail = `${profile.id.substring(0,8)}@example.com`; // Placeholder
-            if (!userMap.has(profile.id)) {
-                 userMap.set(profile.id, {
-                    id: profile.id,
-                    name: profile.billingAddress?.name || profile.shippingAddress?.name || 'N/A',
-                    email: userEmail,
-                    joinDate: 'N/A', 
-                    role: 'Customer',
-                });
-            }
+            userMap.set(profile.id, {
+                id: profile.id,
+                name: profile.billingAddress?.name || profile.shippingAddress?.name || 'N/A',
+                email: 'N/A', // Will be updated from orders if available
+                joinDate: 'N/A', 
+                role: 'Customer',
+            });
         });
 
         // Process users from orders, adding or updating info
         orders?.forEach((order: any) => {
-            const customerEmail = order.customer?.email;
-            const userId = order.userId;
-
-            if (userId) {
-                const existingUser = userMap.get(userId);
+            if (order.userId) {
+                const existingUser = userMap.get(order.userId);
                 if (existingUser) {
-                    // Update existing user with more accurate info from order
+                    // Update user with info from their most recent order if it's more complete
+                    if (order.customer.email && (existingUser.email === 'N/A' || !existingUser.email)) {
+                        existingUser.email = order.customer.email;
+                    }
+                    if (order.customer.fullName && (existingUser.name === 'N/A' || !existingUser.name)) {
+                        existingUser.name = order.customer.fullName;
+                    }
                     const orderDate = order.createdAt?.toDate();
-                    const updatedUser = { ...existingUser };
-
-                    if (customerEmail) {
-                        updatedUser.email = customerEmail;
+                    if (orderDate) {
+                        const existingDate = existingUser.joinDate === 'N/A' ? null : new Date(existingUser.joinDate);
+                        if (!existingDate || orderDate < existingDate) {
+                            existingUser.joinDate = orderDate.toLocaleDateString();
+                        }
                     }
-                     if (order.customer.fullName && (updatedUser.name === 'N/A' || !updatedUser.name)) {
-                        updatedUser.name = order.customer.fullName;
-                    }
-
-                    if (orderDate && (updatedUser.joinDate === 'N/A' || new Date(updatedUser.joinDate) > orderDate)) {
-                        updatedUser.joinDate = orderDate.toLocaleDateString();
-                    }
-                    userMap.set(userId, updatedUser);
-
-                } else if(customerEmail) {
-                    userMap.set(userId, {
-                        id: userId,
+                } else if (!userMap.has(order.userId)) {
+                    // This user only exists in orders, create a record for them
+                     userMap.set(order.userId, {
+                        id: order.userId,
                         name: order.customer.fullName,
-                        email: customerEmail,
+                        email: order.customer.email,
                         joinDate: order.createdAt?.toDate().toLocaleDateString() || 'N/A',
                         role: 'Customer',
                     });
                 }
             }
         });
-        
-        const finalUserMap = new Map<string, User>();
-        userMap.forEach(user => {
-            const key = user.role === 'Admin' ? user.email : user.id;
-            const existing = finalUserMap.get(key);
-            if (!existing || (user.email.includes('@') && !existing.email.includes('@'))) {
-                 finalUserMap.set(key, user);
-            } else if (existing && !existing.email.includes('@') && user.email.includes('@')) {
-                 finalUserMap.set(key, user);
-            }
-        });
 
+        // If userProfiles are loaded, only show users that are in that list (plus admin)
+        if (userProfiles) {
+            const activeUserIds = new Set(userProfiles.map(p => p.id));
+            activeUserIds.add('admin_user');
+            
+            const filteredUsers: User[] = [];
+            userMap.forEach((user, id) => {
+                if (activeUserIds.has(id)) {
+                    filteredUsers.push(user);
+                }
+            });
+            return filteredUsers;
+        }
 
-        return Array.from(finalUserMap.values());
+        return Array.from(userMap.values());
 
     }, [orders, userProfiles]);
     
     const handleDelete = () => {
         if (!userToDelete || !firestore) return;
 
-        // Prevent deleting the admin user
         if (userToDelete.id === 'admin_user') {
             toast({
                 variant: 'destructive',
