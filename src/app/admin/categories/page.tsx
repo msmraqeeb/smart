@@ -1,25 +1,74 @@
 
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { getCategories } from '@/lib/data';
 import type { Category } from '@/lib/types';
 import withAdminAuth from '@/components/withAdminAuth';
-import { Pencil, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useFirestore } from '@/firebase';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
 
 function AdminCategoriesPage() {
     const [categories, setCategories] = useState<Category[]>([]);
+    const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+    const firestore = useFirestore();
+    const { toast } = useToast();
+
+    const fetchCategories = () => {
+        getCategories().then(setCategories);
+    };
 
     useEffect(() => {
-        getCategories().then(setCategories);
+        fetchCategories();
     }, []);
+    
+    const handleDelete = async () => {
+        if (!categoryToDelete || !firestore) return;
+
+        try {
+            await deleteDoc(doc(firestore, "categories", categoryToDelete.id));
+            toast({
+                title: "Category Deleted",
+                description: `"${categoryToDelete.name}" has been successfully deleted.`,
+            });
+            setCategoryToDelete(null);
+            fetchCategories(); // Refetch categories after deletion
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: "Error deleting category",
+                description: "There was a problem deleting the category. Please try again.",
+            });
+        }
+    };
+
 
     return (
         <div className="container mx-auto px-4 py-8">
+            <AlertDialog open={!!categoryToDelete} onOpenChange={(open) => !open && setCategoryToDelete(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete the category
+                            "{categoryToDelete?.name}".
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
             <div className="flex justify-between items-center mb-8">
                 <h1 className="font-headline text-4xl font-bold">Manage Categories</h1>
                 <Button asChild>
@@ -39,7 +88,7 @@ function AdminCategoriesPage() {
                                 <TableHead>ID</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Slug</TableHead>
-                                <TableHead>Actions</TableHead>
+                                <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -57,15 +106,25 @@ function AdminCategoriesPage() {
                                     <TableCell className="font-medium">{category.id.substring(0, 8)}</TableCell>
                                     <TableCell>{category.name}</TableCell>
                                     <TableCell>{category.slug}</TableCell>
-                                    <TableCell>
-                                        <div className="flex gap-2">
-                                            <Button variant="outline" size="icon">
-                                                <Pencil className="h-4 w-4" />
-                                            </Button>
-                                            <Button variant="destructive" size="icon">
-                                                <Trash2 className="h-4 w-4" />
-                                            </Button>
-                                        </div>
+                                    <TableCell className="text-right">
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="ghost" size="icon">
+                                                    <MoreHorizontal className="h-4 w-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href={`/admin/categories/edit/${category.id}`}>Edit</Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    className="text-destructive"
+                                                    onClick={() => setCategoryToDelete(category)}
+                                                >
+                                                    Delete
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
                             ))}
