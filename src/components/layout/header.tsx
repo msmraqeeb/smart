@@ -28,6 +28,7 @@ const navLinks = [
 
 export function Header() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -48,18 +49,20 @@ export function Header() {
             >
               Home
             </Link>
-            <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center gap-1 text-foreground/60 transition-colors hover:text-foreground/80 focus:outline-none">
-                    Categories
-                    <ChevronDown className="h-4 w-4" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                    {categories.map(category => (
-                         <DropdownMenuItem key={category.id} asChild>
-                            <Link href={`/products?category=${category.slug}`}>{category.name}</Link>
-                        </DropdownMenuItem>
-                    ))}
-                </DropdownMenuContent>
+            <DropdownMenu open={isCategoriesOpen} onOpenChange={setIsCategoriesOpen}>
+                <div onMouseEnter={() => setIsCategoriesOpen(true)} onMouseLeave={() => setIsCategoriesOpen(false)}>
+                    <DropdownMenuTrigger className="flex items-center gap-1 text-foreground/60 transition-colors hover:text-foreground/80 focus:outline-none">
+                        Categories
+                        <ChevronDown className="h-4 w-4" />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent>
+                        {categories.map(category => (
+                             <DropdownMenuItem key={category.id} asChild>
+                                <Link href={`/products?category=${category.slug}`}>{category.name}</Link>
+                            </DropdownMenuItem>
+                        ))}
+                    </DropdownMenuContent>
+                </div>
             </DropdownMenu>
              <Link
               href="/products"
