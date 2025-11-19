@@ -13,9 +13,10 @@
             "city": { "type": "string" },
             "district": { "type": "string" },
             "mobileNumber": { "type": "string" },
-            "email": { "type": "string", "format": "email" }
+            "email": { "type": "string", "format": "email" },
+            "area": { "type": "string" }
           },
-          "required": ["fullName", "address", "city", "district", "mobileNumber", "email"]
+          "required": ["fullName", "address", "city", "district", "mobileNumber", "email", "area"]
         },
         "items": {
           "type": "array",

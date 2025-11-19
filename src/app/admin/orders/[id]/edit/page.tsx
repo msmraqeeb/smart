@@ -184,13 +184,9 @@ function EditOrderPage() {
             <section>
               <h3 className="font-headline text-xl mb-4">Customer Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="firstName">First Name</Label>
-                  <Input id="firstName" value={order.customer.firstName} onChange={handleCustomerChange} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="lastName">Last Name</Label>
-                  <Input id="lastName" value={order.customer.lastName} onChange={handleCustomerChange} />
+                <div className="space-y-2 md:col-span-2">
+                  <Label htmlFor="fullName">Full Name</Label>
+                  <Input id="fullName" value={order.customer.fullName} onChange={handleCustomerChange} />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="email">Email</Label>
@@ -205,8 +201,8 @@ function EditOrderPage() {
                   <Input id="city" value={order.customer.city} onChange={handleCustomerChange} />
                 </div>
                  <div className="space-y-2">
-                  <Label htmlFor="zip">ZIP Code</Label>
-                  <Input id="zip" value={order.customer.zip} onChange={handleCustomerChange} />
+                  <Label htmlFor="area">Area</Label>
+                  <Input id="area" value={order.customer.area} onChange={handleCustomerChange} />
                 </div>
               </div>
             </section>

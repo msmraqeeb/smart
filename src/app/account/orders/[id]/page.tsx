@@ -93,9 +93,9 @@ export default function OrderDetailsPage() {
             <div>
                 <h3 className="font-semibold mb-2">Shipping Address</h3>
                 <address className="not-italic text-muted-foreground">
-                    {order.customer.firstName} {order.customer.lastName}<br/>
+                    {order.customer.fullName}<br/>
                     {order.customer.address}<br/>
-                    {order.customer.city}, {order.customer.zip}
+                    {order.customer.city}, {order.customer.district}
                 </address>
             </div>
         </CardContent>
