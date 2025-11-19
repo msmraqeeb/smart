@@ -8,16 +8,19 @@ import React, { useState } from "react";
 type Address = {
     name: string;
     address: string;
+    mobile: string;
 };
 
 export default function AccountAddressesPage() {
     const [billingAddress, setBillingAddress] = useState<Address>({
         name: 'John Doe',
-        address: '123 Main St, Anytown, USA 12345'
+        address: '123 Main St, Anytown, USA 12345',
+        mobile: '+1 (555) 123-4567'
     });
     const [shippingAddress, setShippingAddress] = useState<Address>({
         name: 'John Doe',
-        address: '123 Main St, Anytown, USA 12345'
+        address: '123 Main St, Anytown, USA 12345',
+        mobile: '+1 (555) 555-5555'
     });
 
     const [editBilling, setEditBilling] = useState(false);
@@ -70,6 +73,10 @@ export default function AccountAddressesPage() {
                                     <Label htmlFor="billingAddress">Address</Label>
                                     <Input id="billingAddress" value={tempBilling.address} onChange={(e) => setTempBilling({...tempBilling, address: e.target.value})} />
                                 </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="billingMobile">Mobile Number</Label>
+                                    <Input id="billingMobile" type="tel" value={tempBilling.mobile} onChange={(e) => setTempBilling({...tempBilling, mobile: e.target.value})} />
+                                </div>
                             </CardContent>
                             <CardFooter className="flex justify-end gap-2">
                                 <Button variant="ghost" onClick={handleCancelBilling}>Cancel</Button>
@@ -80,7 +87,8 @@ export default function AccountAddressesPage() {
                         <CardContent>
                             <address className="not-italic text-muted-foreground">
                                 {billingAddress.name}<br/>
-                                {billingAddress.address}
+                                {billingAddress.address}<br/>
+                                {billingAddress.mobile}
                             </address>
                         </CardContent>
                     )}
@@ -102,6 +110,10 @@ export default function AccountAddressesPage() {
                                     <Label htmlFor="shippingAddress">Address</Label>
                                     <Input id="shippingAddress" value={tempShipping.address} onChange={(e) => setTempShipping({...tempShipping, address: e.target.value})} />
                                 </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="shippingMobile">Mobile Number</Label>
+                                    <Input id="shippingMobile" type="tel" value={tempShipping.mobile} onChange={(e) => setTempShipping({...tempShipping, mobile: e.target.value})} />
+                                </div>
                             </CardContent>
                             <CardFooter className="flex justify-end gap-2">
                                 <Button variant="ghost" onClick={handleCancelShipping}>Cancel</Button>
@@ -112,7 +124,8 @@ export default function AccountAddressesPage() {
                         <CardContent>
                             <address className="not-italic text-muted-foreground">
                                 {shippingAddress.name}<br/>
-                                {shippingAddress.address}
+                                {shippingAddress.address}<br/>
+                                {shippingAddress.mobile}
                             </address>
                         </CardContent>
                     )}
