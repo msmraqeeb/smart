@@ -9,7 +9,6 @@ import {
   Package,
   MapPin,
   Settings,
-  GitCompare,
   Heart,
 } from "lucide-react";
 import { useAuth } from "@/firebase";
@@ -28,8 +27,7 @@ const navLinks = [
   { href: "/account/orders", icon: Package, label: "Orders" },
   { href: "/account/addresses", icon: MapPin, label: "Addresses" },
   { href: "/account/profile", icon: Settings, label: "Account details" },
-  { href: "#", icon: GitCompare, label: "Compare" },
-  { href: "#", icon: Heart, label: "Wishlist" },
+  { href: "/account/wishlist", icon: Heart, label: "Wishlist" },
 ];
 
 export default function AccountLayout({

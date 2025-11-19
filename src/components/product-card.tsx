@@ -8,7 +8,9 @@ import { Button } from "@/components/ui/button";
 import type { Product } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { useCart } from "@/context/cart-context";
-import { ShoppingCart } from "lucide-react";
+import { useWishlist } from "@/context/wishlist-context";
+import { ShoppingCart, Heart } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
@@ -16,10 +18,21 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+  const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlist();
+
+  const isInWishlist = wishlistItems.some((item) => item.id === product.id);
+
+  const handleWishlistToggle = () => {
+    if (isInWishlist) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
+  };
 
   return (
     <Card className="flex h-full flex-col overflow-hidden transition-all hover:shadow-lg">
-      <CardHeader className="p-0">
+      <CardHeader className="p-0 relative">
         <Link href={`/products/${product.id}`} className="block">
           <Image
             src={product.imageUrl}
@@ -30,6 +43,15 @@ export function ProductCard({ product }: ProductCardProps) {
             className="aspect-square w-full object-cover"
           />
         </Link>
+        <Button 
+          size="icon" 
+          variant="ghost" 
+          className="absolute top-2 right-2 rounded-full h-8 w-8 bg-background/70 hover:bg-background"
+          onClick={handleWishlistToggle}
+        >
+          <Heart className={cn("h-4 w-4", isInWishlist ? "text-red-500 fill-red-500" : "text-muted-foreground")} />
+          <span className="sr-only">Add to wishlist</span>
+        </Button>
       </CardHeader>
       <CardContent className="flex-1 p-4">
         <CardTitle className="font-headline text-lg">

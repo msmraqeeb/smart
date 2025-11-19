@@ -62,6 +62,13 @@
             "mobile": { "type": "string" }
           },
           "required": ["name", "address", "mobile"]
+        },
+        "wishlist": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "An array of product IDs that the user has added to their wishlist."
         }
       }
     }
@@ -76,7 +83,7 @@
     },
     "/users/{userId}": {
       "schema": { "$ref": "#/entities/UserProfile" },
-      "description": "Stores user profile information, including addresses."
+      "description": "Stores user profile information, including addresses and wishlist."
     }
   }
 }
