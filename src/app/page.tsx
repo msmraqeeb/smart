@@ -1,3 +1,5 @@
+'use client';
+
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -5,9 +7,15 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { getCategories } from "@/lib/data";
 import { FeaturedProducts } from "@/components/featured-products";
 import { ArrowRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import type { Category } from "@/lib/types";
 
-export default async function Home() {
-  const categories = await getCategories();
+export default function Home() {
+  const [categories, setCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    getCategories().then(setCategories);
+  }, []);
 
   return (
     <div className="container mx-auto px-4 py-8">

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
@@ -19,30 +20,38 @@ interface CartContextType {
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
 const getInitialCartState = (): CartItem[] => {
+    if (typeof window === "undefined") {
+        return [];
+    }
     try {
-        if (typeof window !== "undefined") {
-            const savedCart = window.localStorage.getItem('getmart-cart');
-            return savedCart ? JSON.parse(savedCart) : [];
-        }
+        const savedCart = window.localStorage.getItem('getmart-cart');
+        return savedCart ? JSON.parse(savedCart) : [];
     } catch (error) {
         console.error("Failed to read cart from localStorage", error);
+        return [];
     }
-    return [];
 };
 
-
 export const CartProvider = ({ children }: { children: ReactNode }) => {
-  const [cartItems, setCartItems] = useState<CartItem[]>(getInitialCartState);
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    try {
-        window.localStorage.setItem('getmart-cart', JSON.stringify(cartItems));
-    } catch (error) {
-        console.error("Failed to save cart to localStorage", error);
+    setIsClient(true);
+    setCartItems(getInitialCartState());
+  }, []);
+
+  useEffect(() => {
+    if (isClient) {
+        try {
+            window.localStorage.setItem('getmart-cart', JSON.stringify(cartItems));
+        } catch (error) {
+            console.error("Failed to save cart to localStorage", error);
+        }
     }
-  }, [cartItems]);
+  }, [cartItems, isClient]);
 
   const addToCart = (product: Product, quantity: number) => {
     setCartItems((prevItems) => {
@@ -101,19 +110,21 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     0
   );
 
+  const value = {
+    cartItems,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    cartTotal,
+    itemCount: isClient ? itemCount : 0,
+    isCartOpen,
+    setIsCartOpen,
+  };
+
   return (
     <CartContext.Provider
-      value={{
-        cartItems,
-        addToCart,
-        removeFromCart,
-        updateQuantity,
-        clearCart,
-        cartTotal,
-        itemCount,
-        isCartOpen,
-        setIsCartOpen,
-      }}
+      value={value}
     >
       {children}
     </CartContext.Provider>
