@@ -6,9 +6,10 @@ import { Badge } from "@/components/ui/badge";
 import withAdminAuth from '@/components/withAdminAuth';
 import { MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useCollection, useFirestore } from "@/firebase";
+import { useCollection, useAuth, useFirestore } from "@/firebase";
 import { collection } from "firebase/firestore";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { getAuth } from "firebase/auth";
 
 type User = {
     id: string;
@@ -20,6 +21,21 @@ type User = {
 
 function AdminUsersPage() {
     const firestore = useFirestore();
+    const { auth } = useAuth();
+    const [allUsers, setAllUsers] = useState<any[]>([]);
+    
+    useEffect(() => {
+        // This is a simplified way to list users on the client-side for an admin panel.
+        // For production, this should be a secure backend function.
+        if(auth) {
+            // Since there's no direct `listUsers` on the client-side SDK,
+            // we will build our user list from the `orders` collection
+            // and add any authenticated users not present in orders.
+            // This is a workaround for the mock admin panel.
+        }
+    }, [auth]);
+
+
     const ordersCollection = React.useMemo(() => {
         if (!firestore) return null;
         return collection(firestore, 'orders');
@@ -40,7 +56,7 @@ function AdminUsersPage() {
                     name: order.customer.fullName,
                     email: customerEmail,
                     joinDate: order.createdAt?.toDate().toLocaleDateString() || 'N/A',
-                    role: customerEmail === 'admin@email.com' ? 'Admin' : 'Customer',
+                    role: 'Customer',
                 });
             }
         });
@@ -55,10 +71,29 @@ function AdminUsersPage() {
                 role: 'Admin' 
             });
         }
+        
+        // A real app would fetch all users from a backend.
+        // We'll add a dummy user to show how new signups might appear.
+        // In a real scenario, you'd fetch from Firebase Auth via a backend.
+        const allRegisteredUsers = [...customerMap.values()];
 
-        return Array.from(customerMap.values());
+        // This is a placeholder for actual Firebase Auth user listing.
+        // Let's assume we have a new user who hasn't ordered.
+        // We'll add them manually for this mock-up.
+        if (auth?.currentUser && !customerMap.has(auth.currentUser.email!)) {
+            allRegisteredUsers.push({
+                id: auth.currentUser.uid,
+                name: auth.currentUser.displayName || 'New User',
+                email: auth.currentUser.email!,
+                joinDate: auth.currentUser.metadata.creationTime ? new Date(auth.currentUser.metadata.creationTime).toLocaleDateString() : 'N/A',
+                role: 'Customer'
+            })
+        }
 
-    }, [orders]);
+
+        return allRegisteredUsers;
+
+    }, [orders, auth]);
 
 
     return (
@@ -79,7 +114,7 @@ function AdminUsersPage() {
                                     <TableHead>User ID</TableHead>
                                     <TableHead>Name</TableHead>
                                     <TableHead>Email</TableHead>
-                                    <TableHead>First Order</TableHead>
+                                    <TableHead>Joined / First Order</TableHead>
                                     <TableHead>Role</TableHead>
                                     <TableHead>Actions</TableHead>
                                 </TableRow>
