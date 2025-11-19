@@ -2,14 +2,11 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // WARNING: The following rules are intentionally permissive for development.
-    // In a production environment, you must implement more granular security rules,
-    // likely using custom claims to properly distinguish between user roles (e.g., admin vs. customer).
-
-    // Allow any authenticated user full access to any document.
-    // This will allow the mock admin panel to function correctly.
+    // WARNING: These rules are completely open and are not secure.
+    // They are intended for initial development and testing only.
+    // You MUST secure your database before going to production.
     match /{document=**} {
-      allow read, write: if request.auth != null;
+      allow read, write: if true;
     }
   }
 }
