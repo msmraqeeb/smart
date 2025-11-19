@@ -47,7 +47,9 @@ export default function SignupPage() {
       
       if (userCredential.user) {
         await updateProfile(userCredential.user, { displayName: name });
-        await sendEmailVerification(userCredential.user);
+        await sendEmailVerification(userCredential.user, {
+            url: `${window.location.origin}/auth/verified`,
+        });
       }
 
       setSuccess(true);
