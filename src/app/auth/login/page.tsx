@@ -37,7 +37,14 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      if (!userCredential.user.emailVerified) {
+        setError("Please verify your email before logging in. Check your inbox for a verification link.");
+        await auth.signOut(); // Sign out the user until they verify
+        setLoading(false);
+        return;
+      }
+
       toast({
         title: "Login Successful",
         description: "Welcome back!",
@@ -45,7 +52,11 @@ export default function LoginPage() {
       router.push('/account');
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Failed to sign in.');
+       if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setError('Invalid email or password. Please try again.');
+      } else {
+        setError(err.message || 'Failed to sign in.');
+      }
     } finally {
       setLoading(false);
     }

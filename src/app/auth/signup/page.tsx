@@ -13,10 +13,10 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Leaf, AlertTriangle } from "lucide-react";
+import { Leaf, AlertTriangle, CheckCircle } from "lucide-react";
 import Link from "next/link";
 import { useAuth } from "@/firebase";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
@@ -26,6 +26,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
   const router = useRouter();
   const { auth } = useAuth();
   const { toast } = useToast();
@@ -44,16 +45,17 @@ export default function SignupPage() {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       
-      // Update user profile with display name
       if (userCredential.user) {
         await updateProfile(userCredential.user, { displayName: name });
+        await sendEmailVerification(userCredential.user);
       }
 
+      setSuccess(true);
       toast({
-        title: "Account Created",
-        description: "Welcome! You have successfully signed up.",
+        title: "Verification Email Sent",
+        description: "Please check your inbox to verify your account.",
       });
-      router.push('/account');
+      
     } catch (err: any) {
       console.error(err);
       setError(err.message || 'Failed to create an account.');
@@ -61,6 +63,26 @@ export default function SignupPage() {
       setLoading(false);
     }
   };
+  
+  if (success) {
+    return (
+        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background p-4">
+            <Card className="w-full max-w-sm text-center">
+                <CardHeader>
+                    <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
+                    <CardTitle className="font-headline text-2xl">Registration Successful!</CardTitle>
+                    <CardDescription>A verification link has been sent to your email address. Please check your inbox (and spam folder) to complete your registration.</CardDescription>
+                </CardHeader>
+                <CardFooter>
+                    <Button asChild className="w-full">
+                        <Link href="/auth/login">Back to Login</Link>
+                    </Button>
+                </CardFooter>
+            </Card>
+        </div>
+    );
+  }
+
 
   return (
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background p-4">
