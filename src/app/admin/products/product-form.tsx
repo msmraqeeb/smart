@@ -61,7 +61,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
   useEffect(() => {
     if (watchName) {
         const slug = watchName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-        form.setValue('slug', slug);
+        form.setValue('slug', slug, { shouldValidate: true });
     }
   }, [watchName, form]);
 
