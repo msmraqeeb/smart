@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import {
   ProductRecommendationFromPromptOutput,
 } from "@/ai/flows/product-recommendation-from-prompt";
 import Link from "next/link";
+import { getProducts } from "@/lib/data";
+import type { Product } from "@/lib/types";
 
 export function AIRecommendations() {
   const [prompt, setPrompt] = useState("");
@@ -18,6 +20,13 @@ export function AIRecommendations() {
     useState<ProductRecommendationFromPromptOutput["recommendations"]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    getProducts().then(setAllProducts);
+  }, []);
+
+  const availableProductIds = useMemo(() => new Set(allProducts.map(p => p.id)), [allProducts]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,11 +99,13 @@ export function AIRecommendations() {
                   <CardContent className="flex-1">
                     <p className="text-sm text-muted-foreground">{rec.description}</p>
                   </CardContent>
-                  <div className="p-4 pt-0">
-                    <Button asChild variant="outline" className="w-full">
-                       <Link href={`/products/${rec.productId}`}>View Product</Link>
-                    </Button>
-                  </div>
+                  {availableProductIds.has(rec.productId) && (
+                    <div className="p-4 pt-0">
+                      <Button asChild variant="outline" className="w-full">
+                         <Link href={`/products/${rec.productId}`}>View Product</Link>
+                      </Button>
+                    </div>
+                  )}
                 </Card>
               ))}
             </div>
