@@ -1,6 +1,6 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ListOrdered, Package, Users, LogOut, Truck } from "lucide-react";
+import { ListOrdered, Package, Users, LogOut, Truck, LayoutGrid } from "lucide-react";
 import Link from "next/link";
 import withAdminAuth from "@/components/withAdminAuth";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,12 @@ const adminLinks = [
         icon: Package,
         title: "Manage Products",
         description: "Add, edit, and remove products from the store."
+    },
+    {
+        href: "/admin/categories",
+        icon: LayoutGrid,
+        title: "Manage Categories",
+        description: "Add, edit, and organize product categories."
     },
      {
         href: "/admin/users",
