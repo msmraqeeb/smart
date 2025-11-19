@@ -38,7 +38,6 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
     return { id: doc.id, ...doc.data(), reviews: reviews } as Product;
 }
 
-
 export async function getFeaturedProducts(): Promise<Product[]> {
     const productsCollection = collection(firestore, 'products');
     const q = query(productsCollection, where("featured", "==", true));
