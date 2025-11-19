@@ -188,9 +188,13 @@ function EditOrderPage() {
                   <Label htmlFor="fullName">Full Name</Label>
                   <Input id="fullName" value={order.customer.fullName} onChange={handleCustomerChange} />
                 </div>
-                <div className="space-y-2 md:col-span-2">
+                <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" type="email" value={order.customer.email} onChange={handleCustomerChange} />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="mobileNumber">Mobile Number</Label>
+                    <Input id="mobileNumber" type="tel" value={order.customer.mobileNumber} onChange={handleCustomerChange} />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="address">Address</Label>
