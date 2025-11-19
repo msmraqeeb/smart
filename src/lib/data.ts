@@ -11,9 +11,10 @@ const reviews: Review[] = [];
 export async function getProducts(filters?: { category?: string }): Promise<Product[]> {
     const productsCollection = collection(firestore, 'products');
     let q = query(productsCollection);
-    if (filters?.category && filters.category !== 'all') {
-        q = query(productsCollection, where("category", "==", filters.category));
-    }
+    // This client-side filtering is now handled in the products page component
+    // if (filters?.category && filters.category !== 'all') {
+    //     q = query(productsCollection, where("category", "==", filters.category));
+    // }
     const snapshot = await getDocs(q);
     if (snapshot.empty) {
         return [];
