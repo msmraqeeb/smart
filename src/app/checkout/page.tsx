@@ -69,6 +69,7 @@ export default function CheckoutPage() {
     district: '',
     mobileNumber: '',
     email: '',
+    area: '',
   });
   const [paymentMethod, setPaymentMethod] = useState('cod');
 
@@ -101,7 +102,7 @@ export default function CheckoutPage() {
         ...prev, 
         [id]: value,
         // Reset area when district changes
-        ...(id === 'city' && { district: '' })
+        ...(id === 'district' && { area: '' })
     }));
   }
 
@@ -121,6 +122,7 @@ export default function CheckoutPage() {
         address: customerInfo.address,
         city: customerInfo.city,
         district: customerInfo.district,
+        area: customerInfo.area,
         mobileNumber: customerInfo.mobileNumber,
         email: customerInfo.email,
       },
@@ -147,7 +149,7 @@ export default function CheckoutPage() {
     router.push("/");
   }
 
-  const selectedDistrict = locations.find(loc => loc.district === customerInfo.city);
+  const selectedDistrict = locations.find(loc => loc.district === customerInfo.district);
 
   if (cartItems.length === 0) {
     return null;
@@ -172,9 +174,9 @@ export default function CheckoutPage() {
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
                  <div className="space-y-2">
-                    <Label htmlFor="city">District/Zilla</Label>
-                    <Select onValueChange={(value) => handleSelectChange('city', value)} value={customerInfo.city} required>
-                        <SelectTrigger id="city">
+                    <Label htmlFor="district">District/Zilla</Label>
+                    <Select onValueChange={(value) => handleSelectChange('district', value)} value={customerInfo.district} required>
+                        <SelectTrigger id="district">
                             <SelectValue placeholder="Select a District/Zilla" />
                         </SelectTrigger>
                         <SelectContent>
@@ -185,9 +187,9 @@ export default function CheckoutPage() {
                     </Select>
                  </div>
                  <div className="space-y-2">
-                    <Label htmlFor="district">Area</Label>
-                    <Select onValueChange={(value) => handleSelectChange('district', value)} value={customerInfo.district} required disabled={!customerInfo.city}>
-                        <SelectTrigger id="district">
+                    <Label htmlFor="area">Area</Label>
+                    <Select onValueChange={(value) => handleSelectChange('area', value)} value={customerInfo.area} required disabled={!customerInfo.district}>
+                        <SelectTrigger id="area">
                             <SelectValue placeholder="Select an Area" />
                         </SelectTrigger>
                         <SelectContent>
