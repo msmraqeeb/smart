@@ -7,11 +7,12 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
-    // Allow authenticated users to manage the 'orders' collection.
-    // This allows admins to view all orders.
-    // WARNING: This rule is permissive. In a production environment, you should
-    // implement more granular access control, such as using custom claims to
-    // verify admin status.
+    // WARNING: The following rules are permissive and are intended for development
+    // environments with a mock admin user. For production, you should implement
+    // more granular access control, likely using custom claims to verify admin status.
+
+    // Allow any authenticated user to list, read, and write to the 'orders' collection.
+    // This is necessary for the admin panel to view and manage all orders.
     match /orders/{orderId} {
       allow read, write: if request.auth != null;
     }
@@ -24,8 +25,8 @@ service cloud.firestore {
       allow read, create, update: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Allow admins (any authenticated user in this insecure setup) to list all users.
-    // WARNING: This is not secure. In production, check for an admin custom claim.
+    // Allow any authenticated user to list users.
+    // This is necessary for the 'Manage Users' page in the admin panel.
     match /users {
         allow list: if request.auth != null;
     }
