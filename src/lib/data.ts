@@ -1,5 +1,4 @@
 
-'use client';
 import type { Product, Category, Review } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
