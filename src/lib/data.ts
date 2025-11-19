@@ -1,3 +1,4 @@
+
 import type { Product, Category, Review } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
@@ -10,7 +11,7 @@ const reviews: Review[] = [];
 export async function getProducts(filters?: { category?: string }): Promise<Product[]> {
     const productsCollection = collection(firestore, 'products');
     let q = query(productsCollection);
-    if (filters?.category) {
+    if (filters?.category && filters.category !== 'all') {
         q = query(productsCollection, where("category", "==", filters.category));
     }
     const snapshot = await getDocs(q);
