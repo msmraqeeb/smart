@@ -1,3 +1,4 @@
+
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getProductBySlug } from "@/lib/data";
@@ -11,7 +12,7 @@ import { Reviews } from "@/components/reviews";
 export default async function ProductDetailPage({
   params,
 }: {
-  params: { id: string, slug: string };
+  params: { slug: string };
 }) {
   const product = await getProductBySlug(params.slug);
 
