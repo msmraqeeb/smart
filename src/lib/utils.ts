@@ -10,5 +10,5 @@ export function formatCurrency(amount: number) {
     style: "currency",
     currency: "BDT",
     currencyDisplay: "symbol",
-  }).format(amount);
+  }).format(amount).replace('BDT', '৳');
 }
