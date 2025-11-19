@@ -93,7 +93,7 @@ const ReviewDate = ({ date }: { date: string }) => {
 
 
 export function Reviews({ product }: { product: Product }) {
-    const [reviews, setReviews] = useState<Review[]>(product.reviews);
+    const [reviews, setReviews] = useState<Review[]>(product.reviews || []);
     const { toast } = useToast();
 
     const reviewSummary = useMemo(() => {
