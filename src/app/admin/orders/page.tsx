@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from '@/lib/utils';
 import withAdminAuth from '@/components/withAdminAuth';
 import { useCollection } from "@/firebase";
-import { collection } from "firebase/firestore";
+import { collection, query, orderBy } from "firebase/firestore";
 import { useFirestore } from "@/firebase";
 import React from "react";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ function AdminOrdersPage() {
     
     const ordersCollection = React.useMemo(() => {
         if (!firestore) return null;
-        return collection(firestore, 'orders');
+        return query(collection(firestore, 'orders'), orderBy('createdAt', 'desc'));
     }, [firestore]);
 
     const { data: orders, loading } = useCollection(ordersCollection);
