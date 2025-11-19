@@ -1,5 +1,6 @@
+'use client';
 import Link from "next/link";
-import { ShoppingCart, User, Leaf, Menu } from "lucide-react";
+import { Leaf, Menu, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartSheet } from "@/components/cart-sheet";
 import {
@@ -7,6 +8,17 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { getCategories } from "@/lib/data";
+import type { Category } from "@/lib/types";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -15,6 +27,13 @@ const navLinks = [
 ];
 
 export function Header() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    getCategories().then(setCategories);
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
@@ -23,23 +42,39 @@ export function Header() {
           <span className="font-headline text-lg font-bold">GetMart</span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
-          {navLinks.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-foreground/60 transition-colors hover:text-foreground/80"
+           <Link
+              href="/"
+              className={cn("transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}
             >
-              {link.label}
+              Home
             </Link>
-          ))}
+            <DropdownMenu>
+                <DropdownMenuTrigger className="flex items-center gap-1 text-foreground/60 transition-colors hover:text-foreground/80 focus:outline-none">
+                    Categories
+                    <ChevronDown className="h-4 w-4" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    {categories.map(category => (
+                         <DropdownMenuItem key={category.id} asChild>
+                            <Link href={`/products?category=${category.slug}`}>{category.name}</Link>
+                        </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+            </DropdownMenu>
+             <Link
+              href="/products"
+              className={cn("transition-colors hover:text-foreground/80", pathname === "/products" ? "text-foreground" : "text-foreground/60")}
+            >
+              Products
+            </Link>
+             <Link
+              href="/account"
+              className={cn("transition-colors hover:text-foreground/80", pathname.startsWith("/account") ? "text-foreground" : "text-foreground/60")}
+            >
+              My Account
+            </Link>
         </nav>
         <div className="flex flex-1 items-center justify-end gap-2">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/account">
-              <User className="h-5 w-5" />
-              <span className="sr-only">My Account</span>
-            </Link>
-          </Button>
           <CartSheet />
           <Sheet>
             <SheetTrigger asChild>
