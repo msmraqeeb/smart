@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import type { Product, Review } from '@/lib/types';
 import { Star, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -79,6 +80,16 @@ const ReviewForm = ({ onSubmit }: { onSubmit: (review: { text: string, rating: n
 const Label = ({htmlFor, className, children} : {htmlFor?: string, className?: string, children: React.ReactNode}) => (
     <label htmlFor={htmlFor} className={cn('text-sm font-medium', className)}>{children}</label>
 )
+
+const ReviewDate = ({ date }: { date: string }) => {
+    const [formattedDate, setFormattedDate] = useState('');
+
+    useEffect(() => {
+        setFormattedDate(new Date(date).toLocaleString());
+    }, [date]);
+
+    return <p className="text-xs text-muted-foreground">{formattedDate}</p>;
+};
 
 
 export function Reviews({ product }: { product: Product }) {
@@ -177,7 +188,7 @@ export function Reviews({ product }: { product: Product }) {
                                <div className="flex items-center justify-between">
                                  <div>
                                     <p className="font-bold">{review.author}</p>
-                                    <p className="text-xs text-muted-foreground">{new Date(review.date).toLocaleString()}</p>
+                                    <ReviewDate date={review.date} />
                                  </div>
                                   <StarRating rating={review.rating} size="sm" />
                                </div>
@@ -190,7 +201,7 @@ export function Reviews({ product }: { product: Product }) {
                                        </Avatar>
                                        <div className="flex-1">
                                             <p className="font-bold">{review.reply.author}</p>
-                                            <p className="text-xs text-muted-foreground">Replied on {new Date(review.reply.date).toLocaleString()}</p>
+                                            <ReviewDate date={review.reply.date} />
                                             <p className="mt-2 text-sm">{review.reply.text}</p>
                                        </div>
                                    </div>
