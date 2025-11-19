@@ -9,7 +9,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useCollection, useAuth, useFirestore } from "@/firebase";
 import { collection } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
-import { getAuth } from "firebase/auth";
 
 type User = {
     id: string;
@@ -21,80 +20,78 @@ type User = {
 
 function AdminUsersPage() {
     const firestore = useFirestore();
-    const { auth } = useAuth();
-    const [allUsers, setAllUsers] = useState<any[]>([]);
     
-    useEffect(() => {
-        // This is a simplified way to list users on the client-side for an admin panel.
-        // For production, this should be a secure backend function.
-        if(auth) {
-            // Since there's no direct `listUsers` on the client-side SDK,
-            // we will build our user list from the `orders` collection
-            // and add any authenticated users not present in orders.
-            // This is a workaround for the mock admin panel.
-        }
-    }, [auth]);
-
-
     const ordersCollection = React.useMemo(() => {
         if (!firestore) return null;
         return collection(firestore, 'orders');
     }, [firestore]);
 
-    const { data: orders, loading } = useCollection(ordersCollection);
+    const usersCollection = React.useMemo(() => {
+        if (!firestore) return null;
+        return collection(firestore, 'users');
+    }, [firestore]);
+
+    const { data: orders, loading: ordersLoading } = useCollection(ordersCollection);
+    const { data: userProfiles, loading: usersLoading } = useCollection(usersCollection);
 
     const users = React.useMemo(() => {
-        if (!orders) return [];
+        if (!orders && !userProfiles) return [];
         
-        const customerMap = new Map<string, User>();
+        const userMap = new Map<string, User>();
 
-        orders.forEach((order: any) => {
-            const customerEmail = order.customer?.email;
-            if (customerEmail && !customerMap.has(customerEmail)) {
-                customerMap.set(customerEmail, {
-                    id: order.userId || customerEmail,
-                    name: order.customer.fullName,
-                    email: customerEmail,
-                    joinDate: order.createdAt?.toDate().toLocaleDateString() || 'N/A',
+        // Add admin user first
+        userMap.set('admin@email.com', { 
+            id: 'admin_user', 
+            name: 'Admin User', 
+            email: 'admin@email.com', 
+            joinDate: 'N/A', 
+            role: 'Admin' 
+        });
+
+        // Process users from user profiles (users who have saved addresses)
+        userProfiles?.forEach((profile: any) => {
+             // A real app would have email on the user profile object
+            const userEmail = profile.billingAddress?.email || profile.shippingAddress?.email || `${profile.id.substring(0,5)}@example.com`;
+            if (!userMap.has(userEmail)) {
+                 userMap.set(userEmail, {
+                    id: profile.id,
+                    name: profile.billingAddress?.name || profile.shippingAddress?.name || 'N/A',
+                    email: userEmail,
+                    joinDate: 'N/A', // Join date isn't stored on profile, would need backend logic
                     role: 'Customer',
                 });
             }
         });
 
-        // Add admin user if not already in the list from orders
-        if (!customerMap.has('admin@email.com')) {
-             customerMap.set('admin@email.com', { 
-                id: 'admin_user', 
-                name: 'Admin User', 
-                email: 'admin@email.com', 
-                joinDate: 'N/A', 
-                role: 'Admin' 
-            });
-        }
-        
-        // A real app would fetch all users from a backend.
-        // We'll add a dummy user to show how new signups might appear.
-        // In a real scenario, you'd fetch from Firebase Auth via a backend.
-        const allRegisteredUsers = [...customerMap.values()];
+        // Process users from orders, adding or updating info
+        orders?.forEach((order: any) => {
+            const customerEmail = order.customer?.email;
+            if (customerEmail) {
+                const existingUser = userMap.get(customerEmail);
+                if (existingUser) {
+                    // If user exists, update join date if it's from an earlier order
+                     const orderDate = order.createdAt?.toDate();
+                     if (orderDate && (existingUser.joinDate === 'N/A' || new Date(existingUser.joinDate) > orderDate)) {
+                        userMap.set(customerEmail, { ...existingUser, joinDate: orderDate.toLocaleDateString() });
+                    }
+                } else {
+                     // Add new user from order if not present
+                    userMap.set(customerEmail, {
+                        id: order.userId || customerEmail,
+                        name: order.customer.fullName,
+                        email: customerEmail,
+                        joinDate: order.createdAt?.toDate().toLocaleDateString() || 'N/A',
+                        role: 'Customer',
+                    });
+                }
+            }
+        });
 
-        // This is a placeholder for actual Firebase Auth user listing.
-        // Let's assume we have a new user who hasn't ordered.
-        // We'll add them manually for this mock-up.
-        if (auth?.currentUser && !customerMap.has(auth.currentUser.email!)) {
-            allRegisteredUsers.push({
-                id: auth.currentUser.uid,
-                name: auth.currentUser.displayName || 'New User',
-                email: auth.currentUser.email!,
-                joinDate: auth.currentUser.metadata.creationTime ? new Date(auth.currentUser.metadata.creationTime).toLocaleDateString() : 'N/A',
-                role: 'Customer'
-            })
-        }
+        return Array.from(userMap.values());
 
+    }, [orders, userProfiles]);
 
-        return allRegisteredUsers;
-
-    }, [orders, auth]);
-
+    const loading = ordersLoading || usersLoading;
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -114,7 +111,7 @@ function AdminUsersPage() {
                                     <TableHead>User ID</TableHead>
                                     <TableHead>Name</TableHead>
                                     <TableHead>Email</TableHead>
-                                    <TableHead>Joined / First Order</TableHead>
+                                    <TableHead>Joined</TableHead>
                                     <TableHead>Role</TableHead>
                                     <TableHead>Actions</TableHead>
                                 </TableRow>
@@ -122,7 +119,7 @@ function AdminUsersPage() {
                             <TableBody>
                                 {users.map(user => (
                                     <TableRow key={user.id}>
-                                        <TableCell className="font-medium">{user.id.substring(0,6)}</TableCell>
+                                        <TableCell className="font-medium">{user.id.substring(0,8)}</TableCell>
                                         <TableCell>{user.name}</TableCell>
                                         <TableCell>{user.email}</TableCell>
                                         <TableCell>{user.joinDate}</TableCell>
