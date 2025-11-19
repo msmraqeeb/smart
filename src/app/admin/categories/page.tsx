@@ -1,3 +1,4 @@
+
 'use client';
 import { useEffect, useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
@@ -8,6 +9,7 @@ import type { Category } from '@/lib/types';
 import withAdminAuth from '@/components/withAdminAuth';
 import { Pencil, Trash2 } from 'lucide-react';
 import Image from 'next/image';
+import Link from 'next/link';
 
 function AdminCategoriesPage() {
     const [categories, setCategories] = useState<Category[]>([]);
@@ -20,7 +22,9 @@ function AdminCategoriesPage() {
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="font-headline text-4xl font-bold">Manage Categories</h1>
-                <Button>Add New Category</Button>
+                <Button asChild>
+                    <Link href="/admin/categories/new">Add New Category</Link>
+                </Button>
             </div>
             <Card>
                 <CardHeader>
@@ -50,7 +54,7 @@ function AdminCategoriesPage() {
                                             className="rounded-md object-cover"
                                         />
                                     </TableCell>
-                                    <TableCell className="font-medium">{category.id}</TableCell>
+                                    <TableCell className="font-medium">{category.id.substring(0, 8)}</TableCell>
                                     <TableCell>{category.name}</TableCell>
                                     <TableCell>{category.slug}</TableCell>
                                     <TableCell>
