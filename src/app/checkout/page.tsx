@@ -17,8 +17,8 @@ import { formatCurrency } from "@/lib/utils";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useState } from "react";
-import { useAuth, useFirestore } from "@/firebase";
+import { useEffect, useState, useMemo } from "react";
+import { useAuth, useFirestore, useDoc } from "@/firebase";
 import { doc, setDoc, serverTimestamp, type Firestore } from "firebase/firestore";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
@@ -54,6 +54,14 @@ export default function CheckoutPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user } = useAuth();
+  
+  const userProfileRef = useMemo(() => {
+      if (!firestore || !user) return null;
+      return doc(firestore, 'users', user.uid);
+  }, [firestore, user]);
+
+  const { data: userProfile } = useDoc(userProfileRef);
+
   const [customerInfo, setCustomerInfo] = useState({
     fullName: '',
     address: '',
@@ -69,6 +77,19 @@ export default function CheckoutPage() {
       router.push("/");
     }
   }, [cartItems, router]);
+
+  useEffect(() => {
+    if (user) {
+        const preferredAddress = userProfile?.shippingAddress || userProfile?.billingAddress;
+        setCustomerInfo(prev => ({
+            ...prev,
+            fullName: user.displayName || preferredAddress?.name || '',
+            email: user.email || '',
+            address: preferredAddress?.address || '',
+            mobileNumber: preferredAddress?.mobile || '',
+        }));
+    }
+  }, [user, userProfile]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
