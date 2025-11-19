@@ -8,7 +8,7 @@ export type Product = {
   category: string;
   brand: string;
   featured: boolean;
-  reviews: string[];
+  reviews: Review[];
 };
 
 export type Category = {
@@ -22,4 +22,17 @@ export type Category = {
 export type CartItem = {
   product: Product;
   quantity: number;
+};
+
+export type Review = {
+  id: string;
+  author: string;
+  date: string;
+  rating: number;
+  text: string;
+  reply?: {
+    author: string;
+    date: string;
+    text: string;
+  }
 };

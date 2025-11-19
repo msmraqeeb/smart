@@ -5,6 +5,7 @@ import { formatCurrency } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { AIRecommendations } from "@/components/ai-recommendations";
 import { AddToCartButton } from "@/components/add-to-cart-button";
+import { Reviews } from "@/components/reviews";
 
 
 export default async function ProductDetailPage({
@@ -57,14 +58,7 @@ export default async function ProductDetailPage({
       </div>
 
       <div className="mt-16">
-        <h2 className="font-headline text-3xl font-bold mb-4">Reviews</h2>
-        <div className="space-y-6">
-            {product.reviews.map((review, index) => (
-                <div key={index} className="border-l-4 border-primary pl-4">
-                    <p className="italic">"{review}"</p>
-                </div>
-            ))}
-        </div>
+        <Reviews product={product} />
       </div>
     </div>
   );

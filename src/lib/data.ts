@@ -1,4 +1,4 @@
-import type { Product, Category } from './types';
+import type { Product, Category, Review } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 
 const getImage = (id: string) => {
@@ -6,6 +6,35 @@ const getImage = (id: string) => {
   if (!image) return { imageUrl: "https://picsum.photos/seed/error/600/600", imageHint: 'placeholder' };
   return { imageUrl: image.imageUrl, imageHint: image.imageHint };
 }
+
+const reviews: Review[] = [
+    {
+      id: '1',
+      author: 'Alice',
+      date: '2024-05-20T10:00:00Z',
+      rating: 5,
+      text: 'So crisp and delicious! Best apples I\'ve had in a long time. Will definitely buy again.',
+    },
+    {
+      id: '2',
+      author: 'Bob',
+      date: '2024-05-18T14:30:00Z',
+      rating: 4,
+      text: 'Great quality apples. A bit pricey but worth it for the organic quality. Recommended.',
+       reply: {
+        author: 'GetMart',
+        date: '2024-05-19T09:00:00Z',
+        text: 'Thanks Bob! We\'re glad you enjoyed them.'
+      }
+    },
+     {
+      id: '3',
+      author: 'Charlie',
+      date: '2024-05-15T12:00:00Z',
+      rating: 3,
+      text: 'They were okay. Not as crisp as I was expecting, but still decent flavor.',
+    }
+  ];
 
 const products: Product[] = [
   {
@@ -17,7 +46,7 @@ const products: Product[] = [
     brand: 'FreshFarms',
     featured: true,
     ...getImage('organic-apples'),
-    reviews: ["So crisp and delicious!", "Best apples I've had in a long time.", "A bit pricey but worth it for the quality."],
+    reviews: reviews,
   },
   {
     id: '2',
@@ -28,7 +57,9 @@ const products: Product[] = [
     brand: 'GourmetBox',
     featured: true,
     ...getImage('avocado-toast-kit'),
-    reviews: ["Made my mornings so much easier.", "The sourdough bread is to die for.", "Great value for what you get."],
+    reviews: [
+      { id: '4', author: 'Diana', date: '2024-05-21T08:00:00Z', rating: 5, text: 'Made my mornings so much easier. The sourdough bread is to die for.' },
+    ],
   },
   {
     id: '3',
@@ -39,7 +70,9 @@ const products: Product[] = [
     brand: 'The Bakehouse',
     featured: false,
     ...getImage('sourdough-loaf'),
-    reviews: ["Amazing flavor and texture.", "Perfect for sandwiches or just with butter.", "A staple in our house now."],
+    reviews: [
+      { id: '5', author: 'Eve', date: '2024-05-22T11:00:00Z', rating: 5, text: 'Amazing flavor and texture. Perfect for sandwiches or just with butter.' },
+    ],
   },
   {
     id: '4',
@@ -50,7 +83,10 @@ const products: Product[] = [
     brand: 'HappyHen',
     featured: true,
     ...getImage('free-range-eggs'),
-    reviews: ["You can taste the difference!", "The yolks are so vibrant and orange.", "My go-to eggs for baking and breakfast."],
+    reviews: [
+      { id: '6', author: 'Frank', date: '2024-05-19T18:00:00Z', rating: 5, text: 'You can taste the difference! The yolks are so vibrant and orange.' },
+      { id: '7', author: 'Grace', date: '2024-05-17T07:45:00Z', rating: 4, text: 'My go-to eggs for baking and breakfast. Consistently good quality.' },
+    ],
   },
   {
     id: '5',
@@ -61,7 +97,7 @@ const products: Product[] = [
     brand: 'SunGardens',
     featured: false,
     ...getImage('heirloom-tomatoes'),
-    reviews: ["So beautiful and they taste even better.", "Makes the best caprese salad.", "A summer treat."],
+    reviews: [],
   },
   {
     id: '6',
@@ -72,7 +108,7 @@ const products: Product[] = [
     brand: 'BerryBest',
     featured: true,
     ...getImage('fresh-strawberries'),
-    reviews: ["Incredibly sweet and juicy.", "My kids devoured the whole punnet in minutes.", "Great quality for the price."],
+    reviews: [],
   },
   {
     id: '7',
@@ -83,7 +119,7 @@ const products: Product[] = [
     brand: 'NuttyCo',
     featured: false,
     ...getImage('almond-milk'),
-    reviews: ["Smooth and no weird aftertaste.", "My favorite for lattes.", "Good price for organic."],
+    reviews: [],
   },
   {
     id: '8',
@@ -94,7 +130,7 @@ const products: Product[] = [
     brand: 'The Bakehouse',
     featured: false,
     ...getImage('whole-wheat-baguette'),
-    reviews: ["A healthier option that doesn't compromise on taste.", "Love the nutty flavor.", "Great with soups."],
+    reviews: [],
   },
     {
     id: '9',
@@ -105,7 +141,7 @@ const products: Product[] = [
     brand: 'FreshFarms',
     featured: false,
     ...getImage('organic-bananas'),
-    reviews: ["Perfectly ripe.", "Great for smoothies.", "Good value."],
+    reviews: [],
   },
   {
     id: '10',
@@ -116,7 +152,7 @@ const products: Product[] = [
     brand: 'OlympusDairy',
     featured: false,
     ...getImage('greek-yogurt'),
-    reviews: ["So rich and creamy.", "I use it for everything from breakfast to dips.", "Best Greek yogurt out there."],
+    reviews: [],
   },
   {
     id: '11',
@@ -127,7 +163,7 @@ const products: Product[] = [
     brand: 'GreenLeaf',
     featured: false,
     ...getImage('kale-bunch'),
-    reviews: ["Very fresh and not bitter.", "Makes great kale chips.", "A huge bunch for the price."],
+    reviews: [],
   },
   {
     id: '12',
@@ -138,7 +174,7 @@ const products: Product[] = [
     brand: 'BerryBest',
     featured: false,
     ...getImage('blueberries'),
-    reviews: ["Sweet and flavorful.", "Perfect for my morning oatmeal.", "Always fresh from GetMart."],
+    reviews: [],
   },
 ];
 
