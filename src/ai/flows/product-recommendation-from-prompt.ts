@@ -19,6 +19,7 @@ const ProductRecommendationFromPromptOutputSchema = z.object({
   recommendations: z.array(
     z.object({
       productId: z.string().describe('The ID of the recommended product.'),
+      productSlug: z.string().describe('The slug of the recommended product.'),
       productName: z.string().describe('The name of the recommended product.'),
       description: z.string().describe('A short description of why this product is recommended.'),
     })
@@ -42,7 +43,7 @@ Based on this prompt, provide a list of product recommendations.  The products d
 
 Consider the user's context and preferences when making recommendations.
 
-Output the recommendations in JSON format. Each recommendation should include the product ID, product name, and a short description of why the product is recommended.
+Output the recommendations in JSON format. Each recommendation should include the product ID, product slug, product name, and a short description of why the product is recommended.
 `,
 });
 

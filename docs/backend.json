@@ -7,6 +7,7 @@
       "type": "object",
       "properties": {
         "name": { "type": "string" },
+        "slug": { "type": "string" },
         "description": { "type": "string" },
         "price": { "type": "number" },
         "category": { "type": "string" },
@@ -15,7 +16,7 @@
         "imageUrl": { "type": "string" },
         "imageHint": { "type": "string" }
       },
-      "required": ["name", "price", "category", "imageUrl"]
+      "required": ["name", "slug", "price", "category", "imageUrl"]
     },
     "Category": {
       "title": "Category",

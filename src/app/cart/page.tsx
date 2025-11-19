@@ -72,7 +72,7 @@ export default function CartPage() {
                         />
                       </TableCell>
                       <TableCell className="font-medium">
-                        <Link href={`/products/${item.product.id}`}>{item.product.name}</Link>
+                        <Link href={`/products/${item.product.slug}`}>{item.product.name}</Link>
                       </TableCell>
                       <TableCell>
                          <div className="flex items-center justify-center gap-2">

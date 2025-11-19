@@ -47,7 +47,7 @@ export default function WishlistPage() {
                                         />
                                     </TableCell>
                                     <TableCell className="font-medium">
-                                        <Link href={`/products/${product.id}`} className="hover:underline">
+                                        <Link href={`/products/${product.slug}`} className="hover:underline">
                                             {product.name}
                                         </Link>
                                     </TableCell>

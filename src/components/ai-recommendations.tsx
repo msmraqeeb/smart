@@ -102,7 +102,7 @@ export function AIRecommendations() {
                   {availableProductIds.has(rec.productId) && (
                     <div className="p-4 pt-0">
                       <Button asChild variant="outline" className="w-full">
-                         <Link href={`/products/${rec.productId}`}>View Product</Link>
+                         <Link href={`/products/${rec.productSlug}`}>View Product</Link>
                       </Button>
                     </div>
                   )}

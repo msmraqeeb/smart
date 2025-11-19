@@ -1,4 +1,3 @@
-
 import type { Product, Category, Review } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
@@ -29,6 +28,18 @@ export async function getProductById(id: string): Promise<Product | undefined> {
     }
     return undefined;
 }
+
+export async function getProductBySlug(slug: string): Promise<Product | undefined> {
+    const productsCollection = collection(firestore, 'products');
+    const q = query(productsCollection, where("slug", "==", slug));
+    const snapshot = await getDocs(q);
+    if (snapshot.empty) {
+        return undefined;
+    }
+    const doc = snapshot.docs[0];
+    return { id: doc.id, ...doc.data(), reviews: reviews } as Product;
+}
+
 
 export async function getFeaturedProducts(): Promise<Product[]> {
     const productsCollection = collection(firestore, 'products');

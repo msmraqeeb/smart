@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { getProductById } from "@/lib/data";
+import { getProductBySlug } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { AIRecommendations } from "@/components/ai-recommendations";
@@ -11,9 +11,9 @@ import { Reviews } from "@/components/reviews";
 export default async function ProductDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: { id: string, slug: string };
 }) {
-  const product = await getProductById(params.id);
+  const product = await getProductBySlug(params.slug);
 
   if (!product) {
     notFound();

@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
+  slug: z.string().min(2, "Slug must be at least 2 characters.").refine(s => !s.includes(' '), "Slug cannot contain spaces."),
   description: z.string().min(10, "Description must be at least 10 characters."),
   price: z.coerce.number().positive("Price must be a positive number."),
   category: z.string().min(1, "Please select a category."),
@@ -44,6 +45,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: product?.name || "",
+      slug: product?.slug || "",
       description: product?.description || "",
       price: product?.price || 0,
       category: product?.category || "",
@@ -53,6 +55,15 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
       imageHint: product?.imageHint || "",
     },
   });
+
+  const watchName = form.watch("name");
+
+  useEffect(() => {
+    if (watchName) {
+        const slug = watchName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
+        form.setValue('slug', slug);
+    }
+  }, [watchName, form]);
 
   return (
     <Form {...form}>
@@ -66,6 +77,20 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
               <FormControl>
                 <Input placeholder="e.g. Organic Apples" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="slug"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Slug</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g. organic-apples" {...field} />
+              </FormControl>
+              <FormDescription>This is the URL-friendly version of the name.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -195,4 +220,3 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
     </Form>
   );
 }
-
