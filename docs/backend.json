@@ -1,6 +1,34 @@
 
 {
   "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Represents a product in the store.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "category": { "type": "string" },
+        "brand": { "type": "string" },
+        "featured": { "type": "boolean" },
+        "imageUrl": { "type": "string" },
+        "imageHint": { "type": "string" }
+      },
+      "required": ["name", "price", "category", "imageUrl"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Represents a product category.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "slug": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "imageHint": { "type": "string" }
+      },
+      "required": ["name", "slug", "imageUrl"]
+    },
     "Order": {
       "title": "Order",
       "description": "Represents a customer's order.",
@@ -77,6 +105,14 @@
     "providers": ["anonymous", "email"]
   },
   "firestore": {
+    "/products/{productId}": {
+      "schema": { "$ref": "#/entities/Product" },
+      "description": "Stores individual product listings."
+    },
+    "/categories/{categoryId}": {
+      "schema": { "$ref": "#/entities/Category" },
+      "description": "Stores product categories."
+    },
     "/orders/{orderId}": {
       "schema": { "$ref": "#/entities/Order" },
       "description": "Stores individual customer orders."
