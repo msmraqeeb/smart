@@ -15,7 +15,6 @@ import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import { deleteUser as deleteAuthUser } from '@/ai/flows/delete-user';
-import { onIdTokenChanged, type User as AuthUser } from "firebase/auth";
 
 
 type User = {
@@ -44,7 +43,6 @@ function AdminUsersPage() {
     const { toast } = useToast();
     
     const [userToDelete, setUserToDelete] = React.useState<User | null>(null);
-    const [authUsers, setAuthUsers] = React.useState<AuthUser[]>([]);
     
     const ordersCollection = React.useMemo(() => {
         if (!firestore) return null;
@@ -59,11 +57,6 @@ function AdminUsersPage() {
     const { data: orders, loading: ordersLoading } = useCollection(ordersCollection);
     const { data: userProfiles, loading: usersLoading } = useCollection(usersCollection);
 
-    // This is a new listener for auth state changes.
-    // However, onAuthStateChanged only gives you the *current* user.
-    // To get all users, you need the Admin SDK, which we can't use on the client.
-    // The previous implementation was flawed. Let's create a more robust mock
-    // that combines data from auth, profiles, and orders.
     const users = React.useMemo(() => {
         if (!userProfiles || !orders) return [];
     
@@ -78,11 +71,35 @@ function AdminUsersPage() {
             role: 'Admin',
         });
 
-        // Add/update users from orders first, as they are a primary data source
+        // Add users from user profiles (this covers users who've signed up and saved an address but not ordered)
+        userProfiles.forEach((profile: any) => {
+            if (!profile.id) return;
+            const joinDate = profile.createdAt?.toDate().toLocaleDateString() || 'N/A';
+            userMap.set(profile.id, {
+                id: profile.id,
+                name: profile.billingAddress?.name || profile.shippingAddress?.name || 'N/A',
+                email: 'N/A', // Email is not in the profile, will be filled by orders
+                joinDate: joinDate,
+                role: 'Customer',
+            });
+        });
+    
+        // Add/update users from orders, as they are a primary data source for email and name
         orders.forEach((order: any) => {
             if (order.userId) {
                 const joinDate = order.createdAt?.toDate().toLocaleDateString() || 'N/A';
-                if (!userMap.has(order.userId)) {
+                const existingUser = userMap.get(order.userId);
+
+                if (existingUser) {
+                    // If user exists, update their info if it's missing
+                    if (!existingUser.name || existingUser.name === 'N/A') {
+                        existingUser.name = order.customer.fullName;
+                    }
+                    if (!existingUser.email || existingUser.email === 'N/A') {
+                        existingUser.email = order.customer.email;
+                    }
+                } else {
+                    // If user doesn't exist, create them
                      userMap.set(order.userId, {
                         id: order.userId,
                         name: order.customer.fullName,
@@ -90,36 +107,10 @@ function AdminUsersPage() {
                         joinDate: joinDate,
                         role: 'Customer',
                     });
-                } else {
-                    const existingUser = userMap.get(order.userId)!;
-                    if (!existingUser.email || existingUser.email === 'N/A') {
-                        existingUser.email = order.customer.email;
-                    }
-                     if (!existingUser.name || existingUser.name === 'N/A') {
-                        existingUser.name = order.customer.fullName;
-                    }
                 }
             }
         });
         
-        // Then, add users from profiles, filling in missing info
-        userProfiles.forEach((profile: any) => {
-            const creationTime = profile.createdAt?.toDate().toLocaleDateString() || 'N/A';
-            if (!userMap.has(profile.id)) {
-                userMap.set(profile.id, {
-                    id: profile.id,
-                    name: profile.billingAddress?.name || profile.shippingAddress?.name || 'N/A',
-                    // Email might not be in profile, this will be N/A if they haven't ordered
-                    email: 'N/A', 
-                    joinDate: creationTime,
-                    role: 'Customer',
-                });
-            }
-        });
-
-        // This is the final, permanent fix:
-        // We ensure that we are not filtering out any user that exists in our userMap,
-        // which now correctly contains users from all sources.
         return Array.from(userMap.values());
 
     }, [orders, userProfiles]);
