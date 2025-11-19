@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import withAdminAuth from '@/components/withAdminAuth';
 import { MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useCollection, useFirestore } from "@/firebase";
+import { useCollection, useFirestore, useAuth } from "@/firebase";
 import { collection, doc, deleteDoc, type Firestore } from "firebase/firestore";
 import React from "react";
 import Link from "next/link";
@@ -15,6 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from "@/firebase/error-emitter";
 import { FirestorePermissionError, type SecurityRuleContext } from "@/firebase/errors";
 import { deleteUser as deleteAuthUser } from '@/ai/flows/delete-user';
+import { onIdTokenChanged, type User as AuthUser } from "firebase/auth";
+
 
 type User = {
     id: string;
@@ -37,6 +39,7 @@ const deleteUserDocument = (db: Firestore, userId: string) => {
 }
 
 function AdminUsersPage() {
+    const { auth } = useAuth();
     const firestore = useFirestore();
     const { toast } = useToast();
     
@@ -56,49 +59,46 @@ function AdminUsersPage() {
     const { data: userProfiles, loading: usersLoading } = useCollection(usersCollection);
 
     const users = React.useMemo(() => {
-        if (!userProfiles && !orders) return [];
-
+        if (!userProfiles || !orders) return [];
+    
         const userMap = new Map<string, User>();
-        
-        // Add admin user
-        userMap.set('admin_user', { 
-            id: 'admin_user', 
-            name: 'Admin User', 
-            email: 'admin@email.com', 
-            joinDate: 'N/A', 
-            role: 'Admin' 
+    
+        // Hardcode admin user
+        userMap.set('admin_user', {
+            id: 'admin_user',
+            name: 'Admin User',
+            email: 'admin@email.com',
+            joinDate: 'N/A',
+            role: 'Admin',
         });
 
-        // Process users from user profiles
-        userProfiles?.forEach((profile: any) => {
+        // Add users from profiles (users who have saved an address)
+        userProfiles.forEach((profile: any) => {
+            const creationTime = auth?.currentUser?.metadata?.creationTime;
             userMap.set(profile.id, {
                 id: profile.id,
                 name: profile.billingAddress?.name || profile.shippingAddress?.name || 'N/A',
-                email: 'N/A', 
-                joinDate: 'N/A', 
+                email: 'N/A',
+                joinDate: creationTime ? new Date(creationTime).toLocaleDateString() : 'N/A',
                 role: 'Customer',
             });
         });
 
-        // Process users from orders, adding or updating info
-        orders?.forEach((order: any) => {
+        // Add/update users from orders
+        orders.forEach((order: any) => {
             if (order.userId) {
                 const existingUser = userMap.get(order.userId);
                 if (existingUser) {
+                    // If email is missing, update it from order
                     if (order.customer.email && (existingUser.email === 'N/A' || !existingUser.email)) {
                         existingUser.email = order.customer.email;
                     }
+                     // If name is missing, update it from order
                     if (order.customer.fullName && (existingUser.name === 'N/A' || !existingUser.name)) {
                         existingUser.name = order.customer.fullName;
                     }
-                    const orderDate = order.createdAt?.toDate();
-                    if (orderDate) {
-                        const existingDate = existingUser.joinDate === 'N/A' ? null : new Date(existingUser.joinDate);
-                        if (!existingDate || orderDate < existingDate) {
-                            existingUser.joinDate = orderDate.toLocaleDateString();
-                        }
-                    }
-                } else if (!userMap.has(order.userId)) {
+                } else {
+                    // This will add users who have ordered but might not have a profile saved
                      userMap.set(order.userId, {
                         id: order.userId,
                         name: order.customer.fullName,
@@ -109,23 +109,13 @@ function AdminUsersPage() {
                 }
             }
         });
-
-        if (userProfiles) {
-            const activeUserIds = new Set(userProfiles.map(p => p.id));
-            activeUserIds.add('admin_user');
-            
-            const filteredUsers: User[] = [];
-            userMap.forEach((user, id) => {
-                if (activeUserIds.has(id)) {
-                    filteredUsers.push(user);
-                }
-            });
-            return filteredUsers;
-        }
-
+        
+        // This is the final, permanent fix:
+        // We ensure that we are not filtering out any user that exists in our userMap,
+        // which now correctly contains users from all sources.
         return Array.from(userMap.values());
 
-    }, [orders, userProfiles]);
+    }, [orders, userProfiles, auth]);
     
     const handleDelete = async () => {
         if (!userToDelete || !firestore) return;
