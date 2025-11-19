@@ -4,12 +4,13 @@ import { ProductForm } from '../../product-form';
 import withAdminAuth from '@/components/withAdminAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirestore } from '@/firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc } from 'firebase/firestore';
 import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import type { Product } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getProductById } from '@/lib/data';
 
 function EditProductPage() {
     const firestore = useFirestore();
@@ -21,13 +22,13 @@ function EditProductPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        if (!firestore || typeof id !== 'string') return;
+        if (typeof id !== 'string') return;
         const fetchProduct = async () => {
             setLoading(true);
-            const docRef = doc(firestore, "products", id);
-            const docSnap = await getDoc(docRef);
-            if (docSnap.exists()) {
-                setProduct({ id: docSnap.id, ...docSnap.data() } as Product);
+            const fetchedProduct = await getProductById(id);
+
+            if (fetchedProduct) {
+                setProduct(fetchedProduct);
             } else {
                 toast({
                     variant: 'destructive',
@@ -38,7 +39,7 @@ function EditProductPage() {
             setLoading(false);
         };
         fetchProduct();
-    }, [firestore, id, router, toast]);
+    }, [id, router, toast]);
 
     const handleSubmit = async (data: Omit<Product, 'id' | 'reviews'>) => {
         if (!firestore || typeof id !== 'string') return;

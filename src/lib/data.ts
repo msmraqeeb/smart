@@ -18,8 +18,9 @@ export async function getProducts(): Promise<Product[]> {
 }
 
 export async function getProductById(id: string): Promise<Product | undefined> {
-    const productDoc = doc(firestore, 'products', id);
-    const snapshot = await getDoc(productDoc);
+    if (!id) return undefined;
+    const productDocRef = doc(firestore, 'products', id);
+    const snapshot = await getDoc(productDocRef);
     if (snapshot.exists()) {
         return { id: snapshot.id, ...snapshot.data(), reviews: reviews } as Product;
     }
