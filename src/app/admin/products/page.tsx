@@ -26,19 +26,7 @@ function AdminProductsPage() {
     const firestore = useFirestore();
 
     const fetchProducts = () => {
-        getProducts().then(products => {
-            // Sort products by createdAt in descending order
-            const sortedProducts = products.sort((a, b) => {
-                if (a.createdAt && b.createdAt) {
-                    // Firestore Timestamps can be compared with toMillis()
-                    const aDate = a.createdAt.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt).getTime();
-                    const bDate = b.createdAt.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt).getTime();
-                    return bDate - aDate;
-                }
-                return 0;
-            });
-            setProducts(sortedProducts);
-        });
+        getProducts().then(setProducts);
     }
 
     React.useEffect(() => {

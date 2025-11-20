@@ -1,7 +1,7 @@
 
 import type { Product, Category, Review } from './types';
 import { PlaceHolderImages } from './placeholder-images';
-import { collection, getDocs, doc, getDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, where, orderBy } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
 
 const { firestore } = initializeFirebase();
@@ -10,7 +10,8 @@ const reviews: Review[] = [];
 
 export async function getProducts(): Promise<Product[]> {
     const productsCollection = collection(firestore, 'products');
-    const snapshot = await getDocs(productsCollection);
+    const q = query(productsCollection, orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
     if (snapshot.empty) {
         return [];
     }
