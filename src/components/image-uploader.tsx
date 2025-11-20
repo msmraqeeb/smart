@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject, type UploadTask } from 'firebase/storage';
 import { useFirebaseApp } from '@/firebase';
@@ -68,10 +68,12 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
           );
         },
         (error) => {
-          console.error("Upload Error:", error);
            if (error.code === 'storage/canceled') {
+            // This is an intentional cancellation, so we don't show an error toast.
+            // The file is already removed from the `uploadingFiles` state by the `cancelUpload` function.
             return;
           }
+          console.error("Upload Error:", error);
           setUploadingFiles(prev => prev.filter(f => f.id !== fileWrapper.id));
           toast({
             variant: 'destructive',
