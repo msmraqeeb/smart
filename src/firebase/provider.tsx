@@ -11,12 +11,14 @@ import React, {
 import { FirebaseApp } from 'firebase/app';
 import { Auth, onAuthStateChanged, User } from 'firebase/auth';
 import { Firestore } from 'firebase/firestore';
+import { FirebaseStorage } from 'firebase/storage';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 
 interface FirebaseContextType {
   app: FirebaseApp | null;
   auth: Auth | null;
   firestore: Firestore | null;
+  storage: FirebaseStorage | null;
   user: User | null;
 }
 
@@ -29,6 +31,7 @@ interface FirebaseProviderProps {
   app: FirebaseApp;
   auth: Auth;
   firestore: Firestore;
+  storage: FirebaseStorage;
 }
 
 export function FirebaseProvider({
@@ -36,6 +39,7 @@ export function FirebaseProvider({
   app,
   auth,
   firestore,
+  storage,
 }: FirebaseProviderProps) {
   const [user, setUser] = useState<User | null>(null);
 
@@ -52,9 +56,10 @@ export function FirebaseProvider({
       app,
       auth,
       firestore,
+      storage,
       user,
     }),
-    [app, auth, firestore, user]
+    [app, auth, firestore, storage, user]
   );
 
   return (
@@ -84,4 +89,8 @@ export const useAuth = (): { auth: Auth | null; user: User | null } => {
 
 export const useFirestore = (): Firestore | null => {
   return useFirebase().firestore;
+};
+
+export const useStorage = (): FirebaseStorage | null => {
+    return useFirebase().storage;
 };

@@ -1,6 +1,7 @@
 import { initializeApp, getApp, getApps, FirebaseApp } from 'firebase/app';
 import { getAuth, Auth } from 'firebase/auth';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import { getStorage, FirebaseStorage } from 'firebase/storage';
 import { firebaseConfig } from './config';
 import { useCollection } from './firestore/use-collection';
 import { useDoc } from './firestore/use-doc';
@@ -10,6 +11,7 @@ import {
   useFirebaseApp,
   useAuth,
   useFirestore,
+  useStorage,
 } from './provider';
 import { FirebaseClientProvider } from './client-provider';
 
@@ -17,12 +19,14 @@ function initializeFirebase(): {
   app: FirebaseApp;
   auth: Auth;
   firestore: Firestore;
+  storage: FirebaseStorage;
 } {
   const apps = getApps();
   const app = apps.length > 0 ? getApp() : initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const firestore = getFirestore(app);
-  return { app, auth, firestore };
+  const storage = getStorage(app);
+  return { app, auth, firestore, storage };
 }
 
 export {
@@ -35,4 +39,5 @@ export {
   useFirebaseApp,
   useAuth,
   useFirestore,
+  useStorage,
 };
