@@ -42,7 +42,7 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
       return;
     }
 
-    const newUploads = acceptedFiles.map(file => {
+    const newUploads: UploadingFile[] = acceptedFiles.map(file => {
       const id = `${file.name}-${Date.now()}`;
       const storageRef = ref(storage, `${folder}/${id}-${file.name}`);
       const uploadTask = uploadBytesResumable(storageRef, file);
@@ -60,6 +60,7 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
           );
         },
         (error) => {
+          // Ignore cancelled uploads, as the user initiated it
           if (error.code !== 'storage/canceled') {
             console.error("Upload Error:", error);
             toast({
@@ -72,6 +73,7 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
           setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
         },
         () => {
+          // On successful upload, get the URL and update the form
           getDownloadURL(upload.uploadTask.snapshot.ref).then((downloadURL) => {
             onChange([...value, downloadURL]);
             // Remove from uploading list on success
@@ -92,8 +94,10 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
   const removeImage = (urlToRemove: string) => {
     if (!storage) return;
 
+    // Immediately update the form state
     onChange(value.filter(url => url !== urlToRemove));
 
+    // Attempt to delete from Firebase Storage
     try {
       const imageRef = ref(storage, urlToRemove);
       deleteObject(imageRef).then(() => {
@@ -102,10 +106,9 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
           description: 'The image has been deleted from storage.',
         });
       }).catch((error) => {
-        console.error("Error deleting file from storage:", error);
-        if (error.code === 'storage/object-not-found') {
-            // This is okay, it might have been a placeholder or manual URL
-        } else {
+        // This can happen if the URL was manually added or already deleted, which is fine.
+        console.warn("Could not delete file from storage:", error);
+        if (error.code !== 'storage/object-not-found') {
             toast({
                 variant: 'destructive',
                 title: 'Deletion Failed',
@@ -114,7 +117,8 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
         }
       });
     } catch(e) {
-      console.error("Error parsing URL for deletion:", e);
+      // This can happen if the URL is not a valid storage URL (e.g. from an external site)
+      console.warn("Error parsing URL for deletion:", e);
     }
   };
   
@@ -123,7 +127,7 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
     if (fileToCancel) {
       fileToCancel.uploadTask.cancel();
     }
-    setUploadingFiles(prev => prev.filter(f => f.id !== fileId));
+    // The error handler for the upload task will remove it from the list
   };
   
   return (
