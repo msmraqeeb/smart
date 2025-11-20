@@ -1,3 +1,4 @@
+
 'use client';
 import Link from "next/link";
 import { Leaf, Menu, ChevronDown } from "lucide-react";
@@ -13,10 +14,14 @@ import {
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import { getCategories } from "@/lib/data";
 import type { Category } from "@/lib/types";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +31,10 @@ const navLinks = [
   { href: "/account", label: "My Account" },
 ];
 
+interface CategoryWithChildren extends Category {
+    children: CategoryWithChildren[];
+}
+
 export function Header() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
@@ -34,6 +43,28 @@ export function Header() {
   useEffect(() => {
     getCategories().then(setCategories);
   }, []);
+
+  const categoryTree = useMemo(() => {
+    const categoryMap = new Map<string, CategoryWithChildren>();
+    const topLevelCategories: CategoryWithChildren[] = [];
+
+    categories.forEach(category => {
+      categoryMap.set(category.id, { ...category, children: [] });
+    });
+
+    categories.forEach(category => {
+      if (category.parentId && categoryMap.has(category.parentId)) {
+        const parent = categoryMap.get(category.parentId);
+        if (parent) {
+            parent.children.push(categoryMap.get(category.id)!);
+        }
+      } else {
+        topLevelCategories.push(categoryMap.get(category.id)!);
+      }
+    });
+
+    return topLevelCategories;
+  }, [categories]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -56,10 +87,27 @@ export function Header() {
                         <ChevronDown className="h-4 w-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        {categories.map(category => (
-                             <DropdownMenuItem key={category.id} asChild>
-                                <Link href={`/products?category=${category.slug}`}>{category.name}</Link>
-                            </DropdownMenuItem>
+                        {categoryTree.map(category => (
+                            category.children.length > 0 ? (
+                                <DropdownMenuSub key={category.id}>
+                                    <DropdownMenuSubTrigger>
+                                        <span>{category.name}</span>
+                                    </DropdownMenuSubTrigger>
+                                    <DropdownMenuPortal>
+                                        <DropdownMenuSubContent>
+                                            {category.children.map(subCategory => (
+                                                <DropdownMenuItem key={subCategory.id} asChild>
+                                                    <Link href={`/products?category=${subCategory.slug}`}>{subCategory.name}</Link>
+                                                </DropdownMenuItem>
+                                            ))}
+                                        </DropdownMenuSubContent>
+                                    </DropdownMenuPortal>
+                                </DropdownMenuSub>
+                            ) : (
+                                <DropdownMenuItem key={category.id} asChild>
+                                    <Link href={`/products?category=${category.slug}`}>{category.name}</Link>
+                                </DropdownMenuItem>
+                            )
                         ))}
                     </DropdownMenuContent>
                 </div>
