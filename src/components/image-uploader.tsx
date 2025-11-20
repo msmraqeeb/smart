@@ -44,18 +44,19 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
       return;
     }
 
-    const newFiles: UploadingFile[] = acceptedFiles.map(file => ({
+    const newFilesToUpload = acceptedFiles.map(file => ({
       id: `${file.name}-${file.lastModified}-${file.size}`,
       file,
       progress: 0,
     }));
     
-    setUploadingFiles(prev => [...prev, ...newFiles]);
+    setUploadingFiles(prev => [...prev, ...newFilesToUpload]);
 
-    newFiles.forEach(fileWrapper => {
+    newFilesToUpload.forEach(fileWrapper => {
       const storageRef = ref(storage, `${folder}/${Date.now()}-${fileWrapper.file.name}`);
       const uploadTask = uploadBytesResumable(storageRef, fileWrapper.file);
 
+       // Store the upload task in the state
        setUploadingFiles(prev => 
          prev.map(f => f.id === fileWrapper.id ? {...f, uploadTask} : f)
        );
@@ -68,13 +69,13 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
           );
         },
         (error) => {
+           // This error is triggered by uploadTask.cancel()
            if (error.code === 'storage/canceled') {
-            // This is an intentional cancellation, so we don't show an error toast.
-            // The file is already removed from the `uploadingFiles` state by the `cancelUpload` function.
-            return;
+            console.log(`Upload canceled for ${fileWrapper.file.name}`);
+            return; // Don't show error toast for intentional cancellations
           }
           console.error("Upload Error:", error);
-          setUploadingFiles(prev => prev.filter(f => f.id !== fileWrapper.id));
+           setUploadingFiles(prev => prev.filter(f => f.id !== fileWrapper.id));
           toast({
             variant: 'destructive',
             title: 'Upload Failed',
@@ -83,6 +84,7 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
         },
         () => {
           getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            // Use callback form of onChange to get the latest `value`
             onChange([...value, downloadURL]);
             setUploadingFiles(prev => prev.filter(f => f.id !== fileWrapper.id));
           });
@@ -128,9 +130,9 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
   
   const cancelUpload = (fileId: string) => {
     setUploadingFiles(prev => {
-        const fileWrapper = prev.find(f => f.id === fileId);
-        if(fileWrapper?.uploadTask){
-            fileWrapper.uploadTask.cancel();
+        const fileToCancel = prev.find(f => f.id === fileId);
+        if (fileToCancel?.uploadTask) {
+            fileToCancel.uploadTask.cancel();
         }
         return prev.filter(f => f.id !== fileId);
     });
