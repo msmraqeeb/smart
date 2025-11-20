@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -73,6 +74,32 @@ export default function ProductsPage() {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }, [searchQuery, selectedCategory, sortOrder, pathname, router]);
 
+  const hierarchicalCategories = useMemo(() => {
+    const categoryMap = new Map(categories.map(c => [c.id, { ...c, children: [] as Category[] }]));
+    const topLevelCategories: (Category & { children: Category[] })[] = [];
+
+    categories.forEach(category => {
+        if (category.parentId && categoryMap.has(category.parentId)) {
+            categoryMap.get(category.parentId)?.children.push(categoryMap.get(category.id)!);
+        } else {
+            topLevelCategories.push(categoryMap.get(category.id)!);
+        }
+    });
+
+    const flattened: { name: string; slug: string; id: string }[] = [];
+    const flatten = (cats: (Category & { children: Category[] })[], depth = 0) => {
+        cats.sort((a, b) => a.name.localeCompare(b.name));
+        for (const cat of cats) {
+            flattened.push({ ...cat, name: `${'— '.repeat(depth)}${cat.name}` });
+            if (cat.children.length > 0) {
+                flatten(cat.children, depth + 1);
+            }
+        }
+    };
+
+    flatten(topLevelCategories);
+    return flattened;
+}, [categories]);
 
   const filteredAndSortedProducts = useMemo(() => {
     let products = [...allProducts];
@@ -136,7 +163,7 @@ export default function ProductsPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
-            {categories.map(category => (
+            {hierarchicalCategories.map(category => (
                  <SelectItem key={category.id} value={category.slug}>{category.name}</SelectItem>
             ))}
           </SelectContent>
