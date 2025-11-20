@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject, type UploadTask } from 'firebase/storage';
 import { useFirebaseApp } from '@/firebase';
@@ -16,6 +16,7 @@ interface UploadingFile {
   id: string;
   file: File;
   progress: number;
+  task: UploadTask;
 }
 
 interface ImageUploaderProps {
@@ -30,7 +31,6 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
   const { toast } = useToast();
 
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
-  const uploadTasksRef = useRef<Map<string, UploadTask>>(new Map());
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!storage) {
@@ -42,48 +42,42 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
       return;
     }
 
-    const newUploads: UploadingFile[] = [];
-
-    acceptedFiles.forEach(file => {
+    const newUploads = acceptedFiles.map(file => {
       const id = `${file.name}-${Date.now()}`;
-      newUploads.push({ id, file, progress: 0 });
-
       const storageRef = ref(storage, `${folder}/${id}-${file.name}`);
-      const uploadTask = uploadBytesResumable(storageRef, file);
+      const task = uploadBytesResumable(storageRef, file);
+      return { id, file, progress: 0, task };
+    });
 
-      uploadTasksRef.current.set(id, uploadTask);
+    setUploadingFiles(prev => [...prev, ...newUploads]);
 
-      uploadTask.on('state_changed',
+    newUploads.forEach(upload => {
+      upload.task.on('state_changed',
         (snapshot) => {
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
           setUploadingFiles(prev =>
-            prev.map(f => f.id === id ? { ...f, progress } : f)
+            prev.map(f => f.id === upload.id ? { ...f, progress } : f)
           );
         },
         (error) => {
-          uploadTasksRef.current.delete(id);
-          setUploadingFiles(prev => prev.filter(f => f.id !== id));
-          
           if (error.code !== 'storage/canceled') {
             console.error("Upload Error:", error);
             toast({
               variant: 'destructive',
               title: 'Upload Failed',
-              description: `Could not upload ${file.name}.`,
+              description: `Could not upload ${upload.file.name}.`,
             });
           }
+          setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
         },
         () => {
-          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          getDownloadURL(upload.task.snapshot.ref).then((downloadURL) => {
             onChange([...urls, downloadURL]);
-            uploadTasksRef.current.delete(id);
-            setUploadingFiles(prev => prev.filter(f => f.id !== id));
+            setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
           });
         }
       );
     });
-
-    setUploadingFiles(prev => [...prev, ...newUploads]);
 
   }, [storage, folder, onChange, toast, urls]);
 
@@ -92,7 +86,7 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
     accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.gif'] },
     multiple: true
   });
-
+  
   const removeImage = (urlToRemove: string) => {
     if (!storage) return;
 
@@ -107,11 +101,7 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
         });
       }).catch((error) => {
         if (error.code !== 'storage/object-not-found') {
-            toast({
-                variant: 'destructive',
-                title: 'Deletion Failed',
-                description: 'Could not remove the image from storage. It may have already been deleted.',
-            });
+            console.warn("Error deleting from storage:", error);
         }
       });
     } catch(e) {
@@ -120,10 +110,13 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
   };
   
   const cancelUpload = (fileId: string) => {
-    const task = uploadTasksRef.current.get(fileId);
-    if (task) {
-      task.cancel();
-    }
+      setUploadingFiles(prev => {
+          const uploadToCancel = prev.find(f => f.id === fileId);
+          if (uploadToCancel) {
+              uploadToCancel.task.cancel();
+          }
+          return prev.filter(f => f.id !== fileId);
+      });
   };
   
   return (
