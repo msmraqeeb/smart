@@ -127,11 +127,13 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
   };
   
   const cancelUpload = (fileId: string) => {
-    const fileWrapper = uploadingFiles.find(f => f.id === fileId);
-    if(fileWrapper?.uploadTask){
-        fileWrapper.uploadTask.cancel();
-    }
-    setUploadingFiles(prev => prev.filter(f => f.id !== fileId));
+    setUploadingFiles(prev => {
+        const fileWrapper = prev.find(f => f.id === fileId);
+        if(fileWrapper?.uploadTask){
+            fileWrapper.uploadTask.cancel();
+        }
+        return prev.filter(f => f.id !== fileId);
+    });
   };
   
   return (
