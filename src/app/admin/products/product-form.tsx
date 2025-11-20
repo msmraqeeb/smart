@@ -14,6 +14,7 @@ import { getCategories } from "@/lib/data";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, PlusCircle } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -285,4 +286,3 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
   );
 }
 
-    
