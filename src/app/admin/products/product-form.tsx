@@ -19,6 +19,7 @@ const formSchema = z.object({
   slug: z.string().min(2, "Slug must be at least 2 characters.").refine(s => !s.includes(' '), "Slug cannot contain spaces."),
   description: z.string().min(10, "Description must be at least 10 characters."),
   price: z.coerce.number().positive("Price must be a positive number."),
+  salePrice: z.coerce.number().optional().default(0),
   category: z.string().min(1, "Please select a category."),
   brand: z.string().optional(),
   featured: z.boolean(),
@@ -48,6 +49,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
       slug: product?.slug || "",
       description: product?.description || "",
       price: product?.price || 0,
+      salePrice: product?.salePrice || undefined,
       category: product?.category || "",
       brand: product?.brand || "",
       featured: product?.featured || false,
@@ -64,10 +66,18 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
         form.setValue('slug', slug);
     }
   }, [watchName, form]);
+  
+  const handleFormSubmit = (data: ProductFormValues) => {
+    const dataToSubmit = { ...data };
+    if (!dataToSubmit.salePrice) {
+      delete (dataToSubmit as any).salePrice;
+    }
+    onSubmit(dataToSubmit);
+  };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="name"
@@ -108,7 +118,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
             </FormItem>
           )}
         />
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-3 gap-8">
             <FormField
             control={form.control}
             name="price"
@@ -118,6 +128,20 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
                 <FormControl>
                     <Input type="number" step="0.01" placeholder="99.99" {...field} />
                 </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+             <FormField
+            control={form.control}
+            name="salePrice"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Sale Price (in BDT)</FormLabel>
+                <FormControl>
+                    <Input type="number" step="0.01" placeholder="79.99" {...field} value={field.value ?? ''} />
+                </FormControl>
+                <FormDescription>Optional. If set, this will be the displayed price.</FormDescription>
                 <FormMessage />
                 </FormItem>
             )}

@@ -10,6 +10,7 @@
         "slug": { "type": "string" },
         "description": { "type": "string" },
         "price": { "type": "number" },
+        "salePrice": { "type": "number" },
         "category": { "type": "string" },
         "brand": { "type": "string" },
         "featured": { "type": "boolean" },

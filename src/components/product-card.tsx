@@ -29,6 +29,10 @@ export function ProductCard({ product }: ProductCardProps) {
       addToWishlist(product);
     }
   };
+  
+  const hasSalePrice = product.salePrice && product.salePrice > 0;
+  const displayPrice = hasSalePrice ? product.salePrice : product.price;
+
 
   return (
     <Card className="flex h-full flex-col overflow-hidden transition-all hover:shadow-lg">
@@ -52,6 +56,11 @@ export function ProductCard({ product }: ProductCardProps) {
           <Heart className={cn("h-4 w-4", isInWishlist ? "text-red-500 fill-red-500" : "text-muted-foreground")} />
           <span className="sr-only">Add to wishlist</span>
         </Button>
+        {hasSalePrice && (
+            <div className="absolute top-2 left-2 bg-destructive text-destructive-foreground px-2 py-1 text-xs font-bold rounded-md">
+                SALE
+            </div>
+        )}
       </CardHeader>
       <CardContent className="flex-1 p-4">
         <CardTitle className="font-headline text-lg">
@@ -61,7 +70,12 @@ export function ProductCard({ product }: ProductCardProps) {
       </CardContent>
       <CardFooter className="p-4 pt-0">
         <div className="flex w-full items-center justify-between">
-          <p className="text-lg font-semibold">{formatCurrency(product.price)}</p>
+          <div className="flex items-baseline gap-2">
+            <p className="text-lg font-semibold text-primary">{formatCurrency(displayPrice!)}</p>
+            {hasSalePrice && (
+                <p className="text-sm font-medium text-muted-foreground line-through">{formatCurrency(product.price)}</p>
+            )}
+          </div>
           <Button size="sm" onClick={() => addToCart(product, 1)}>
             <ShoppingCart className="mr-2 h-4 w-4" />
             Add to Cart
