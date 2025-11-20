@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject, type UploadTask } from 'firebase/storage';
 import { useFirebaseApp } from '@/firebase';
@@ -12,12 +12,11 @@ import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-type UploadingFile = {
-  id: string; // Unique ID for each upload
+interface UploadingFile {
+  id: string;
   file: File;
   progress: number;
-  uploadTask: UploadTask;
-};
+}
 
 interface ImageUploaderProps {
   value: string[];
@@ -25,13 +24,14 @@ interface ImageUploaderProps {
   folder?: string;
 }
 
-export function ImageUploader({ value, onChange, folder = 'products' }: ImageUploaderProps) {
+export function ImageUploader({ value: urls, onChange, folder = 'products' }: ImageUploaderProps) {
   const app = useFirebaseApp();
   const storage = app ? getStorage(app) : null;
   const { toast } = useToast();
 
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
-  
+  const uploadTasksRef = useRef<Map<string, UploadTask>>(new Map());
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!storage) {
       toast({
@@ -42,49 +42,50 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
       return;
     }
 
-    const newUploads = acceptedFiles.map(file => {
+    const newUploads: UploadingFile[] = [];
+
+    acceptedFiles.forEach(file => {
       const id = `${file.name}-${Date.now()}`;
+      newUploads.push({ id, file, progress: 0 });
+
       const storageRef = ref(storage, `${folder}/${id}-${file.name}`);
       const uploadTask = uploadBytesResumable(storageRef, file);
-      
-      return { id, file, progress: 0, uploadTask };
-    });
 
-    setUploadingFiles(prev => [...prev, ...newUploads]);
+      uploadTasksRef.current.set(id, uploadTask);
 
-    newUploads.forEach(upload => {
-      upload.uploadTask.on('state_changed',
+      uploadTask.on('state_changed',
         (snapshot) => {
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadingFiles(prev => 
-            prev.map(f => f.id === upload.id ? { ...f, progress } : f)
+          setUploadingFiles(prev =>
+            prev.map(f => f.id === id ? { ...f, progress } : f)
           );
         },
         (error) => {
-          // Ignore cancelled uploads, as the user initiated it
+          uploadTasksRef.current.delete(id);
+          setUploadingFiles(prev => prev.filter(f => f.id !== id));
+          
           if (error.code !== 'storage/canceled') {
             console.error("Upload Error:", error);
             toast({
               variant: 'destructive',
               title: 'Upload Failed',
-              description: `Could not upload ${upload.file.name}.`,
+              description: `Could not upload ${file.name}.`,
             });
           }
-          // Remove from uploading list on error or cancel
-          setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
         },
         () => {
-          // On successful upload, get the URL and update the form
-          getDownloadURL(upload.uploadTask.snapshot.ref).then((downloadURL) => {
-            onChange([...value, downloadURL]);
-            // Remove from uploading list on success
-            setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            onChange([...urls, downloadURL]);
+            uploadTasksRef.current.delete(id);
+            setUploadingFiles(prev => prev.filter(f => f.id !== id));
           });
         }
       );
     });
 
-  }, [storage, folder, onChange, toast, value]);
+    setUploadingFiles(prev => [...prev, ...newUploads]);
+
+  }, [storage, folder, onChange, toast, urls]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -95,10 +96,8 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
   const removeImage = (urlToRemove: string) => {
     if (!storage) return;
 
-    // Immediately update the form state
-    onChange(value.filter(url => url !== urlToRemove));
+    onChange(urls.filter(url => url !== urlToRemove));
 
-    // Attempt to delete from Firebase Storage
     try {
       const imageRef = ref(storage, urlToRemove);
       deleteObject(imageRef).then(() => {
@@ -107,8 +106,6 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
           description: 'The image has been deleted from storage.',
         });
       }).catch((error) => {
-        // This can happen if the URL was manually added or already deleted, which is fine.
-        console.warn("Could not delete file from storage:", error);
         if (error.code !== 'storage/object-not-found') {
             toast({
                 variant: 'destructive',
@@ -118,17 +115,15 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
         }
       });
     } catch(e) {
-      // This can happen if the URL is not a valid storage URL (e.g. from an external site)
       console.warn("Error parsing URL for deletion:", e);
     }
   };
   
   const cancelUpload = (fileId: string) => {
-    const fileToCancel = uploadingFiles.find(f => f.id === fileId);
-    if (fileToCancel) {
-      fileToCancel.uploadTask.cancel();
+    const task = uploadTasksRef.current.get(fileId);
+    if (task) {
+      task.cancel();
     }
-    // The error handler for the upload task will remove it from the list
   };
   
   return (
@@ -148,9 +143,9 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
         </div>
       </div>
       
-       {(value.length > 0 || uploadingFiles.length > 0) && (
+       {(urls.length > 0 || uploadingFiles.length > 0) && (
          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {value.map((url, index) => (
+            {urls.map((url, index) => (
                 <div key={url} className="relative aspect-square">
                     <Image src={url} alt={`Uploaded image ${index + 1}`} fill sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw" className="rounded-md object-cover" />
                      <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => removeImage(url)}>
