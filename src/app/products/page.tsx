@@ -26,9 +26,14 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
-  const [sortOrder, setSortOrder] = useState(searchParams.get('sort') || 'featured');
+  // Get filter values from URL params
+  const initialCategory = searchParams.get('category') || 'all';
+  const initialSearch = searchParams.get('q') || '';
+  const initialSort = searchParams.get('sort') || 'featured';
+
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
+  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
+  const [sortOrder, setSortOrder] = useState(initialSort);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -44,26 +49,29 @@ export default function ProductsPage() {
     fetchInitialData();
   }, []);
 
+  // Effect to update local state when URL params change
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
+    setSelectedCategory(searchParams.get('category') || 'all');
+    setSearchQuery(searchParams.get('q') || '');
+    setSortOrder(searchParams.get('sort') || 'featured');
+  }, [searchParams]);
+
+  // Effect to update URL when local state changes
+  useEffect(() => {
+    const params = new URLSearchParams();
     if (searchQuery) {
       params.set('q', searchQuery);
-    } else {
-      params.delete('q');
     }
     if (selectedCategory !== 'all') {
       params.set('category', selectedCategory);
-    } else {
-      params.delete('category');
     }
     if (sortOrder !== 'featured') {
         params.set('sort', sortOrder);
-    } else {
-        params.delete('sort');
     }
     
+    // Using router.replace to avoid adding to browser history for filters
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [searchQuery, selectedCategory, sortOrder, pathname, router, searchParams]);
+  }, [searchQuery, selectedCategory, sortOrder, pathname, router]);
 
 
   const filteredAndSortedProducts = useMemo(() => {
@@ -78,7 +86,7 @@ export default function ProductsPage() {
     if (searchQuery) {
       products = products.filter(p =>
         p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
         p.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
