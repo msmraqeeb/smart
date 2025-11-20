@@ -38,7 +38,7 @@ export function CategoryForm({ category, onSubmit }: CategoryFormProps) {
       slug: category?.slug || "",
       imageUrl: category?.imageUrl || "",
       imageHint: category?.imageHint || "",
-      parentId: category?.parentId || "",
+      parentId: category?.parentId || "none",
     },
   });
 
@@ -55,11 +55,19 @@ export function CategoryForm({ category, onSubmit }: CategoryFormProps) {
     }
   }, [watchName, form]);
 
+  const handleFormSubmit = (data: CategoryFormValues) => {
+    const dataToSubmit = { ...data };
+    if (dataToSubmit.parentId === 'none') {
+      dataToSubmit.parentId = '';
+    }
+    onSubmit(dataToSubmit);
+  };
+
   const possibleParents = categories.filter(c => c.id !== category?.id);
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="name"
@@ -93,14 +101,14 @@ export function CategoryForm({ category, onSubmit }: CategoryFormProps) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Parent Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                <Select onValueChange={field.onChange} defaultValue={field.value || "none"}>
                     <FormControl>
                         <SelectTrigger>
                             <SelectValue placeholder="Select a parent category (optional)" />
                         </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                        <SelectItem value="">None (Top-Level Category)</SelectItem>
+                        <SelectItem value="none">None (Top-Level Category)</SelectItem>
                         {possibleParents.map(cat => (
                             <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                         ))}

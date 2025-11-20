@@ -45,7 +45,9 @@ function EditCategoryPage() {
         
         const dataToUpdate: Partial<Category> = { ...data };
         if (!data.parentId) {
-            dataToUpdate.parentId = ''; // Or delete it, depending on desired db state
+            // Firestore doesn't like undefined, so we either delete the field
+            // or set it to a consistent empty value like null or an empty string.
+            delete (dataToUpdate as any).parentId; 
         }
         
         try {
