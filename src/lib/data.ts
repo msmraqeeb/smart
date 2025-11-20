@@ -10,8 +10,7 @@ const reviews: Review[] = [];
 
 export async function getProducts(): Promise<Product[]> {
     const productsCollection = collection(firestore, 'products');
-    const q = query(productsCollection, orderBy('createdAt', 'desc'));
-    const snapshot = await getDocs(q);
+    const snapshot = await getDocs(productsCollection);
     if (snapshot.empty) {
         return [];
     }
