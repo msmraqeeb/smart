@@ -31,6 +31,9 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
   const storage = app ? getStorage(app) : null;
   const { toast } = useToast();
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
+  
+  // Use a ref to hold the tasks to avoid issues with stale state in callbacks
+  const uploadTasksRef = useRef<Map<string, UploadTask>>(new Map());
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!storage) {
@@ -46,6 +49,8 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
       const id = `${file.name}-${Date.now()}`;
       const storageRef = ref(storage, `${folder}/${id}-${file.name}`);
       const task = uploadBytesResumable(storageRef, file);
+      
+      uploadTasksRef.current.set(id, task);
       
       return { id, file, progress: 0, task, source: 'local' as const };
     });
@@ -67,14 +72,14 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
               description: `Could not upload ${upload.file.name}.`,
             });
           }
-          // Remove from uploading list on error
           setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
+          uploadTasksRef.current.delete(upload.id);
         },
         () => {
           getDownloadURL(upload.task.snapshot.ref).then((downloadURL) => {
             onChange([...urls, downloadURL]);
-            // Remove from uploading list on success
             setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
+            uploadTasksRef.current.delete(upload.id);
           });
         }
       );
@@ -84,7 +89,7 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.gif'] },
+    accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp'] },
     multiple: true
   });
   
@@ -92,6 +97,11 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
     if (!storage) return;
 
     onChange(urls.filter(url => url !== urlToRemove));
+
+    // Do not delete from storage if it's not a Firebase URL
+    if (!urlToRemove.includes('firebasestorage.googleapis.com')) {
+      return;
+    }
 
     try {
       const imageRef = ref(storage, urlToRemove);
@@ -101,24 +111,22 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
           description: 'The image has been deleted from storage.',
         });
       }).catch((error) => {
-        // It's okay if the object doesn't exist (e.g., if it was a URL added manually)
         if (error.code !== 'storage/object-not-found') {
             console.warn("Could not delete from storage:", error);
         }
       });
     } catch(e) {
-      // This can happen if the URL is not a valid storage URL
       console.warn("Error parsing URL for deletion:", e);
     }
   };
 
-  const cancelUpload = (upload: UploadingFile) => {
-    upload.task.cancel();
-    setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
-    toast({
-        title: 'Upload Canceled',
-        description: `Upload of ${upload.file.name} was canceled.`,
-    });
+  const cancelUpload = (uploadId: string) => {
+    const task = uploadTasksRef.current.get(uploadId);
+    if (task) {
+      task.cancel();
+      uploadTasksRef.current.delete(uploadId);
+    }
+    setUploadingFiles(prev => prev.filter(f => f.id !== uploadId));
   }
   
   return (
@@ -132,7 +140,7 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
             ) : (
                 <>
                     <p className="text-lg font-semibold">Drag & drop images here, or click to select</p>
-                    <p className="text-sm">Supports JPEG, PNG, GIF</p>
+                    <p className="text-sm">Supports JPEG, PNG, GIF, WebP</p>
                 </>
             )}
         </div>
@@ -155,7 +163,7 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
                     <p className="text-xs text-muted-foreground mt-2 truncate w-full text-center">{upload.file.name}</p>
                     <Progress value={upload.progress} className="h-2 mt-2 w-full" />
                 </div>
-                 <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => cancelUpload(upload)}>
+                 <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => cancelUpload(upload.id)}>
                     <X className="h-4 w-4" />
                  </Button>
             </div>

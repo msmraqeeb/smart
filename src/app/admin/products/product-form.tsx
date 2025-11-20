@@ -63,6 +63,13 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
   });
 
   const watchName = form.watch("name");
+  const watchImageUrls = form.watch("imageUrls");
+
+  useEffect(() => {
+    if (watchImageUrls.length > 0) {
+      form.clearErrors("imageUrls");
+    }
+  }, [watchImageUrls, form]);
 
   useEffect(() => {
     if (watchName && !form.getValues('slug')) {
@@ -73,10 +80,9 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
 
   const handleAddImageUrl = () => {
     try {
-      // Use Zod to validate the single URL
       z.string().url("Invalid URL format.").parse(imageUrlInput);
       const currentUrls = form.getValues('imageUrls');
-      form.setValue('imageUrls', [...currentUrls, imageUrlInput]);
+      form.setValue('imageUrls', [...currentUrls, imageUrlInput], { shouldValidate: true });
       setImageUrlInput('');
       toast({
         title: 'Image URL added',
