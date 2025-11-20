@@ -69,14 +69,14 @@ export function ProductCard({ product }: ProductCardProps) {
         <p className="mt-2 text-sm text-muted-foreground">{product.brand}</p>
       </CardContent>
       <CardFooter className="p-4 pt-0">
-        <div className="flex w-full items-center justify-between">
+        <div className="flex w-full flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <div className="flex items-baseline gap-2">
             <p className="text-lg font-semibold text-primary">{formatCurrency(displayPrice!)}</p>
             {hasSalePrice && (
                 <p className="text-sm font-medium text-muted-foreground line-through">{formatCurrency(product.price)}</p>
             )}
           </div>
-          <Button size="sm" onClick={() => addToCart(product, 1)}>
+          <Button size="sm" onClick={() => addToCart(product, 1)} className="w-full sm:w-auto">
             <ShoppingCart className="mr-2 h-4 w-4" />
             Add to Cart
           </Button>
