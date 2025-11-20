@@ -28,15 +28,9 @@ function AdminProductsPage() {
     const fetchProducts = () => {
         getProducts().then(products => {
             const sorted = products.sort((a, b) => {
-                if (a.createdAt && b.createdAt) {
-                    // Firestore Timestamps can be compared with toMillis()
-                    return b.createdAt.toMillis() - a.createdAt.toMillis();
-                }
-                // If one doesn't have createdAt, keep original order relative to each other
-                // but sort ones with createdAt to the top.
-                if (a.createdAt) return -1;
-                if (b.createdAt) return 1;
-                return 0;
+                const aTime = a.createdAt?.toMillis() || 0;
+                const bTime = b.createdAt?.toMillis() || 0;
+                return bTime - aTime;
             });
             setProducts(sorted);
         });
