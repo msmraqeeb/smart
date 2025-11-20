@@ -23,17 +23,17 @@ export default async function ProductDetailPage({
   
   const hasSalePrice = product.salePrice && product.salePrice > 0;
   const displayPrice = hasSalePrice ? product.salePrice : product.price;
+  const primaryImageUrl = product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : product.imageUrl;
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid md:grid-cols-2 gap-8 lg:gap-16">
         <div className="relative">
           <Image
-            src={product.imageUrl}
+            src={primaryImageUrl}
             alt={product.name}
             width={600}
             height={600}
-            data-ai-hint={product.imageHint}
             className="rounded-lg object-cover w-full aspect-square shadow-lg"
           />
            {hasSalePrice && (
@@ -80,3 +80,5 @@ export default async function ProductDetailPage({
     </div>
   );
 }
+
+    

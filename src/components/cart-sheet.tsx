@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -48,11 +49,10 @@ export function CartSheet() {
                 {cartItems.map((item) => (
                   <div key={item.product.id} className="flex items-start gap-4">
                     <Image
-                      src={item.product.imageUrl}
+                      src={item.product.imageUrls?.[0] || item.product.imageUrl}
                       alt={item.product.name}
                       width={64}
                       height={64}
-                      data-ai-hint={item.product.imageHint}
                       className="rounded-md object-cover"
                     />
                     <div className="flex-1">
@@ -104,3 +104,5 @@ export function CartSheet() {
     </Sheet>
   );
 }
+
+    

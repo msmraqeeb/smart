@@ -106,7 +106,7 @@ function AdminProductsPage() {
                                 <TableRow key={product.id}>
                                     <TableCell>
                                         <Image 
-                                            src={product.imageUrl}
+                                            src={product.imageUrls?.[0] || product.imageUrl}
                                             alt={product.name}
                                             width={40}
                                             height={40}
@@ -148,3 +148,5 @@ function AdminProductsPage() {
 }
 
 export default withAdminAuth(AdminProductsPage);
+
+    

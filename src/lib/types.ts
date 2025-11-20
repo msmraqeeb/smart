@@ -6,7 +6,8 @@ export type Product = {
   description: string;
   price: number;
   salePrice?: number;
-  imageUrl: string;
+  imageUrl: string; // DEPRECATED: use imageUrls
+  imageUrls: string[];
   imageHint: string;
   category: string;
   brand?: string;
@@ -42,3 +43,5 @@ export type Review = {
     text: string;
   }
 };
+
+    

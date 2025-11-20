@@ -41,10 +41,10 @@ function EditProductPage() {
         fetchProduct();
     }, [id, router, toast]);
 
-    const handleSubmit = async (data: Omit<Product, 'id' | 'reviews'>) => {
+    const handleSubmit = async (data: Omit<Product, 'id' | 'reviews' | 'imageUrl' | 'imageHint'> & {imageUrls: string[]}) => {
         if (!firestore || typeof id !== 'string') return;
         try {
-            await updateDoc(doc(firestore, "products", id), data);
+            await updateDoc(doc(firestore, "products", id), data as any);
             toast({
                 title: "Product Updated",
                 description: `Product "${data.name}" has been successfully updated.`,
@@ -94,3 +94,5 @@ function EditProductPage() {
 }
 
 export default withAdminAuth(EditProductPage);
+
+    

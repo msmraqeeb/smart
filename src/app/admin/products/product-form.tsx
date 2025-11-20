@@ -1,6 +1,6 @@
 
 'use client';
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import type { Product, Category } from "@/lib/types";
 import { getCategories } from "@/lib/data";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { Trash2, PlusCircle } from "lucide-react";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -23,15 +24,14 @@ const formSchema = z.object({
   category: z.string().min(1, "Please select a category."),
   brand: z.string().optional(),
   featured: z.boolean(),
-  imageUrl: z.string().url("Please enter a valid URL."),
-  imageHint: z.string().optional(),
+  imageUrls: z.array(z.object({ value: z.string().url("Please enter a valid URL.") })).min(1, "At least one image URL is required."),
 });
 
 type ProductFormValues = z.infer<typeof formSchema>;
 
 interface ProductFormProps {
   product?: Product;
-  onSubmit: (data: ProductFormValues) => void;
+  onSubmit: (data: Omit<Product, 'id' | 'reviews' | 'imageUrl' | 'imageHint'> & {imageUrls: string[]}) => void;
 }
 
 export function ProductForm({ product, onSubmit }: ProductFormProps) {
@@ -53,9 +53,13 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
       category: product?.category || "",
       brand: product?.brand || "",
       featured: product?.featured || false,
-      imageUrl: product?.imageUrl || "",
-      imageHint: product?.imageHint || "",
+      imageUrls: product?.imageUrls?.map(url => ({ value: url })) || [{ value: "" }],
     },
+  });
+  
+  const { fields, append, remove } = useFieldArray({
+    control: form.control,
+    name: "imageUrls"
   });
 
   const watchName = form.watch("name");
@@ -68,9 +72,9 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
   }, [watchName, form]);
   
   const handleFormSubmit = (data: ProductFormValues) => {
-    const dataToSubmit = { ...data };
+    const dataToSubmit: any = { ...data, imageUrls: data.imageUrls.map(url => url.value) };
     if (!dataToSubmit.salePrice) {
-      delete (dataToSubmit as any).salePrice;
+      delete dataToSubmit.salePrice;
     }
     onSubmit(dataToSubmit);
   };
@@ -209,35 +213,44 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
             </FormItem>
           )}
         />
-         <div className="grid md:grid-cols-2 gap-8">
-            <FormField
-            control={form.control}
-            name="imageUrl"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Image URL</FormLabel>
-                <FormControl>
-                    <Input type="url" placeholder="https://..." {...field} />
-                </FormControl>
-                <FormDescription>Link to the product image.</FormDescription>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
-             <FormField
-            control={form.control}
-            name="imageHint"
-            render={({ field }) => (
-                <FormItem>
-                <FormLabel>Image AI Hint</FormLabel>
-                <FormControl>
-                    <Input placeholder="e.g. fresh apples" {...field} />
-                </FormControl>
-                <FormDescription>Keywords for AI image search (max 2 words).</FormDescription>
-                <FormMessage />
-                </FormItem>
-            )}
-            />
+         <div>
+            <Label>Product Image URLs</Label>
+            <div className="space-y-4 mt-2">
+                 {fields.map((field, index) => (
+                    <FormField
+                    key={field.id}
+                    control={form.control}
+                    name={`imageUrls.${index}.value`}
+                    render={({ field }) => (
+                        <FormItem>
+                            <div className="flex items-center gap-2">
+                                <FormControl>
+                                    <Input type="url" placeholder="https://..." {...field} />
+                                </FormControl>
+                                {fields.length > 1 && (
+                                    <Button type="button" variant="destructive" size="icon" onClick={() => remove(index)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </div>
+                            <FormDescription>
+                                {index === 0 ? "This is the primary product image." : `Additional image ${index + 1}.`}
+                            </FormDescription>
+                             <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                ))}
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => append({ value: "" })}
+                >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Image URL
+                </Button>
+            </div>
         </div>
         <FormField
             control={form.control}
@@ -271,3 +284,5 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
     </Form>
   );
 }
+
+    

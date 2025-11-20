@@ -57,3 +57,5 @@ export async function getCategories(): Promise<Category[]> {
     }
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
 }
+
+    

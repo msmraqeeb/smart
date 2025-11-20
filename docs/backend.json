@@ -14,10 +14,9 @@
         "category": { "type": "string" },
         "brand": { "type": "string" },
         "featured": { "type": "boolean" },
-        "imageUrl": { "type": "string" },
-        "imageHint": { "type": "string" }
+        "imageUrls": { "type": "array", "items": { "type": "string" } }
       },
-      "required": ["name", "slug", "price", "category", "imageUrl"]
+      "required": ["name", "slug", "price", "category", "imageUrls"]
     },
     "Category": {
       "title": "Category",
@@ -126,3 +125,5 @@
     }
   }
 }
+
+    

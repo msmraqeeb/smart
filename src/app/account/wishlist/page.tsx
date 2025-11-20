@@ -38,11 +38,10 @@ export default function WishlistPage() {
                                 <TableRow key={product.id}>
                                     <TableCell className="hidden md:table-cell">
                                         <Image
-                                            src={product.imageUrl}
+                                            src={product.imageUrls?.[0] || product.imageUrl}
                                             alt={product.name}
                                             width={64}
                                             height={64}
-                                            data-ai-hint={product.imageHint}
                                             className="rounded-md object-cover"
                                         />
                                     </TableCell>
@@ -89,3 +88,5 @@ export default function WishlistPage() {
         </Card>
     );
 }
+
+    

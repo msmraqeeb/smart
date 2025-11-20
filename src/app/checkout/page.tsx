@@ -254,7 +254,7 @@ export default function CheckoutPage() {
                     {cartItems.map(item => (
                         <div key={item.product.id} className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
-                                <Image src={item.product.imageUrl} alt={item.product.name} width={48} height={48} className="rounded-md" />
+                                <Image src={item.product.imageUrls?.[0] || item.product.imageUrl} alt={item.product.name} width={48} height={48} className="rounded-md" />
                                 <div>
                                     <p className="font-medium">{item.product.name}</p>
                                     <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
@@ -287,3 +287,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
+    

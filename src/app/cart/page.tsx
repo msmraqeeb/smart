@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -63,11 +64,10 @@ export default function CartPage() {
                     <TableRow key={item.product.id}>
                       <TableCell className="hidden md:table-cell">
                         <Image
-                          src={item.product.imageUrl}
+                          src={item.product.imageUrls?.[0] || item.product.imageUrl}
                           alt={item.product.name}
                           width={64}
                           height={64}
-                          data-ai-hint={item.product.imageHint}
                           className="rounded-md object-cover"
                         />
                       </TableCell>
@@ -138,3 +138,5 @@ export default function CartPage() {
     </div>
   );
 }
+
+    

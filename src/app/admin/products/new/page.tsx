@@ -15,7 +15,7 @@ function NewProductPage() {
     const router = useRouter();
     const { toast } = useToast();
 
-    const handleSubmit = async (data: Omit<Product, 'id' | 'reviews'>) => {
+    const handleSubmit = async (data: Omit<Product, 'id' | 'reviews' | 'imageUrl' | 'imageHint'> & {imageUrls: string[]}) => {
         if (!firestore) return;
         try {
             const docRef = await addDoc(collection(firestore, "products"), {
@@ -53,3 +53,5 @@ function NewProductPage() {
 }
 
 export default withAdminAuth(NewProductPage);
+
+    

@@ -33,17 +33,18 @@ export function ProductCard({ product }: ProductCardProps) {
   const hasSalePrice = product.salePrice && product.salePrice > 0;
   const displayPrice = hasSalePrice ? product.salePrice : product.price;
 
+  const primaryImageUrl = product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : product.imageUrl;
+
 
   return (
     <Card className="flex h-full flex-col overflow-hidden transition-all hover:shadow-lg">
       <CardHeader className="p-0 relative">
         <Link href={`/products/${product.slug}`} className="block">
           <Image
-            src={product.imageUrl}
+            src={primaryImageUrl}
             alt={product.name}
             width={400}
             height={400}
-            data-ai-hint={product.imageHint}
             className="aspect-square w-full object-cover"
           />
         </Link>
@@ -85,3 +86,5 @@ export function ProductCard({ product }: ProductCardProps) {
     </Card>
   );
 }
+
+    
