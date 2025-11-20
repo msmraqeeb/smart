@@ -19,6 +19,7 @@ export type Category = {
   slug: string;
   imageUrl: string;
   imageHint: string;
+  parentId?: string;
 };
 
 export type CartItem = {

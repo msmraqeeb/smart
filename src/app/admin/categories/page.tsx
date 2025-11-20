@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getCategories } from '@/lib/data';
 import type { Category } from '@/lib/types';
 import withAdminAuth from '@/components/withAdminAuth';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useFirestore } from '@/firebase';
@@ -51,6 +51,33 @@ function AdminCategoriesPage() {
         }
     };
 
+    const sortedCategories = useMemo(() => {
+        const categoryMap = new Map(categories.map(c => [c.id, { ...c, children: [] as Category[] }]));
+        const topLevelCategories: (Category & { children: Category[] })[] = [];
+
+        categories.forEach(category => {
+            if (category.parentId && categoryMap.has(category.parentId)) {
+                categoryMap.get(category.parentId)?.children.push(categoryMap.get(category.id)!);
+            } else {
+                topLevelCategories.push(categoryMap.get(category.id)!);
+            }
+        });
+
+        const flattened: Category[] = [];
+        const flatten = (cats: (Category & { children: Category[] })[], depth = 0) => {
+            cats.sort((a, b) => a.name.localeCompare(b.name));
+            for (const cat of cats) {
+                flattened.push({ ...cat, name: `${'— '.repeat(depth)}${cat.name}` });
+                if (cat.children.length > 0) {
+                    flatten(cat.children, depth + 1);
+                }
+            }
+        };
+
+        flatten(topLevelCategories);
+        return flattened;
+    }, [categories]);
+
 
     return (
         <div className="container mx-auto px-4 py-8">
@@ -60,7 +87,7 @@ function AdminCategoriesPage() {
                         <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
                         <AlertDialogDescription>
                             This action cannot be undone. This will permanently delete the category
-                            "{categoryToDelete?.name}".
+                            "{categoryToDelete?.name}". This may also affect products within this category.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -85,14 +112,13 @@ function AdminCategoriesPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[100px]">Image</TableHead>
-                                <TableHead>ID</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Slug</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {categories.map(category => (
+                            {sortedCategories.map(category => (
                                 <TableRow key={category.id}>
                                     <TableCell>
                                         <Image
@@ -100,10 +126,10 @@ function AdminCategoriesPage() {
                                             alt={category.name}
                                             width={40}
                                             height={40}
+                                            data-ai-hint={category.imageHint}
                                             className="rounded-md object-cover"
                                         />
                                     </TableCell>
-                                    <TableCell className="font-medium">{category.id.substring(0, 8)}</TableCell>
                                     <TableCell>{category.name}</TableCell>
                                     <TableCell>{category.slug}</TableCell>
                                     <TableCell className="text-right">

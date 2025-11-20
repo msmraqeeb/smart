@@ -42,8 +42,16 @@ function EditCategoryPage() {
 
     const handleSubmit = async (data: Omit<Category, 'id'>) => {
         if (!firestore || typeof id !== 'string') return;
+        
+        const dataToUpdate: Partial<Category> = { ...data };
+        if (!data.parentId) {
+            dataToUpdate.parentId = ''; // Or delete it, depending on desired db state
+        }
+        
         try {
-            await updateDoc(doc(firestore, "categories", id), data);
+            await updateDoc(doc(firestore, "categories", id), {
+                ...dataToUpdate
+            });
             toast({
                 title: "Category Updated",
                 description: `Category "${data.name}" has been successfully updated.`,

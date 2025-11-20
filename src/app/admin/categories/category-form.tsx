@@ -8,13 +8,16 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/ui/input";
 import type { Category } from "@/lib/types";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { getCategories } from "@/lib/data";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   slug: z.string().min(2, "Slug must be at least 2 characters.").refine(s => !s.includes(' '), "Slug cannot contain spaces."),
   imageUrl: z.string().url("Please enter a valid URL."),
   imageHint: z.string().optional(),
+  parentId: z.string().optional(),
 });
 
 type CategoryFormValues = z.infer<typeof formSchema>;
@@ -26,6 +29,7 @@ interface CategoryFormProps {
 
 export function CategoryForm({ category, onSubmit }: CategoryFormProps) {
   const router = useRouter();
+  const [categories, setCategories] = useState<Category[]>([]);
   
   const form = useForm<CategoryFormValues>({
     resolver: zodResolver(formSchema),
@@ -34,8 +38,13 @@ export function CategoryForm({ category, onSubmit }: CategoryFormProps) {
       slug: category?.slug || "",
       imageUrl: category?.imageUrl || "",
       imageHint: category?.imageHint || "",
+      parentId: category?.parentId || "",
     },
   });
+
+  useEffect(() => {
+    getCategories().then(setCategories);
+  }, []);
 
   const watchName = form.watch("name");
 
@@ -45,6 +54,8 @@ export function CategoryForm({ category, onSubmit }: CategoryFormProps) {
         form.setValue('slug', slug);
     }
   }, [watchName, form]);
+
+  const possibleParents = categories.filter(c => c.id !== category?.id);
 
   return (
     <Form {...form}>
@@ -72,6 +83,30 @@ export function CategoryForm({ category, onSubmit }: CategoryFormProps) {
                 <Input placeholder="e.g. fresh-vegetables" {...field} />
               </FormControl>
               <FormDescription>This is the URL-friendly version of the name.</FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="parentId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Parent Category</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value || ""}>
+                    <FormControl>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select a parent category (optional)" />
+                        </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                        <SelectItem value="">None (Top-Level Category)</SelectItem>
+                        {possibleParents.map(cat => (
+                            <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+              <FormDescription>Assign this to a parent to create a sub-category.</FormDescription>
               <FormMessage />
             </FormItem>
           )}

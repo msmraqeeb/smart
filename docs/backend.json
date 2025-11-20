@@ -26,7 +26,8 @@
         "name": { "type": "string" },
         "slug": { "type": "string" },
         "imageUrl": { "type": "string" },
-        "imageHint": { "type": "string" }
+        "imageHint": { "type": "string" },
+        "parentId": { "type": "string", "description": "The ID of the parent category, if it's a sub-category." }
       },
       "required": ["name", "slug", "imageUrl"]
     },

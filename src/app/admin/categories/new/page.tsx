@@ -17,7 +17,11 @@ function NewCategoryPage() {
     const handleSubmit = async (data: Omit<Category, 'id'>) => {
         if (!firestore) return;
         try {
-            await addDoc(collection(firestore, "categories"), data);
+            const dataToSave: any = { ...data };
+            if (!dataToSave.parentId) {
+                delete dataToSave.parentId;
+            }
+            await addDoc(collection(firestore, "categories"), dataToSave);
             toast({
                 title: "Category Created",
                 description: `Category "${data.name}" has been successfully created.`,
