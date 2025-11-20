@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject, type UploadTask } from 'firebase/storage';
 import { useFirebaseApp } from '@/firebase';
@@ -19,14 +20,6 @@ interface UploadingFile {
   source: 'local';
 }
 
-interface UploadedFile {
-  id: string;
-  url: string;
-  source: 'remote';
-}
-
-type ManagedFile = UploadingFile | UploadedFile;
-
 interface ImageUploaderProps {
   value: string[];
   onChange: (urls: string[]) => void;
@@ -37,6 +30,7 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
   const app = useFirebaseApp();
   const storage = app ? getStorage(app) : null;
   const { toast } = useToast();
+  const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!storage) {
@@ -48,16 +42,21 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
       return;
     }
 
-    acceptedFiles.forEach(file => {
+    const newUploads = acceptedFiles.map(file => {
       const id = `${file.name}-${Date.now()}`;
       const storageRef = ref(storage, `${folder}/${id}-${file.name}`);
       const task = uploadBytesResumable(storageRef, file);
+      
+      return { id, file, progress: 0, task, source: 'local' as const };
+    });
+    
+    setUploadingFiles(prev => [...prev, ...newUploads]);
 
-      task.on('state_changed',
+    newUploads.forEach(upload => {
+      upload.task.on('state_changed',
         (snapshot) => {
-          // This space intentionally left blank. 
-          // We are not using progress updates to avoid state complexity.
-          // The UI will just show a generic loading state.
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress } : f));
         },
         (error) => {
           if (error.code !== 'storage/canceled') {
@@ -65,13 +64,17 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
             toast({
               variant: 'destructive',
               title: 'Upload Failed',
-              description: `Could not upload ${file.name}.`,
+              description: `Could not upload ${upload.file.name}.`,
             });
           }
+          // Remove from uploading list on error
+          setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
         },
         () => {
-          getDownloadURL(task.snapshot.ref).then((downloadURL) => {
+          getDownloadURL(upload.task.snapshot.ref).then((downloadURL) => {
             onChange([...urls, downloadURL]);
+            // Remove from uploading list on success
+            setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
           });
         }
       );
@@ -98,14 +101,25 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
           description: 'The image has been deleted from storage.',
         });
       }).catch((error) => {
+        // It's okay if the object doesn't exist (e.g., if it was a URL added manually)
         if (error.code !== 'storage/object-not-found') {
-            console.warn("Error deleting from storage:", error);
+            console.warn("Could not delete from storage:", error);
         }
       });
     } catch(e) {
+      // This can happen if the URL is not a valid storage URL
       console.warn("Error parsing URL for deletion:", e);
     }
   };
+
+  const cancelUpload = (upload: UploadingFile) => {
+    upload.task.cancel();
+    setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
+    toast({
+        title: 'Upload Canceled',
+        description: `Upload of ${upload.file.name} was canceled.`,
+    });
+  }
   
   return (
     <div className="space-y-4">
@@ -124,19 +138,29 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
         </div>
       </div>
       
-       {(urls.length > 0) && (
-         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {urls.map((url, index) => (
-                <div key={url} className="relative aspect-square">
-                    <Image src={url} alt={`Uploaded image ${index + 1}`} fill sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw" className="rounded-md object-cover" />
-                     <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => removeImage(url)}>
-                        <X className="h-4 w-4" />
-                     </Button>
-                     {index === 0 && <div className="absolute bottom-0 left-0 bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-br-md rounded-tl-md">Cover</div>}
+       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {urls.map((url, index) => (
+              <div key={url} className="relative aspect-square">
+                  <Image src={url} alt={`Uploaded image ${index + 1}`} fill sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw" className="rounded-md object-cover" />
+                    <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => removeImage(url)}>
+                      <X className="h-4 w-4" />
+                    </Button>
+                    {index === 0 && <div className="absolute bottom-0 left-0 bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-br-md rounded-tl-md">Cover</div>}
+              </div>
+          ))}
+          {uploadingFiles.map((upload) => (
+            <div key={upload.id} className="relative aspect-square">
+                <div className="flex flex-col items-center justify-center h-full w-full rounded-md bg-muted p-2">
+                    <FileImage className="h-10 w-10 text-muted-foreground" />
+                    <p className="text-xs text-muted-foreground mt-2 truncate w-full text-center">{upload.file.name}</p>
+                    <Progress value={upload.progress} className="h-2 mt-2 w-full" />
                 </div>
-            ))}
-         </div>
-       )}
+                 <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => cancelUpload(upload)}>
+                    <X className="h-4 w-4" />
+                 </Button>
+            </div>
+          ))}
+       </div>
     </div>
   );
 }
