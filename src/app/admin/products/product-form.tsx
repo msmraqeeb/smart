@@ -20,7 +20,7 @@ const formSchema = z.object({
   description: z.string().min(10, "Description must be at least 10 characters."),
   price: z.coerce.number().positive("Price must be a positive number."),
   category: z.string().min(1, "Please select a category."),
-  brand: z.string().min(2, "Brand must be at least 2 characters."),
+  brand: z.string().optional(),
   featured: z.boolean(),
   imageUrl: z.string().url("Please enter a valid URL."),
   imageHint: z.string().optional(),
@@ -59,9 +59,9 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
   const watchName = form.watch("name");
 
   useEffect(() => {
-    if (watchName) {
+    if (watchName && !form.getValues('slug')) {
         const slug = watchName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
-        form.setValue('slug', slug, { shouldValidate: true });
+        form.setValue('slug', slug);
     }
   }, [watchName, form]);
 
