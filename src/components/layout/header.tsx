@@ -35,6 +35,32 @@ interface CategoryWithChildren extends Category {
     children: CategoryWithChildren[];
 }
 
+const RecursiveCategoryMenu = ({ categories }: { categories: CategoryWithChildren[] }) => {
+    return (
+        <>
+            {categories.map(category => (
+                category.children.length > 0 ? (
+                    <DropdownMenuSub key={category.id}>
+                        <DropdownMenuSubTrigger>
+                            <span>{category.name}</span>
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                            <DropdownMenuSubContent>
+                                <RecursiveCategoryMenu categories={category.children} />
+                            </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                    </DropdownMenuSub>
+                ) : (
+                    <DropdownMenuItem key={category.id} asChild>
+                        <Link href={`/products?category=${category.slug}`}>{category.name}</Link>
+                    </DropdownMenuItem>
+                )
+            ))}
+        </>
+    );
+};
+
+
 export function Header() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
@@ -87,28 +113,7 @@ export function Header() {
                         <ChevronDown className="h-4 w-4" />
                     </DropdownMenuTrigger>
                     <DropdownMenuContent>
-                        {categoryTree.map(category => (
-                            category.children.length > 0 ? (
-                                <DropdownMenuSub key={category.id}>
-                                    <DropdownMenuSubTrigger>
-                                        <span>{category.name}</span>
-                                    </DropdownMenuSubTrigger>
-                                    <DropdownMenuPortal>
-                                        <DropdownMenuSubContent>
-                                            {category.children.map(subCategory => (
-                                                <DropdownMenuItem key={subCategory.id} asChild>
-                                                    <Link href={`/products?category=${subCategory.slug}`}>{subCategory.name}</Link>
-                                                </DropdownMenuItem>
-                                            ))}
-                                        </DropdownMenuSubContent>
-                                    </DropdownMenuPortal>
-                                </DropdownMenuSub>
-                            ) : (
-                                <DropdownMenuItem key={category.id} asChild>
-                                    <Link href={`/products?category=${category.slug}`}>{category.name}</Link>
-                                </DropdownMenuItem>
-                            )
-                        ))}
+                        <RecursiveCategoryMenu categories={categoryTree} />
                     </DropdownMenuContent>
                 </div>
             </DropdownMenu>
