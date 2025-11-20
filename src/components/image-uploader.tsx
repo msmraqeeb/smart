@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject, type UploadTask } from 'firebase/storage';
 import { useFirebaseApp } from '@/firebase';
@@ -42,10 +42,11 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
       return;
     }
 
-    const newUploads: UploadingFile[] = acceptedFiles.map(file => {
+    const newUploads = acceptedFiles.map(file => {
       const id = `${file.name}-${Date.now()}`;
       const storageRef = ref(storage, `${folder}/${id}-${file.name}`);
       const uploadTask = uploadBytesResumable(storageRef, file);
+      
       return { id, file, progress: 0, uploadTask };
     });
 
