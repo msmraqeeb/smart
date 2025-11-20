@@ -96,6 +96,7 @@ function AdminProductsPage() {
                                 <TableHead className="w-[80px]">Image</TableHead>
                                 <TableHead>ID</TableHead>
                                 <TableHead>Name</TableHead>
+                                <TableHead>Date &amp; Time</TableHead>
                                 <TableHead>Category</TableHead>
                                 <TableHead>Price</TableHead>
                                 <TableHead className='text-right'>Actions</TableHead>
@@ -115,6 +116,7 @@ function AdminProductsPage() {
                                     </TableCell>
                                     <TableCell className="font-medium">{product.id.substring(0,8)}</TableCell>
                                     <TableCell>{product.name}</TableCell>
+                                    <TableCell>{product.createdAt ? product.createdAt.toDate().toLocaleString() : 'N/A'}</TableCell>
                                     <TableCell className="capitalize">{product.category}</TableCell>
                                     <TableCell>{formatCurrency(product.price)}</TableCell>
                                     <TableCell className='text-right'>
