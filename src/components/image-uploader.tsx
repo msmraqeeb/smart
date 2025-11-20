@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -30,17 +31,8 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
   const storage = app ? getStorage(app) : null;
   const { toast } = useToast();
 
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
-  const [initialUrls, setInitialUrls] = useState<string[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState<UploadedFile[]>([]);
   
-  useEffect(() => {
-    // Sync external value with initialUrls, but only once
-    if (value && value.length > 0 && initialUrls.length === 0) {
-      setInitialUrls(value);
-    }
-  }, [value, initialUrls]);
-
-
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!storage) {
       toast({
@@ -56,7 +48,7 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
       progress: 0,
     }));
 
-    setUploadedFiles(prev => [...prev, ...newFiles]);
+    setUploadingFiles(prev => [...prev, ...newFiles]);
 
     newFiles.forEach(fileWrapper => {
       const storageRef = ref(storage, `${folder}/${Date.now()}-${fileWrapper.file.name}`);
@@ -67,11 +59,11 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
       uploadTask.on('state_changed',
         (snapshot) => {
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadedFiles(prev => prev.map(f => f.file === fileWrapper.file ? { ...f, progress } : f));
+          setUploadingFiles(prev => prev.map(f => f.file === fileWrapper.file ? { ...f, progress } : f));
         },
         (error) => {
           console.error("Upload Error:", error);
-          setUploadedFiles(prev => prev.map(f => f.file === fileWrapper.file ? { ...f, error: error.message } : f));
+          setUploadingFiles(prev => prev.map(f => f.file === fileWrapper.file ? { ...f, error: error.message } : f));
           toast({
             variant: 'destructive',
             title: 'Upload Failed',
@@ -80,8 +72,10 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
         },
         () => {
           getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            setUploadedFiles(prev => prev.map(f => f.file === fileWrapper.file ? { ...f, url: downloadURL } : f));
+            // Add the new URL to the form state
             onChange([...value, downloadURL]);
+            // Remove the file from the uploading state
+            setUploadingFiles(prev => prev.filter(f => f.file !== fileWrapper.file));
           });
         }
       );
@@ -99,7 +93,6 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
 
     // Remove from UI state first for responsiveness
     onChange(value.filter(url => url !== urlToRemove));
-    setInitialUrls(prev => prev.filter(url => url !== urlToRemove));
 
     try {
       const imageRef = ref(storage, urlToRemove);
@@ -111,7 +104,7 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
       }).catch((error) => {
         console.error("Error deleting file from storage:", error);
         if (error.code === 'storage/object-not-found') {
-            // This is okay, it might have been a placeholder URL
+            // This is okay, it might have been a placeholder or manual URL
         } else {
             toast({
                 variant: 'destructive',
@@ -126,14 +119,12 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
   };
   
   const cancelUpload = (fileToCancel: File) => {
-    const fileWrapper = uploadedFiles.find(f => f.file === fileToCancel);
+    const fileWrapper = uploadingFiles.find(f => f.file === fileToCancel);
     if(fileWrapper?.uploadTask){
         fileWrapper.uploadTask.cancel();
     }
-    setUploadedFiles(prev => prev.filter(f => f.file !== fileToCancel));
+    setUploadingFiles(prev => prev.filter(f => f.file !== fileToCancel));
   };
-  
-  const allImageUrls = [...initialUrls];
   
   return (
     <div className="space-y-4">
@@ -152,9 +143,9 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
         </div>
       </div>
       
-       {(initialUrls.length > 0 || uploadedFiles.length > 0) && (
+       {(value.length > 0 || uploadingFiles.length > 0) && (
          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {initialUrls.map((url, index) => (
+            {value.map((url, index) => (
                 <div key={url} className="relative aspect-square">
                     <Image src={url} alt={`Uploaded image ${index + 1}`} layout="fill" className="rounded-md object-cover" />
                      <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => removeImage(url)}>
@@ -163,7 +154,7 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
                      {index === 0 && <div className="absolute bottom-0 left-0 bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-br-md rounded-tl-md">Cover</div>}
                 </div>
             ))}
-            {uploadedFiles.map((fileWrapper) => (
+            {uploadingFiles.map((fileWrapper) => (
               <div key={fileWrapper.file.name} className="relative aspect-square rounded-md border bg-muted/20">
                 {fileWrapper.progress < 100 && !fileWrapper.error && (
                     <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
