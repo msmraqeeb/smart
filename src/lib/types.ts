@@ -12,6 +12,7 @@ export type Product = {
   brand?: string;
   featured: boolean;
   reviews?: Review[];
+  createdAt?: any;
 };
 
 export type Category = {

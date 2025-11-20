@@ -4,7 +4,7 @@ import { ProductForm } from '../product-form';
 import withAdminAuth from '@/components/withAdminAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirestore } from '@/firebase';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import type { Product } from '@/lib/types';
@@ -18,7 +18,10 @@ function NewProductPage() {
     const handleSubmit = async (data: Omit<Product, 'id' | 'reviews'>) => {
         if (!firestore) return;
         try {
-            const docRef = await addDoc(collection(firestore, "products"), data);
+            const docRef = await addDoc(collection(firestore, "products"), {
+                ...data,
+                createdAt: serverTimestamp() 
+            });
             toast({
                 title: "Product Created",
                 description: `Product "${data.name}" has been successfully created.`,
