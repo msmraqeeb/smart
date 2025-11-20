@@ -20,6 +20,8 @@ export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlist();
 
+  if (!product) return null;
+
   const isInWishlist = wishlistItems.some((item) => item.id === product.id);
 
   const handleWishlistToggle = () => {

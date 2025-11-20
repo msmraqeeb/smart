@@ -8,6 +8,7 @@ import { AIRecommendations } from "@/components/ai-recommendations";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { Reviews } from "@/components/reviews";
 import { Badge } from "@/components/ui/badge";
+import type { Product } from "@/lib/types";
 
 
 export default async function ProductDetailPage({
@@ -24,6 +25,10 @@ export default async function ProductDetailPage({
   const hasSalePrice = product.salePrice && product.salePrice > 0;
   const displayPrice = hasSalePrice ? product.salePrice : product.price;
   const primaryImageUrl = product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : product.imageUrl;
+  
+  // Convert complex objects to plain objects for Client Components
+  const plainProduct: Product = JSON.parse(JSON.stringify(product));
+
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -65,7 +70,7 @@ export default async function ProductDetailPage({
           
           <Separator />
 
-          <AddToCartButton product={product} />
+          <AddToCartButton product={plainProduct} />
 
         </div>
       </div>
@@ -75,7 +80,7 @@ export default async function ProductDetailPage({
       </div>
 
       <div className="mt-16">
-        <Reviews product={product} />
+        <Reviews product={plainProduct} />
       </div>
     </div>
   );
