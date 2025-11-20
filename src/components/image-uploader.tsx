@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject, type UploadTask } from 'firebase/storage';
 import { useFirebaseApp } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -12,12 +12,13 @@ import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 
-type UploadedFile = {
+type UploadingFile = {
+  id: string; // Unique ID for each upload
   file: File;
   progress: number;
   url?: string;
   error?: string;
-  uploadTask?: ReturnType<typeof uploadBytesResumable>;
+  uploadTask?: UploadTask;
 };
 
 interface ImageUploaderProps {
@@ -31,7 +32,7 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
   const storage = app ? getStorage(app) : null;
   const { toast } = useToast();
 
-  const [uploadingFiles, setUploadingFiles] = useState<UploadedFile[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!storage) {
@@ -43,7 +44,8 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
       return;
     }
 
-    const newFiles: UploadedFile[] = acceptedFiles.map(file => ({
+    const newFiles: UploadingFile[] = acceptedFiles.map(file => ({
+      id: `${file.name}-${file.lastModified}-${file.size}`,
       file,
       progress: 0,
     }));
@@ -54,16 +56,24 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
       const storageRef = ref(storage, `${folder}/${Date.now()}-${fileWrapper.file.name}`);
       const uploadTask = uploadBytesResumable(storageRef, fileWrapper.file);
 
-      fileWrapper.uploadTask = uploadTask;
+      // Store the upload task in the file wrapper to be able to cancel it
+       setUploadingFiles(prev => 
+         prev.map(f => f.id === fileWrapper.id ? {...f, uploadTask} : f)
+       );
 
       uploadTask.on('state_changed',
         (snapshot) => {
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadingFiles(prev => prev.map(f => f.file === fileWrapper.file ? { ...f, progress } : f));
+          setUploadingFiles(prev => 
+            prev.map(f => f.id === fileWrapper.id ? { ...f, progress } : f)
+          );
         },
         (error) => {
           console.error("Upload Error:", error);
-          setUploadingFiles(prev => prev.map(f => f.file === fileWrapper.file ? { ...f, error: error.message } : f));
+           if (error.code === 'storage/canceled') {
+            return; // Don't show toast for cancellation
+          }
+          setUploadingFiles(prev => prev.filter(f => f.id !== fileWrapper.id));
           toast({
             variant: 'destructive',
             title: 'Upload Failed',
@@ -72,15 +82,15 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
         },
         () => {
           getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            // Add the new URL to the form state
-            onChange([...value, downloadURL]);
+            // Use callback form of onChange to get the latest `value`
+            onChange((currentValue) => [...currentValue, downloadURL]);
             // Remove the file from the uploading state
-            setUploadingFiles(prev => prev.filter(f => f.file !== fileWrapper.file));
+            setUploadingFiles(prev => prev.filter(f => f.id !== fileWrapper.id));
           });
         }
       );
     });
-  }, [storage, folder, onChange, value, toast]);
+  }, [storage, folder, onChange, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -118,12 +128,12 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
     }
   };
   
-  const cancelUpload = (fileToCancel: File) => {
-    const fileWrapper = uploadingFiles.find(f => f.file === fileToCancel);
+  const cancelUpload = (fileId: string) => {
+    const fileWrapper = uploadingFiles.find(f => f.id === fileId);
     if(fileWrapper?.uploadTask){
         fileWrapper.uploadTask.cancel();
     }
-    setUploadingFiles(prev => prev.filter(f => f.file !== fileToCancel));
+    setUploadingFiles(prev => prev.filter(f => f.id !== fileId));
   };
   
   return (
@@ -147,7 +157,7 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {value.map((url, index) => (
                 <div key={url} className="relative aspect-square">
-                    <Image src={url} alt={`Uploaded image ${index + 1}`} layout="fill" className="rounded-md object-cover" />
+                    <Image src={url} alt={`Uploaded image ${index + 1}`} fill sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw" className="rounded-md object-cover" />
                      <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => removeImage(url)}>
                         <X className="h-4 w-4" />
                      </Button>
@@ -155,19 +165,13 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
                 </div>
             ))}
             {uploadingFiles.map((fileWrapper) => (
-              <div key={fileWrapper.file.name} className="relative aspect-square rounded-md border bg-muted/20">
-                {fileWrapper.progress < 100 && !fileWrapper.error && (
-                    <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
-                        <FileImage className="h-8 w-8" />
-                        <p className="max-w-full truncate px-2">{fileWrapper.file.name}</p>
-                        <Progress value={fileWrapper.progress} className="w-4/5 h-2" />
-                    </div>
-                )}
-                {fileWrapper.url && (
-                    <Image src={fileWrapper.url} alt={fileWrapper.file.name} layout="fill" className="rounded-md object-cover" />
-                )}
-                {fileWrapper.error && <div className="p-2 text-xs text-destructive-foreground bg-destructive rounded-md h-full flex items-center justify-center">{fileWrapper.error}</div>}
-                 <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => fileWrapper.url ? removeImage(fileWrapper.url) : cancelUpload(fileWrapper.file)}>
+              <div key={fileWrapper.id} className="relative aspect-square rounded-md border bg-muted/20">
+                <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <FileImage className="h-8 w-8" />
+                    <p className="max-w-full truncate px-2">{fileWrapper.file.name}</p>
+                    <Progress value={fileWrapper.progress} className="w-4/5 h-2" />
+                </div>
+                 <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => cancelUpload(fileWrapper.id)}>
                     <X className="h-4 w-4" />
                  </Button>
               </div>
