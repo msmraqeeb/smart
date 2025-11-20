@@ -15,6 +15,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Label } from "@/components/ui/label";
 import { ImageUploader } from '@/components/image-uploader';
+import { useToast } from "@/hooks/use-toast";
 
 
 const formSchema = z.object({
@@ -39,6 +40,8 @@ interface ProductFormProps {
 export function ProductForm({ product, onSubmit }: ProductFormProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const router = useRouter();
+  const { toast } = useToast();
+  const [imageUrlInput, setImageUrlInput] = useState("");
 
   useEffect(() => {
     getCategories().then(setCategories);
@@ -67,6 +70,27 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
         form.setValue('slug', slug);
     }
   }, [watchName, form]);
+
+  const handleAddImageUrl = () => {
+    try {
+      // Use Zod to validate the single URL
+      z.string().url("Invalid URL format.").parse(imageUrlInput);
+      const currentUrls = form.getValues('imageUrls');
+      form.setValue('imageUrls', [...currentUrls, imageUrlInput]);
+      setImageUrlInput('');
+      toast({
+        title: 'Image URL added',
+      });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+             toast({
+                variant: 'destructive',
+                title: 'Invalid URL',
+                description: error.errors[0].message,
+             });
+        }
+    }
+  };
   
   const handleFormSubmit = (data: ProductFormValues) => {
     const dataToSubmit: any = { ...data };
@@ -159,6 +183,21 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
                             onChange={field.onChange}
                         />
                     </FormControl>
+                     <div className="mt-4 space-y-2">
+                        <Label htmlFor="imageUrlInput">Add by URL</Label>
+                        <div className="flex gap-2">
+                             <Input
+                                id="imageUrlInput"
+                                type="url"
+                                placeholder="https://example.com/image.jpg"
+                                value={imageUrlInput}
+                                onChange={(e) => setImageUrlInput(e.target.value)}
+                            />
+                            <Button type="button" variant="outline" onClick={handleAddImageUrl}>
+                                Add URL
+                            </Button>
+                        </div>
+                     </div>
                      <FormDescription>The first image will be used as the cover image.</FormDescription>
                     <FormMessage />
                 </FormItem>
