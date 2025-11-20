@@ -17,6 +17,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { useToast } from '@/hooks/use-toast';
 import { doc, deleteDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
+import Image from 'next/image';
 
 function AdminProductsPage() {
     const [products, setProducts] = React.useState<Product[]>([]);
@@ -85,6 +86,7 @@ function AdminProductsPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-[80px]">Image</TableHead>
                                 <TableHead>ID</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Category</TableHead>
@@ -95,6 +97,15 @@ function AdminProductsPage() {
                         <TableBody>
                             {products.map(product => (
                                 <TableRow key={product.id}>
+                                    <TableCell>
+                                        <Image 
+                                            src={product.imageUrl}
+                                            alt={product.name}
+                                            width={40}
+                                            height={40}
+                                            className="rounded-md object-cover"
+                                        />
+                                    </TableCell>
                                     <TableCell className="font-medium">{product.id.substring(0,8)}</TableCell>
                                     <TableCell>{product.name}</TableCell>
                                     <TableCell className="capitalize">{product.category}</TableCell>
