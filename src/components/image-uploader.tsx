@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject, type UploadTask } from 'firebase/storage';
 import { useFirebaseApp } from '@/firebase';
@@ -49,14 +49,13 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
       file,
       progress: 0,
     }));
-
+    
     setUploadingFiles(prev => [...prev, ...newFiles]);
 
     newFiles.forEach(fileWrapper => {
       const storageRef = ref(storage, `${folder}/${Date.now()}-${fileWrapper.file.name}`);
       const uploadTask = uploadBytesResumable(storageRef, fileWrapper.file);
 
-      // Store the upload task in the file wrapper to be able to cancel it
        setUploadingFiles(prev => 
          prev.map(f => f.id === fileWrapper.id ? {...f, uploadTask} : f)
        );
@@ -71,7 +70,7 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
         (error) => {
           console.error("Upload Error:", error);
            if (error.code === 'storage/canceled') {
-            return; // Don't show toast for cancellation
+            return;
           }
           setUploadingFiles(prev => prev.filter(f => f.id !== fileWrapper.id));
           toast({
@@ -82,15 +81,13 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
         },
         () => {
           getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-            // Use callback form of onChange to get the latest `value`
-            onChange((currentValue) => [...currentValue, downloadURL]);
-            // Remove the file from the uploading state
+            onChange([...value, downloadURL]);
             setUploadingFiles(prev => prev.filter(f => f.id !== fileWrapper.id));
           });
         }
       );
     });
-  }, [storage, folder, onChange, toast]);
+  }, [storage, folder, onChange, toast, value]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -101,7 +98,6 @@ export function ImageUploader({ value, onChange, folder = 'products' }: ImageUpl
   const removeImage = (urlToRemove: string) => {
     if (!storage) return;
 
-    // Remove from UI state first for responsiveness
     onChange(value.filter(url => url !== urlToRemove));
 
     try {
