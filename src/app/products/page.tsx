@@ -17,6 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CategorySidebar } from '@/components/category-sidebar';
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -50,158 +51,128 @@ export default function ProductsPage() {
     fetchInitialData();
   }, []);
 
-  // Effect to update local state when URL params change
+  // Effect to update local state when URL params change (e.g. browser back/forward)
   useEffect(() => {
     setSelectedCategory(searchParams.get('category') || 'all');
     setSearchQuery(searchParams.get('q') || '');
     setSortOrder(searchParams.get('sort') || 'featured');
   }, [searchParams]);
 
-  // Effect to update URL when local state changes
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (searchQuery) {
-      params.set('q', searchQuery);
-    }
-    if (selectedCategory !== 'all') {
-      params.set('category', selectedCategory);
-    }
-    if (sortOrder !== 'featured') {
-        params.set('sort', sortOrder);
+  // Effect to update URL when local state changes from user interaction
+  const handleFilterChange = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value && value !== 'all') {
+      params.set(key, value);
+    } else {
+      params.delete(key);
     }
     
-    // Using router.replace to avoid adding to browser history for filters
+    // When category changes, reset to first page if pagination were implemented
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [searchQuery, selectedCategory, sortOrder, pathname, router]);
-
-  const hierarchicalCategories = useMemo(() => {
-    const categoryMap = new Map(categories.map(c => [c.id, { ...c, children: [] as Category[] }]));
-    const topLevelCategories: (Category & { children: Category[] })[] = [];
-
-    categories.forEach(category => {
-        if (category.parentId && categoryMap.has(category.parentId)) {
-            categoryMap.get(category.parentId)?.children.push(categoryMap.get(category.id)!);
-        } else {
-            topLevelCategories.push(categoryMap.get(category.id)!);
-        }
-    });
-
-    const flattened: { name: string; slug: string; id: string }[] = [];
-    const flatten = (cats: (Category & { children: Category[] })[], depth = 0) => {
-        cats.sort((a, b) => a.name.localeCompare(b.name));
-        for (const cat of cats) {
-            flattened.push({ ...cat, name: `${'— '.repeat(depth)}${cat.name}` });
-            if (cat.children.length > 0) {
-                flatten(cat.children, depth + 1);
-            }
-        }
-    };
-
-    flatten(topLevelCategories);
-    return flattened;
-}, [categories]);
-
+  };
+  
   const filteredAndSortedProducts = useMemo(() => {
     let products = [...allProducts];
+    const currentCategory = searchParams.get('category');
+    const currentQuery = searchParams.get('q');
+    const currentSort = searchParams.get('sort') || 'featured';
 
     // Filter by category
-    if (selectedCategory !== 'all') {
-      products = products.filter(p => p.category === selectedCategory);
+    if (currentCategory && currentCategory !== 'all') {
+      products = products.filter(p => p.category === currentCategory);
     }
 
     // Filter by search query
-    if (searchQuery) {
+    if (currentQuery) {
       products = products.filter(p =>
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (p.brand && p.brand.toLowerCase().includes(searchQuery.toLowerCase())) ||
-        p.description.toLowerCase().includes(searchQuery.toLowerCase())
+        p.name.toLowerCase().includes(currentQuery.toLowerCase()) ||
+        (p.brand && p.brand.toLowerCase().includes(currentQuery.toLowerCase())) ||
+        p.description.toLowerCase().includes(currentQuery.toLowerCase())
       );
     }
 
     // Sort products
-    switch (sortOrder) {
+    switch (currentSort) {
       case 'price-asc':
-        products.sort((a, b) => a.price - b.price);
+        products.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
         break;
       case 'price-desc':
-        products.sort((a, b) => b.price - a.price);
+        products.sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
         break;
       case 'featured':
       default:
-        // 'featured' sort can be complex, for now we can just show them first
         products.sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0));
         break;
     }
 
     return products;
-  }, [allProducts, selectedCategory, searchQuery, sortOrder]);
+  }, [allProducts, searchParams]);
   
-  const currentCategory = categories.find(c => c.slug === selectedCategory);
+  const currentCategorySlug = searchParams.get('category');
+  const currentCategory = categories.find(c => c.slug === currentCategorySlug);
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="font-headline text-4xl font-bold">
-          {currentCategory ? currentCategory.name : 'All Products'}
-        </h1>
-        <p className="text-muted-foreground mt-2">Browse our collection of high-quality products.</p>
-      </div>
-
-      <div className="mb-8 flex flex-col gap-4 md:flex-row">
-        <div className="relative flex-1">
-          <Input 
-            placeholder="Search products..." 
-            className="pl-10" 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+      <div className="grid md:grid-cols-4 gap-8">
+        <div className="md:col-span-1">
+          <CategorySidebar categories={categories} />
         </div>
-        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-          <SelectTrigger className="w-full md:w-[180px]">
-            <SelectValue placeholder="Filter by category" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {hierarchicalCategories.map(category => (
-                 <SelectItem key={category.id} value={category.slug}>{category.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={sortOrder} onValueChange={setSortOrder}>
-          <SelectTrigger className="w-full md:w-[180px]">
-            <SelectValue placeholder="Sort by" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="featured">Featured</SelectItem>
-            <SelectItem value="price-asc">Price: Low to High</SelectItem>
-            <SelectItem value="price-desc">Price: High to Low</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+        <div className="md:col-span-3">
+          <div className="mb-8">
+            <h1 className="font-headline text-4xl font-bold">
+              {currentCategory ? currentCategory.name : 'All Products'}
+            </h1>
+            <p className="text-muted-foreground mt-2">Browse our collection of high-quality products.</p>
+          </div>
 
-      {loading ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="space-y-2">
-                <Skeleton className="h-64 w-full" />
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-6 w-1/2" />
+          <div className="mb-8 flex flex-col gap-4 md:flex-row">
+            <div className="relative flex-1">
+              <Input 
+                placeholder="Search products..." 
+                className="pl-10" 
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleFilterChange('q', searchQuery)}
+              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             </div>
-          ))}
+            
+            <Select value={sortOrder} onValueChange={(value) => handleFilterChange('sort', value)}>
+              <SelectTrigger className="w-full md:w-[180px]">
+                <SelectValue placeholder="Sort by" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="featured">Featured</SelectItem>
+                <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                <SelectItem value="price-desc">Price: High to Low</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="space-y-2">
+                    <Skeleton className="h-64 w-full" />
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-6 w-1/2" />
+                </div>
+              ))}
+            </div>
+          ) : filteredAndSortedProducts.length > 0 ? (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {filteredAndSortedProducts.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-16">
+                <h2 className="text-2xl font-semibold">No Products Found</h2>
+                <p className="text-muted-foreground mt-2">Try adjusting your filters or search terms.</p>
+            </div>
+          )}
         </div>
-      ) : filteredAndSortedProducts.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {filteredAndSortedProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-16">
-            <h2 className="text-2xl font-semibold">No Products Found</h2>
-            <p className="text-muted-foreground mt-2">Try adjusting your filters or search terms.</p>
-        </div>
-      )}
+      </div>
     </div>
   );
 }

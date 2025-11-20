@@ -9,7 +9,7 @@ export type Product = {
   imageUrl: string;
   imageHint: string;
   category: string;
-  brand: string;
+  brand?: string;
   featured: boolean;
   reviews?: Review[];
 };
@@ -21,6 +21,7 @@ export type Category = {
   imageUrl: string;
   imageHint: string;
   parentId?: string;
+  children?: Category[];
 };
 
 export type CartItem = {
