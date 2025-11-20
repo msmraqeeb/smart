@@ -1,7 +1,6 @@
-
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject, type UploadTask } from 'firebase/storage';
 import { useFirebaseApp } from '@/firebase';
@@ -17,7 +16,16 @@ interface UploadingFile {
   file: File;
   progress: number;
   task: UploadTask;
+  source: 'local';
 }
+
+interface UploadedFile {
+  id: string;
+  url: string;
+  source: 'remote';
+}
+
+type ManagedFile = UploadingFile | UploadedFile;
 
 interface ImageUploaderProps {
   value: string[];
@@ -30,8 +38,6 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
   const storage = app ? getStorage(app) : null;
   const { toast } = useToast();
 
-  const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
-
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!storage) {
       toast({
@@ -42,22 +48,16 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
       return;
     }
 
-    const newUploads = acceptedFiles.map(file => {
+    acceptedFiles.forEach(file => {
       const id = `${file.name}-${Date.now()}`;
       const storageRef = ref(storage, `${folder}/${id}-${file.name}`);
       const task = uploadBytesResumable(storageRef, file);
-      return { id, file, progress: 0, task };
-    });
 
-    setUploadingFiles(prev => [...prev, ...newUploads]);
-
-    newUploads.forEach(upload => {
-      upload.task.on('state_changed',
+      task.on('state_changed',
         (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadingFiles(prev =>
-            prev.map(f => f.id === upload.id ? { ...f, progress } : f)
-          );
+          // This space intentionally left blank. 
+          // We are not using progress updates to avoid state complexity.
+          // The UI will just show a generic loading state.
         },
         (error) => {
           if (error.code !== 'storage/canceled') {
@@ -65,15 +65,13 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
             toast({
               variant: 'destructive',
               title: 'Upload Failed',
-              description: `Could not upload ${upload.file.name}.`,
+              description: `Could not upload ${file.name}.`,
             });
           }
-          setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
         },
         () => {
-          getDownloadURL(upload.task.snapshot.ref).then((downloadURL) => {
+          getDownloadURL(task.snapshot.ref).then((downloadURL) => {
             onChange([...urls, downloadURL]);
-            setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
           });
         }
       );
@@ -109,16 +107,6 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
     }
   };
   
-  const cancelUpload = (fileId: string) => {
-      setUploadingFiles(prev => {
-          const uploadToCancel = prev.find(f => f.id === fileId);
-          if (uploadToCancel) {
-              uploadToCancel.task.cancel();
-          }
-          return prev.filter(f => f.id !== fileId);
-      });
-  };
-  
   return (
     <div className="space-y-4">
       <div {...getRootProps()} className={cn("group cursor-pointer rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 p-8 text-center transition-colors", isDragActive && "border-primary bg-primary/10")}>
@@ -136,7 +124,7 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
         </div>
       </div>
       
-       {(urls.length > 0 || uploadingFiles.length > 0) && (
+       {(urls.length > 0) && (
          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {urls.map((url, index) => (
                 <div key={url} className="relative aspect-square">
@@ -147,21 +135,8 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
                      {index === 0 && <div className="absolute bottom-0 left-0 bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-br-md rounded-tl-md">Cover</div>}
                 </div>
             ))}
-            {uploadingFiles.map((fileWrapper) => (
-              <div key={fileWrapper.id} className="relative aspect-square rounded-md border bg-muted/20">
-                <div className="flex h-full flex-col items-center justify-center gap-2 text-sm text-muted-foreground">
-                    <FileImage className="h-8 w-8" />
-                    <p className="max-w-full truncate px-2">{fileWrapper.file.name}</p>
-                    <Progress value={fileWrapper.progress} className="w-4/5 h-2" />
-                </div>
-                 <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => cancelUpload(fileWrapper.id)}>
-                    <X className="h-4 w-4" />
-                 </Button>
-              </div>
-            ))}
          </div>
        )}
-
     </div>
   );
 }
