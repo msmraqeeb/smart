@@ -77,6 +77,7 @@ export function ImageUploader({ value: urls = [], onChange, folder = 'products' 
         () => {
           getDownloadURL(task.snapshot.ref).then((downloadURL) => {
             onChange([...urls, downloadURL]);
+            setManualUrl(downloadURL); // Set the manualUrl state with the new URL
             setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
           });
         }
