@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useFirebaseApp } from '@/firebase';
@@ -16,6 +16,7 @@ interface UploadingFile {
   id: string;
   file: File;
   progress: number;
+  url?: string;
 }
 
 interface ImageUploaderProps {
@@ -55,7 +56,7 @@ export function ImageUploader({ value: urls = [], onChange, folder = 'products' 
       task.on('state_changed',
         (snapshot) => {
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadingFiles(prev => 
+          setUploadingFiles(prev =>
             prev.map(f => f.id === upload.id ? { ...f, progress } : f)
           );
         },
@@ -72,7 +73,6 @@ export function ImageUploader({ value: urls = [], onChange, folder = 'products' 
         },
         () => {
           getDownloadURL(task.snapshot.ref).then((downloadURL) => {
-            // This is the critical part: call onChange with the new complete list of URLs
             onChange([...urls, downloadURL]);
             setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
           });
