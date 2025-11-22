@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
@@ -101,10 +102,10 @@ function EditUserPage() {
   
   if (id === 'admin_user') {
     return (
-        <div className="container mx-auto px-4 py-8">
-             <Card className="max-w-2xl mx-auto">
+        <div>
+             <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline">Edit User</CardTitle>
+                    <CardTitle>Edit User</CardTitle>
                     <CardDescription>Cannot edit the default admin user.</CardDescription>
                 </CardHeader>
                 <CardFooter>
@@ -118,11 +119,11 @@ function EditUserPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div>
       <form onSubmit={handleSubmit}>
-        <Card className="max-w-2xl mx-auto">
+        <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Edit User</CardTitle>
+            <CardTitle>Edit User</CardTitle>
             <CardDescription>Update details for user ID: {id.substring(0,8)}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">

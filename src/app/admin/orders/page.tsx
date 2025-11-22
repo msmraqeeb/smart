@@ -1,3 +1,4 @@
+
 'use client';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -24,16 +25,14 @@ function AdminOrdersPage() {
 
     if (loading) {
         return (
-             <div className="container mx-auto px-4 py-8">
-                <h1 className="font-headline text-4xl font-bold mb-8">Manage Orders</h1>
+             <div>
                 <p>Loading orders...</p>
             </div>
         );
     }
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <h1 className="font-headline text-4xl font-bold mb-8">Manage Orders</h1>
+        <div>
             <Card>
                 <CardHeader>
                     <CardTitle>All Orders</CardTitle>

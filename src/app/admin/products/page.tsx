@@ -62,7 +62,7 @@ function AdminProductsPage() {
 
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div>
              <AlertDialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -78,8 +78,10 @@ function AdminProductsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="font-headline text-4xl font-bold">Manage Products</h1>
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                  {/* Title is now in the layout header */}
+                </div>
                 <Button asChild>
                     <Link href="/admin/products/new">Add New Product</Link>
                 </Button>
@@ -148,5 +150,3 @@ function AdminProductsPage() {
 }
 
 export default withAdminAuth(AdminProductsPage);
-
-    

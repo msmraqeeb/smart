@@ -1,3 +1,4 @@
+
 'use client';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -153,7 +154,7 @@ function AdminUsersPage() {
     const loading = ordersLoading || usersLoading;
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div>
             <AlertDialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -169,7 +170,6 @@ function AdminUsersPage() {
                 </AlertDialogContent>
             </AlertDialog>
 
-            <h1 className="font-headline text-4xl font-bold mb-8">Manage Users</h1>
             <Card>
                 <CardHeader>
                     <CardTitle>All Users</CardTitle>

@@ -62,8 +62,8 @@ function EditProductPage() {
 
     if (loading) {
         return (
-            <div className="container mx-auto px-4 py-8">
-                <Card className="max-w-4xl mx-auto">
+            <div>
+                <Card>
                     <CardHeader>
                          <Skeleton className="h-8 w-1/2" />
                          <Skeleton className="h-4 w-3/4" />
@@ -79,10 +79,10 @@ function EditProductPage() {
     }
 
     return (
-         <div className="container mx-auto px-4 py-8">
-            <Card className="max-w-4xl mx-auto">
+         <div>
+            <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline">Edit Product</CardTitle>
+                    <CardTitle>Edit Product</CardTitle>
                     <CardDescription>Update the details for "{product?.name}".</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -94,5 +94,3 @@ function EditProductPage() {
 }
 
 export default withAdminAuth(EditProductPage);
-
-    

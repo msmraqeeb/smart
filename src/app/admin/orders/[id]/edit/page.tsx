@@ -173,11 +173,11 @@ function EditOrderPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div>
       <form onSubmit={handleSubmit}>
-        <Card className="max-w-4xl mx-auto">
+        <Card>
           <CardHeader>
-            <CardTitle className="font-headline">Edit Order</CardTitle>
+            <CardTitle>Edit Order</CardTitle>
             <CardDescription>Update details for order #{order.id}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-8">
@@ -330,5 +330,3 @@ function EditOrderPage() {
 }
 
 export default withAdminAuth(EditOrderPage);
-
-    

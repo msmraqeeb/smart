@@ -1,3 +1,4 @@
+
 'use client';
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from "@/components/ui/card";
@@ -27,16 +28,8 @@ function ShippingPage() {
     };
 
     return (
-        <div className="container mx-auto px-4 py-8">
-            <div className="flex items-center gap-4 mb-8">
-                <Truck className="h-10 w-10 text-primary" />
-                <div>
-                    <h1 className="font-headline text-4xl font-bold">Shipping & Delivery</h1>
-                    <p className="text-muted-foreground">Manage your shipping costs and methods.</p>
-                </div>
-            </div>
-
-            <Card className="max-w-2xl">
+        <div>
+            <Card>
                 <CardHeader>
                     <CardTitle>Shipping Costs</CardTitle>
                     <CardDescription>Set the delivery fees for different zones.</CardDescription>

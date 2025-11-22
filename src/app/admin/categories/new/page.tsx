@@ -38,10 +38,10 @@ function NewCategoryPage() {
     };
 
     return (
-         <div className="container mx-auto px-4 py-8">
-            <Card className="max-w-2xl mx-auto">
+         <div>
+            <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline">Add New Category</CardTitle>
+                    <CardTitle>Add New Category</CardTitle>
                     <CardDescription>Fill out the form below to add a new category to your store.</CardDescription>
                 </CardHeader>
                 <CardContent>

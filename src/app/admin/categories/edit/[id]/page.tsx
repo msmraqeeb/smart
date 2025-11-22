@@ -71,8 +71,8 @@ function EditCategoryPage() {
 
     if (loading || !category) {
         return (
-            <div className="container mx-auto px-4 py-8">
-                <Card className="max-w-2xl mx-auto">
+            <div>
+                <Card>
                     <CardHeader>
                          <Skeleton className="h-8 w-1/2" />
                          <Skeleton className="h-4 w-3/4" />
@@ -88,10 +88,10 @@ function EditCategoryPage() {
     }
 
     return (
-         <div className="container mx-auto px-4 py-8">
-            <Card className="max-w-2xl mx-auto">
+         <div>
+            <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline">Edit Category</CardTitle>
+                    <CardTitle>Edit Category</CardTitle>
                     <CardDescription>Update the details for "{category?.name}".</CardDescription>
                 </CardHeader>
                 <CardContent>

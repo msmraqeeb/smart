@@ -89,16 +89,12 @@ function AdminPage() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 space-y-8">
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-            <h1 className="font-headline text-4xl font-bold">Admin Dashboard</h1>
-            <p className="text-muted-foreground mt-2">An overview of your store's performance.</p>
+            <h1 className="font-headline text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-muted-foreground mt-1">An overview of your store's performance.</p>
         </div>
-        <Button variant="outline" onClick={handleSignOut}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Sign Out
-        </Button>
       </div>
       
       {loading ? (
@@ -202,36 +198,6 @@ function AdminPage() {
                     </CardContent>
                 </Card>
             </div>
-            
-            <div>
-                 <h2 className="font-headline text-2xl font-bold mb-4">Management Links</h2>
-                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    <Link href="/admin/orders">
-                        <Card className="h-full hover:bg-card/95 hover:shadow-md transition-all">
-                            <CardHeader className="flex flex-row items-center gap-4">
-                                <ListOrdered className="h-8 w-8 text-primary" />
-                                <div><CardTitle className="font-headline text-xl">Manage Orders</CardTitle></div>
-                            </CardHeader>
-                        </Card>
-                    </Link>
-                     <Link href="/admin/products">
-                        <Card className="h-full hover:bg-card/95 hover:shadow-md transition-all">
-                            <CardHeader className="flex flex-row items-center gap-4">
-                                <Package className="h-8 w-8 text-primary" />
-                                <div><CardTitle className="font-headline text-xl">Manage Products</CardTitle></div>
-                            </CardHeader>
-                        </Card>
-                    </Link>
-                     <Link href="/admin/categories">
-                        <Card className="h-full hover:bg-card/95 hover:shadow-md transition-all">
-                            <CardHeader className="flex flex-row items-center gap-4">
-                                <LayoutGrid className="h-8 w-8 text-primary" />
-                                <div><CardTitle className="font-headline text-xl">Manage Categories</CardTitle></div>
-                            </CardHeader>
-                        </Card>
-                    </Link>
-                  </div>
-            </div>
         </>
       )}
     </div>
@@ -239,4 +205,3 @@ function AdminPage() {
 }
 
 export default withAdminAuth(AdminPage);
-    

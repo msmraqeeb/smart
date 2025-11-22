@@ -38,10 +38,10 @@ function NewProductPage() {
     };
 
     return (
-         <div className="container mx-auto px-4 py-8">
-            <Card className="max-w-4xl mx-auto">
+         <div>
+            <Card>
                 <CardHeader>
-                    <CardTitle className="font-headline">Add New Product</CardTitle>
+                    <CardTitle>Add New Product</CardTitle>
                     <CardDescription>Fill out the form below to add a new product to your store.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -53,5 +53,3 @@ function NewProductPage() {
 }
 
 export default withAdminAuth(NewProductPage);
-
-    

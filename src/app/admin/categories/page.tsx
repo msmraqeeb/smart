@@ -80,7 +80,7 @@ function AdminCategoriesPage() {
 
 
     return (
-        <div className="container mx-auto px-4 py-8">
+        <div>
             <AlertDialog open={!!categoryToDelete} onOpenChange={(open) => !open && setCategoryToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -96,8 +96,10 @@ function AdminCategoriesPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            <div className="flex justify-between items-center mb-8">
-                <h1 className="font-headline text-4xl font-bold">Manage Categories</h1>
+            <div className="flex justify-between items-center mb-6">
+                <div>
+                   {/* Title is now in the layout header */}
+                </div>
                 <Button asChild>
                     <Link href="/admin/categories/new">Add New Category</Link>
                 </Button>
