@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject, type UploadTask } from 'firebase/storage';
 import { useFirebaseApp } from '@/firebase';
@@ -16,8 +16,6 @@ interface UploadingFile {
   id: string;
   file: File;
   progress: number;
-  task: UploadTask;
-  source: 'local';
 }
 
 interface ImageUploaderProps {
@@ -32,9 +30,6 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
   const { toast } = useToast();
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   
-  // Use a ref to hold the tasks to avoid issues with stale state in callbacks
-  const uploadTasksRef = useRef<Map<string, UploadTask>>(new Map());
-
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!storage) {
       toast({
@@ -47,21 +42,21 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
 
     const newUploads = acceptedFiles.map(file => {
       const id = `${file.name}-${Date.now()}`;
-      const storageRef = ref(storage, `${folder}/${id}-${file.name}`);
-      const task = uploadBytesResumable(storageRef, file);
-      
-      uploadTasksRef.current.set(id, task);
-      
-      return { id, file, progress: 0, task, source: 'local' as const };
+      return { id, file, progress: 0 };
     });
     
     setUploadingFiles(prev => [...prev, ...newUploads]);
 
     newUploads.forEach(upload => {
-      upload.task.on('state_changed',
+      const storageRef = ref(storage, `${folder}/${upload.id}-${upload.file.name}`);
+      const task = uploadBytesResumable(storageRef, upload.file);
+
+      task.on('state_changed',
         (snapshot) => {
           const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress } : f));
+          setUploadingFiles(prev => 
+            prev.map(f => f.id === upload.id ? { ...f, progress } : f)
+          );
         },
         (error) => {
           if (error.code !== 'storage/canceled') {
@@ -73,13 +68,11 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
             });
           }
           setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
-          uploadTasksRef.current.delete(upload.id);
         },
         () => {
-          getDownloadURL(upload.task.snapshot.ref).then((downloadURL) => {
+          getDownloadURL(task.snapshot.ref).then((downloadURL) => {
             onChange([...urls, downloadURL]);
             setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
-            uploadTasksRef.current.delete(upload.id);
           });
         }
       );
@@ -98,7 +91,6 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
 
     onChange(urls.filter(url => url !== urlToRemove));
 
-    // Do not delete from storage if it's not a Firebase URL
     if (!urlToRemove.includes('firebasestorage.googleapis.com')) {
       return;
     }
@@ -119,15 +111,6 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
       console.warn("Error parsing URL for deletion:", e);
     }
   };
-
-  const cancelUpload = (uploadId: string) => {
-    const task = uploadTasksRef.current.get(uploadId);
-    if (task) {
-      task.cancel();
-      uploadTasksRef.current.delete(uploadId);
-    }
-    setUploadingFiles(prev => prev.filter(f => f.id !== uploadId));
-  }
   
   return (
     <div className="space-y-4">
@@ -163,9 +146,6 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
                     <p className="text-xs text-muted-foreground mt-2 truncate w-full text-center">{upload.file.name}</p>
                     <Progress value={upload.progress} className="h-2 mt-2 w-full" />
                 </div>
-                 <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => cancelUpload(upload.id)}>
-                    <X className="h-4 w-4" />
-                 </Button>
             </div>
           ))}
        </div>
