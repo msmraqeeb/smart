@@ -3,6 +3,7 @@
 
 import { writeFile } from 'fs/promises'
 import { join } from 'path'
+import 'dotenv/config';
 
 export async function saveFile(data: FormData) {
   const file: File | null = data.get('file') as unknown as File
@@ -19,7 +20,11 @@ export async function saveFile(data: FormData) {
   
   await writeFile(path, buffer);
   console.log(`Open ${path} to see the uploaded file.`);
+  
+  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+  const host = process.env.HOST || 'localhost:9002';
+  const fullUrl = `${protocol}://${host}/images/${filename}`;
 
   // Return the public URL
-  return `/images/${filename}`;
+  return fullUrl;
 }
