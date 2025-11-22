@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useFirebaseApp } from '@/firebase';
@@ -65,19 +65,17 @@ export function ImageUploader({ value: urls = [], onChange, folder = 'products' 
         },
         (error) => {
           console.error("Upload Error:", error);
-          if (error.code !== 'storage/canceled') {
-            toast({
-              variant: 'destructive',
-              title: 'Upload Failed',
-              description: `Could not upload ${upload.file.name}.`,
-            });
-          }
+          toast({
+            variant: 'destructive',
+            title: 'Upload Failed',
+            description: `Could not upload ${upload.file.name}.`,
+          });
           setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
         },
         () => {
           getDownloadURL(task.snapshot.ref).then((downloadURL) => {
             onChange([...urls, downloadURL]);
-            setManualUrl(downloadURL); // Set the manualUrl state with the new URL
+            setManualUrl(downloadURL);
             setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
           });
         }
