@@ -10,8 +10,8 @@ import { useRouter } from "next/navigation";
 import { useCollection, useFirestore } from "@/firebase";
 import React, { useMemo } from "react";
 import { collection, query, orderBy, limit } from "firebase/firestore";
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
-import { ChartTooltipContent } from "@/components/ui/chart";
+import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { subDays, format } from 'date-fns';
@@ -81,6 +81,13 @@ function AdminPage() {
 
   const loading = ordersLoading || usersLoading || recentOrdersLoading;
 
+  const chartConfig = {
+    total: {
+      label: 'Sales',
+      color: 'hsl(var(--primary))',
+    },
+  };
+
   return (
     <div className="container mx-auto px-4 py-8 space-y-8">
       <div className="flex justify-between items-center">
@@ -138,17 +145,17 @@ function AdminPage() {
                         <CardDescription>Total sales in the last 7 days.</CardDescription>
                     </CardHeader>
                     <CardContent className="pl-2">
-                        <ResponsiveContainer width="100%" height={350}>
-                            <BarChart data={salesData}>
-                                <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
-                                <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${formatCurrency(value)}`} />
-                                <Tooltip
-                                    cursor={{fill: 'hsl(var(--muted))'}}
-                                    content={<ChartTooltipContent formatter={(value) => formatCurrency(value as number)} />}
-                                />
-                                <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                            </BarChart>
-                        </ResponsiveContainer>
+                      <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+                        <BarChart accessibilityLayer data={salesData}>
+                            <XAxis dataKey="date" stroke="#888888" fontSize={12} tickLine={false} axisLine={false} />
+                            <YAxis stroke="#888888" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${formatCurrency(value as number)}`} />
+                            <ChartTooltip
+                                cursor={{fill: 'hsl(var(--muted))'}}
+                                content={<ChartTooltipContent formatter={(value) => formatCurrency(value as number)} />}
+                            />
+                            <Bar dataKey="total" fill="var(--color-total)" radius={[4, 4, 0, 0]} />
+                        </BarChart>
+                      </ChartContainer>
                     </CardContent>
                 </Card>
 
@@ -232,5 +239,4 @@ function AdminPage() {
 }
 
 export default withAdminAuth(AdminPage);
-
     
