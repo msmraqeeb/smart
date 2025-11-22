@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject, type UploadTask } from 'firebase/storage';
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useFirebaseApp } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
