@@ -1,18 +1,18 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
-import { useFirebaseApp } from '@/firebase';
+import { saveFile } from '@/app/actions/upload-actions';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { X, UploadCloud, FileImage, Link as LinkIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
+import { Input } from './ui/input';
+
 
 interface UploadingFile {
   id: string;
@@ -23,65 +23,56 @@ interface UploadingFile {
 interface ImageUploaderProps {
   value: string[];
   onChange: (urls: string[]) => void;
-  folder?: string;
+  folder?: string; // folder prop is no longer used but kept for component signature stability
 }
 
-export function ImageUploader({ value: urls = [], onChange, folder = 'products' }: ImageUploaderProps) {
-  const app = useFirebaseApp();
-  const storage = app ? getStorage(app) : null;
+export function ImageUploader({ value: urls = [], onChange }: ImageUploaderProps) {
   const { toast } = useToast();
   
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   const [manualUrl, setManualUrl] = useState('');
   
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (!storage) {
-      toast({
-        variant: 'destructive',
-        title: 'Storage not configured',
-        description: 'Firebase Storage is not available to upload files.',
-      });
-      return;
-    }
-
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    
     const newUploads = acceptedFiles.map(file => ({
       id: `${file.name}-${Date.now()}`,
       file,
       progress: 0,
     }));
-
     setUploadingFiles(prev => [...prev, ...newUploads]);
 
-    newUploads.forEach(upload => {
-      const storageRef = ref(storage, `${folder}/${upload.id}-${upload.file.name}`);
-      const task = uploadBytesResumable(storageRef, upload.file);
+    for (const upload of newUploads) {
+      try {
+        const formData = new FormData();
+        formData.append('file', upload.file);
 
-      task.on('state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-          setUploadingFiles(prev =>
-            prev.map(f => f.id === upload.id ? { ...f, progress } : f)
-          );
-        },
-        (error) => {
-          console.error("Upload Error:", error);
-          toast({
-            variant: 'destructive',
-            title: 'Upload Failed',
-            description: `Could not upload ${upload.file.name}.`,
-          });
+        // Simulate progress for server action
+        setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress: 50 } : f));
+
+        const publicUrl = await saveFile(formData);
+        
+        setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress: 100 } : f));
+        
+        // Use a function for `onChange` to get the latest state of `urls`
+        onChange((prevUrls) => [...prevUrls, publicUrl]);
+        setManualUrl(publicUrl); // auto-fill the URL field as requested
+        
+        // Remove from uploading list
+        setTimeout(() => {
           setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
-        },
-        () => {
-          getDownloadURL(task.snapshot.ref).then((downloadURL) => {
-            onChange([...urls, downloadURL]);
-            setManualUrl(downloadURL);
-            setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
-          });
-        }
-      );
-    });
-  }, [storage, folder, onChange, toast, urls]);
+        }, 500);
+
+      } catch (error) {
+        console.error("Upload Error:", error);
+        toast({
+          variant: 'destructive',
+          title: 'Upload Failed',
+          description: `Could not upload ${upload.file.name}.`,
+        });
+        setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
+      }
+    }
+  }, [onChange, toast]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -90,40 +81,24 @@ export function ImageUploader({ value: urls = [], onChange, folder = 'products' 
   });
   
   const removeImage = (urlToRemove: string) => {
-    if (!storage) return;
-
+    // Note: This does not delete the file from the server's public/images folder.
+    // A separate server action would be needed for that.
     onChange(urls.filter(url => url !== urlToRemove));
-
-    if (!urlToRemove.includes('firebasestorage.googleapis.com')) {
-      return;
-    }
-
-    try {
-      const imageRef = ref(storage, urlToRemove);
-      deleteObject(imageRef).then(() => {
-        toast({
-          title: 'Image Removed',
-          description: 'The image has been deleted from storage.',
-        });
-      }).catch((error) => {
-        if (error.code !== 'storage/object-not-found') {
-            console.warn("Could not delete from storage:", error);
-        }
-      });
-    } catch(e) {
-      console.warn("Error parsing URL for deletion:", e);
-    }
   };
-
-  const addManualUrl = () => {
+  
+    const addManualUrl = () => {
     if (manualUrl && !urls.includes(manualUrl)) {
       try {
-        new URL(manualUrl);
-        onChange([...urls, manualUrl]);
-        setManualUrl('');
-        toast({
-          title: 'Image URL Added',
-        });
+        // Simple check for a relative or absolute URL path
+        if (manualUrl.startsWith('/') || manualUrl.startsWith('http')) {
+           onChange([...urls, manualUrl]);
+           setManualUrl('');
+           toast({
+            title: 'Image URL Added',
+           });
+        } else {
+            throw new Error('Invalid URL format');
+        }
       } catch (_) {
         toast({
           variant: 'destructive',
@@ -133,7 +108,7 @@ export function ImageUploader({ value: urls = [], onChange, folder = 'products' 
       }
     }
   };
-  
+
   return (
     <div className="space-y-4">
       <div {...getRootProps()} className={cn("group cursor-pointer rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 p-8 text-center transition-colors", isDragActive && "border-primary bg-primary/10")}>
