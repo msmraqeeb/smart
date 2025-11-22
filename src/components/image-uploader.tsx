@@ -1,22 +1,23 @@
 
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useFirebaseApp } from '@/firebase';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { X, UploadCloud, FileImage } from 'lucide-react';
+import { X, UploadCloud, FileImage, Link as LinkIcon } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { Separator } from './ui/separator';
 
 interface UploadingFile {
   id: string;
   file: File;
   progress: number;
-  url?: string;
 }
 
 interface ImageUploaderProps {
@@ -29,8 +30,10 @@ export function ImageUploader({ value: urls = [], onChange, folder = 'products' 
   const app = useFirebaseApp();
   const storage = app ? getStorage(app) : null;
   const { toast } = useToast();
+  
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
-
+  const [manualUrl, setManualUrl] = useState('');
+  
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!storage) {
       toast({
@@ -112,6 +115,25 @@ export function ImageUploader({ value: urls = [], onChange, folder = 'products' 
       console.warn("Error parsing URL for deletion:", e);
     }
   };
+
+  const addManualUrl = () => {
+    if (manualUrl && !urls.includes(manualUrl)) {
+      try {
+        new URL(manualUrl);
+        onChange([...urls, manualUrl]);
+        setManualUrl('');
+        toast({
+          title: 'Image URL Added',
+        });
+      } catch (_) {
+        toast({
+          variant: 'destructive',
+          title: 'Invalid URL',
+          description: 'Please enter a valid image URL.',
+        });
+      }
+    }
+  };
   
   return (
     <div className="space-y-4">
@@ -130,6 +152,23 @@ export function ImageUploader({ value: urls = [], onChange, folder = 'products' 
         </div>
       </div>
       
+       <div className="relative flex items-center">
+            <Separator className="flex-1" />
+            <span className="mx-4 text-xs font-medium text-muted-foreground">OR</span>
+            <Separator className="flex-1" />
+        </div>
+
+        <div className="flex items-center gap-2">
+            <LinkIcon className="h-5 w-5 text-muted-foreground" />
+            <Input 
+                type="url"
+                placeholder="https://example.com/image.png"
+                value={manualUrl}
+                onChange={(e) => setManualUrl(e.target.value)}
+            />
+            <Button type="button" onClick={addManualUrl}>Add URL</Button>
+        </div>
+
        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {urls && urls.map((url, index) => (
               <div key={url} className="relative aspect-square">
