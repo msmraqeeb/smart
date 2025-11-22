@@ -6,13 +6,10 @@ import { useDropzone } from 'react-dropzone';
 import { saveFile } from '@/app/actions/upload-actions';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { X, UploadCloud, FileImage, Link as LinkIcon } from 'lucide-react';
+import { X, UploadCloud, FileImage } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-import { Separator } from './ui/separator';
-import { Input } from './ui/input';
-
 
 interface UploadingFile {
   id: string;
@@ -23,14 +20,13 @@ interface UploadingFile {
 interface ImageUploaderProps {
   value: string[];
   onChange: (urls: string[]) => void;
-  folder?: string; // folder prop is no longer used but kept for component signature stability
+  folder?: string;
 }
 
 export function ImageUploader({ value: urls = [], onChange }: ImageUploaderProps) {
   const { toast } = useToast();
   
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
-  const [manualUrl, setManualUrl] = useState('');
   
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     
@@ -46,18 +42,14 @@ export function ImageUploader({ value: urls = [], onChange }: ImageUploaderProps
         const formData = new FormData();
         formData.append('file', upload.file);
 
-        // Simulate progress for server action
         setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress: 50 } : f));
 
         const publicUrl = await saveFile(formData);
         
         setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress: 100 } : f));
         
-        // Use a function for `onChange` to get the latest state of `urls`
-        onChange((prevUrls) => [...prevUrls, publicUrl]);
-        setManualUrl(publicUrl); // auto-fill the URL field as requested
+        onChange([...urls, publicUrl]);
         
-        // Remove from uploading list
         setTimeout(() => {
           setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
         }, 500);
@@ -72,7 +64,7 @@ export function ImageUploader({ value: urls = [], onChange }: ImageUploaderProps
         setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
       }
     }
-  }, [onChange, toast]);
+  }, [onChange, toast, urls]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -81,34 +73,9 @@ export function ImageUploader({ value: urls = [], onChange }: ImageUploaderProps
   });
   
   const removeImage = (urlToRemove: string) => {
-    // Note: This does not delete the file from the server's public/images folder.
-    // A separate server action would be needed for that.
     onChange(urls.filter(url => url !== urlToRemove));
   };
   
-    const addManualUrl = () => {
-    if (manualUrl && !urls.includes(manualUrl)) {
-      try {
-        // Simple check for a relative or absolute URL path
-        if (manualUrl.startsWith('/') || manualUrl.startsWith('http')) {
-           onChange([...urls, manualUrl]);
-           setManualUrl('');
-           toast({
-            title: 'Image URL Added',
-           });
-        } else {
-            throw new Error('Invalid URL format');
-        }
-      } catch (_) {
-        toast({
-          variant: 'destructive',
-          title: 'Invalid URL',
-          description: 'Please enter a valid image URL.',
-        });
-      }
-    }
-  };
-
   return (
     <div className="space-y-4">
       <div {...getRootProps()} className={cn("group cursor-pointer rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 p-8 text-center transition-colors", isDragActive && "border-primary bg-primary/10")}>
@@ -125,23 +92,6 @@ export function ImageUploader({ value: urls = [], onChange }: ImageUploaderProps
             )}
         </div>
       </div>
-      
-       <div className="relative flex items-center">
-            <Separator className="flex-1" />
-            <span className="mx-4 text-xs font-medium text-muted-foreground">OR</span>
-            <Separator className="flex-1" />
-        </div>
-
-        <div className="flex items-center gap-2">
-            <LinkIcon className="h-5 w-5 text-muted-foreground" />
-            <Input 
-                type="url"
-                placeholder="https://example.com/image.png"
-                value={manualUrl}
-                onChange={(e) => setManualUrl(e.target.value)}
-            />
-            <Button type="button" onClick={addManualUrl}>Add URL</Button>
-        </div>
 
        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {urls && urls.map((url, index) => (
