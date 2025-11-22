@@ -40,26 +40,36 @@ function ShippingPage() {
                             <Label htmlFor="inside-dhaka" className="font-semibold">Inside Dhaka</Label>
                             <p className="text-sm text-muted-foreground">Standard delivery charge for orders within Dhaka metropolitan area.</p>
                         </div>
-                        <Input
-                            id="inside-dhaka"
-                            type="number"
-                            value={insideDhaka}
-                            onChange={(e) => setInsideDhaka(e.target.value)}
-                            className="w-32"
-                        />
+                        <div className="relative w-32">
+                             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
+                                ৳
+                            </span>
+                            <Input
+                                id="inside-dhaka"
+                                type="number"
+                                value={insideDhaka}
+                                onChange={(e) => setInsideDhaka(e.target.value)}
+                                className="pl-8"
+                            />
+                        </div>
                     </div>
                     <div className="flex items-center justify-between gap-4 rounded-md border p-4">
                         <div>
                             <Label htmlFor="outside-dhaka" className="font-semibold">Outside Dhaka</Label>
                             <p className="text-sm text-muted-foreground">Standard delivery charge for orders outside of Dhaka.</p>
                         </div>
-                        <Input
-                            id="outside-dhaka"
-                            type="number"
-                            value={outsideDhaka}
-                            onChange={(e) => setOutsideDhaka(e.target.value)}
-                            className="w-32"
-                        />
+                         <div className="relative w-32">
+                             <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">
+                                ৳
+                            </span>
+                            <Input
+                                id="outside-dhaka"
+                                type="number"
+                                value={outsideDhaka}
+                                onChange={(e) => setOutsideDhaka(e.target.value)}
+                                className="pl-8"
+                            />
+                        </div>
                     </div>
                 </CardContent>
                 <CardFooter className="flex justify-end">
