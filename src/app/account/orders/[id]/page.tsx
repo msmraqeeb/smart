@@ -1,3 +1,4 @@
+
 'use client';
 import { useRouter, useParams } from 'next/navigation';
 import { useDoc } from '@/firebase';
@@ -35,6 +36,8 @@ export default function OrderDetailsPage() {
   if (!order) {
     return <div>Order not found.</div>;
   }
+
+  const subtotal = order.total - (order.shippingCost || 0);
 
   return (
     <Card>
@@ -77,11 +80,11 @@ export default function OrderDetailsPage() {
             <div className="space-y-2">
                  <div className="flex justify-between">
                     <p className="text-muted-foreground">Subtotal</p>
-                    <p>{formatCurrency(order.total)}</p>
+                    <p>{formatCurrency(subtotal)}</p>
                 </div>
                  <div className="flex justify-between">
-                    <p className="text-muted-foreground">Shipping</p>
-                    <p>FREE</p>
+                    <p className="text-muted-foreground">Shipping ({order.shippingZone})</p>
+                    <p>{formatCurrency(order.shippingCost)}</p>
                 </div>
                 <Separator />
                  <div className="flex justify-between font-bold text-lg">
@@ -95,10 +98,12 @@ export default function OrderDetailsPage() {
                 <address className="not-italic text-muted-foreground">
                     {order.customer.fullName}<br/>
                     {order.customer.address}<br/>
-                    {order.customer.city}, {order.customer.district}
+                    {order.customer.area}, {order.customer.district}
                 </address>
             </div>
         </CardContent>
     </Card>
   );
 }
+
+    

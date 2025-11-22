@@ -118,9 +118,9 @@ export default function CartPage() {
                 <span>Subtotal</span>
                 <span>{formatCurrency(cartTotal)}</span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-muted-foreground">
                 <span>Shipping</span>
-                <span>FREE</span>
+                <span>Calculated at checkout</span>
               </div>
               <div className="flex justify-between font-bold text-lg">
                 <span>Total</span>

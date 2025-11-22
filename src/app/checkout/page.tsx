@@ -65,13 +65,17 @@ export default function CheckoutPage() {
   const [customerInfo, setCustomerInfo] = useState({
     fullName: '',
     address: '',
-    city: '',
     district: '',
     mobileNumber: '',
     email: '',
     area: '',
   });
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  
+  const INSIDE_DHAKA_COST = 80;
+  const OUTSIDE_DHAKA_COST = 150;
+  const [shippingCost, setShippingCost] = useState(0);
+  const [shippingZone, setShippingZone] = useState<string | null>(null);
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -91,6 +95,21 @@ export default function CheckoutPage() {
         }));
     }
   }, [user, userProfile]);
+  
+  useEffect(() => {
+    if (customerInfo.district === 'Dhaka') {
+        setShippingCost(INSIDE_DHAKA_COST);
+        setShippingZone('Inside Dhaka');
+    } else if (customerInfo.district) {
+        setShippingCost(OUTSIDE_DHAKA_COST);
+        setShippingZone('Outside Dhaka');
+    } else {
+        setShippingCost(0);
+        setShippingZone(null);
+    }
+  }, [customerInfo.district]);
+
+  const grandTotal = cartTotal + shippingCost;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -120,7 +139,6 @@ export default function CheckoutPage() {
       customer: {
         fullName: customerInfo.fullName,
         address: customerInfo.address,
-        city: customerInfo.city,
         district: customerInfo.district,
         area: customerInfo.area,
         mobileNumber: customerInfo.mobileNumber,
@@ -132,11 +150,13 @@ export default function CheckoutPage() {
         quantity: item.quantity,
         price: item.product.price,
       })),
-      total: cartTotal,
+      total: grandTotal,
       status: "Processing",
       createdAt: serverTimestamp(),
       userId: user?.uid || null,
       paymentMethod,
+      shippingCost,
+      shippingZone,
     };
 
     saveOrder(firestore, orderId, orderData);
@@ -269,13 +289,13 @@ export default function CheckoutPage() {
                         <p>{formatCurrency(cartTotal)}</p>
                     </div>
                      <div className="flex justify-between">
-                        <p>Shipping</p>
-                        <p>FREE</p>
+                        <p>Shipping ({shippingZone || 'Select district'})</p>
+                        <p>{formatCurrency(shippingCost)}</p>
                     </div>
                     <Separator />
                      <div className="flex justify-between font-bold text-lg">
                         <p>Total</p>
-                        <p>{formatCurrency(cartTotal)}</p>
+                        <p>{formatCurrency(grandTotal)}</p>
                     </div>
                 </CardContent>
             </Card>

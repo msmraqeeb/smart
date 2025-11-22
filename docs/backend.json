@@ -41,13 +41,12 @@
           "properties": {
             "fullName": { "type": "string" },
             "address": { "type": "string" },
-            "city": { "type": "string" },
             "district": { "type": "string" },
             "mobileNumber": { "type": "string" },
             "email": { "type": "string", "format": "email" },
             "area": { "type": "string" }
           },
-          "required": ["fullName", "address", "city", "district", "mobileNumber", "email", "area"]
+          "required": ["fullName", "address", "district", "mobileNumber", "email", "area"]
         },
         "items": {
           "type": "array",
@@ -66,9 +65,11 @@
         "status": { "type": "string", "enum": ["Processing", "Shipped", "Delivered", "Cancelled"] },
         "createdAt": { "type": "string", "format": "date-time" },
         "userId": { "type": "string" },
-        "paymentMethod": { "type": "string", "enum": ["cod", "online"] }
+        "paymentMethod": { "type": "string", "enum": ["cod", "online"] },
+        "shippingCost": { "type": "number" },
+        "shippingZone": { "type": "string" }
       },
-      "required": ["customer", "items", "total", "status", "createdAt", "paymentMethod"]
+      "required": ["customer", "items", "total", "status", "createdAt", "paymentMethod", "shippingCost", "shippingZone"]
     },
     "UserProfile": {
       "title": "User Profile",
