@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { useFirebaseApp } from '@/firebase';
@@ -24,12 +24,12 @@ interface ImageUploaderProps {
   folder?: string;
 }
 
-export function ImageUploader({ value: urls, onChange, folder = 'products' }: ImageUploaderProps) {
+export function ImageUploader({ value: urls = [], onChange, folder = 'products' }: ImageUploaderProps) {
   const app = useFirebaseApp();
   const storage = app ? getStorage(app) : null;
   const { toast } = useToast();
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
-  
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (!storage) {
       toast({
@@ -40,11 +40,12 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
       return;
     }
 
-    const newUploads = acceptedFiles.map(file => {
-      const id = `${file.name}-${Date.now()}`;
-      return { id, file, progress: 0 };
-    });
-    
+    const newUploads = acceptedFiles.map(file => ({
+      id: `${file.name}-${Date.now()}`,
+      file,
+      progress: 0,
+    }));
+
     setUploadingFiles(prev => [...prev, ...newUploads]);
 
     newUploads.forEach(upload => {
@@ -59,8 +60,8 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
           );
         },
         (error) => {
+          console.error("Upload Error:", error);
           if (error.code !== 'storage/canceled') {
-            console.error("Upload Error:", error);
             toast({
               variant: 'destructive',
               title: 'Upload Failed',
@@ -71,13 +72,13 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
         },
         () => {
           getDownloadURL(task.snapshot.ref).then((downloadURL) => {
+            // This is the critical part: call onChange with the new complete list of URLs
             onChange([...urls, downloadURL]);
             setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
           });
         }
       );
     });
-
   }, [storage, folder, onChange, toast, urls]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -130,7 +131,7 @@ export function ImageUploader({ value: urls, onChange, folder = 'products' }: Im
       </div>
       
        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {urls.map((url, index) => (
+          {urls && urls.map((url, index) => (
               <div key={url} className="relative aspect-square">
                   <Image src={url} alt={`Uploaded image ${index + 1}`} fill sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw" className="rounded-md object-cover" />
                     <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 h-6 w-6 rounded-full" onClick={() => removeImage(url)}>
