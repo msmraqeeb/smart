@@ -4,8 +4,8 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { getProducts, getCategories } from '@/lib/data';
-import type { Product, Category } from '@/lib/types';
+import { getProducts, getCategories, getAttributes } from '@/lib/data';
+import type { Product, Category, Attribute } from '@/lib/types';
 import { ProductCard } from '@/components/product-card';
 import {
   Select,
@@ -64,6 +64,7 @@ export default function ProductsPage() {
 
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [attributes, setAttributes] = useState<Attribute[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Pagination state
@@ -79,12 +80,14 @@ export default function ProductsPage() {
   useEffect(() => {
     const fetchInitialData = async () => {
       setLoading(true);
-      const [productsData, categoriesData] = await Promise.all([
+      const [productsData, categoriesData, attributesData] = await Promise.all([
         getProducts(),
         getCategories(),
+        getAttributes(),
       ]);
       setAllProducts(productsData);
       setCategories(categoriesData);
+      setAttributes(attributesData);
       setLoading(false);
     };
     fetchInitialData();
@@ -175,6 +178,19 @@ export default function ProductsPage() {
     if (selectedBrands.length > 0) {
         products = products.filter(p => p.brand && selectedBrands.includes(p.brand));
     }
+    
+    // Filter by dynamic attributes from URL
+    attributes.forEach(attr => {
+        const selectedValues = searchParams.getAll(attr.name.toLowerCase());
+        if (selectedValues.length > 0) {
+            products = products.filter(p => {
+                if (!p.variants || p.variants.length === 0) return false;
+                return p.variants.some(variant => 
+                    selectedValues.includes(variant.attributes[attr.name])
+                );
+            });
+        }
+    });
 
     // Filter by rating
     if (selectedRating) {
@@ -197,7 +213,7 @@ export default function ProductsPage() {
     }
 
     return products;
-  }, [allProducts, categories, searchParams]);
+  }, [allProducts, categories, attributes, searchParams]);
 
   useEffect(() => {
     setPage(1);
@@ -234,6 +250,14 @@ export default function ProductsPage() {
   } else if (currentCategorySlugs.length > 1) {
       categoryTitle = 'Multiple Categories';
   }
+
+  const availableAttributes = useMemo(() => {
+      const productAttributes = new Set<string>();
+      allProducts.forEach(p => {
+          p.attributes?.forEach(attr => productAttributes.add(attr.name));
+      });
+      return attributes.filter(attr => productAttributes.has(attr.name));
+  }, [allProducts, attributes]);
 
 
   return (
@@ -291,6 +315,32 @@ export default function ProductsPage() {
                 ))}
              </div>
            </div>
+           
+            {/* Dynamic Attribute Filters */}
+            {availableAttributes.map(attr => (
+                <div key={attr.id} className="space-y-4">
+                    <h3 className="font-headline text-2xl font-bold">{attr.name}</h3>
+                    <div className="space-y-2">
+                        {attr.values.map(value => (
+                            <div key={value} className="flex items-center space-x-2">
+                                <Checkbox
+                                    id={`attr-${attr.name}-${value}`}
+                                    checked={searchParams.getAll(attr.name.toLowerCase()).includes(value)}
+                                    onCheckedChange={(checked) => {
+                                        const currentValues = searchParams.getAll(attr.name.toLowerCase());
+                                        const newValues = checked
+                                            ? [...currentValues, value]
+                                            : currentValues.filter(v => v !== value);
+                                        handleFilterChange(attr.name.toLowerCase(), newValues);
+                                    }}
+                                />
+                                <Label htmlFor={`attr-${attr.name}-${value}`} className="font-normal">{value}</Label>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ))}
+
 
             {/* Ratings Filter */}
             <div className="space-y-4">
