@@ -288,7 +288,7 @@ function EditOrderPage() {
                 </div>
                 <div className="space-y-4">
                     {order.items.map((item: any, index: number) => (
-                        <div key={item.id} className="flex flex-col md:flex-row items-center gap-4 rounded-md border p-4">
+                        <div key={`${item.id}-${index}`} className="flex flex-col md:flex-row items-center gap-4 rounded-md border p-4">
                            <div className='flex-1'>
                              <Label>Product Name</Label>
                              <p className='font-medium'>{item.name}</p>
@@ -383,3 +383,5 @@ function EditOrderPage() {
 }
 
 export default withAdminAuth(EditOrderPage);
+
+    
