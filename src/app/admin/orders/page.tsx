@@ -9,12 +9,13 @@ import withAdminAuth from '@/components/withAdminAuth';
 import { useCollection } from "@/firebase";
 import { collection, query, orderBy, writeBatch, doc } from "firebase/firestore";
 import { useFirestore } from "@/firebase";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Pencil, MoreHorizontal } from "lucide-react";
+import { Pencil, MoreHorizontal, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 
 type Order = {
     id: string;
@@ -28,6 +29,7 @@ function AdminOrdersPage() {
     const firestore = useFirestore();
     const { toast } = useToast();
     
+    const [searchQuery, setSearchQuery] = useState('');
     const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
     const [statusToUpdate, setStatusToUpdate] = useState<string | null>(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -39,9 +41,20 @@ function AdminOrdersPage() {
 
     const { data: orders, loading, error } = useCollection<Order>(ordersCollection);
 
+    const filteredOrders = useMemo(() => {
+        if (!orders) return [];
+        if (!searchQuery) return orders;
+
+        return orders.filter(order =>
+            order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            order.customer?.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+    }, [orders, searchQuery]);
+
+
     const handleSelectAll = (checked: boolean | 'indeterminate') => {
-        if (checked === true && orders) {
-            setSelectedOrders(orders.map(o => o.id));
+        if (checked === true && filteredOrders) {
+            setSelectedOrders(filteredOrders.map(o => o.id));
         } else {
             setSelectedOrders([]);
         }
@@ -112,7 +125,7 @@ function AdminOrdersPage() {
     }
 
 
-    const isAllSelected = orders ? selectedOrders.length === orders.length : false;
+    const isAllSelected = filteredOrders ? selectedOrders.length === filteredOrders.length && filteredOrders.length > 0 : false;
     const isSomeSelected = selectedOrders.length > 0 && !isAllSelected;
 
     if (loading) {
@@ -163,32 +176,44 @@ function AdminOrdersPage() {
             </AlertDialog>
             <Card>
                 <CardHeader>
-                    <div className="flex justify-between items-center">
-                        <div>
+                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div className="flex-1">
                             <CardTitle>All Orders</CardTitle>
                             <CardDescription>View and manage all customer orders.</CardDescription>
                         </div>
-                        {selectedOrders.length > 0 && (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline">
-                                        Actions ({selectedOrders.length})
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <DropdownMenuLabel>Bulk Actions</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem onSelect={() => setStatusToUpdate('Processing')}>Change status to Processing</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => setStatusToUpdate('Shipped')}>Change status to Shipped</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => setStatusToUpdate('Delivered')}>Change status to Delivered</DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => setStatusToUpdate('Cancelled')}>Change status to Cancelled</DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="text-destructive" onSelect={() => setIsDeleteDialogOpen(true)}>
-                                        Delete Selected
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )}
+                         <div className="flex items-center gap-2 w-full md:w-auto">
+                            <div className="relative flex-1 md:flex-auto">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    type="search"
+                                    placeholder="Search by ID or name..."
+                                    className="pl-8 w-full"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                />
+                            </div>
+                            {selectedOrders.length > 0 && (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline">
+                                            Actions ({selectedOrders.length})
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <DropdownMenuLabel>Bulk Actions</DropdownMenuLabel>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem onSelect={() => setStatusToUpdate('Processing')}>Change status to Processing</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => setStatusToUpdate('Shipped')}>Change status to Shipped</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => setStatusToUpdate('Delivered')}>Change status to Delivered</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => setStatusToUpdate('Cancelled')}>Change status to Cancelled</DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem className="text-destructive" onSelect={() => setIsDeleteDialogOpen(true)}>
+                                            Delete Selected
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            )}
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -198,7 +223,7 @@ function AdminOrdersPage() {
                                 <TableHead className="w-[50px]">
                                     <Checkbox 
                                         onCheckedChange={handleSelectAll}
-                                        checked={isAllSelected || isSomeSelected}
+                                        checked={isAllSelected}
                                         indeterminate={isSomeSelected}
                                         aria-label="Select all rows"
                                     />
@@ -212,7 +237,7 @@ function AdminOrdersPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {orders?.map((order) => (
+                            {filteredOrders?.map((order) => (
                                 <TableRow key={order.id} data-state={selectedOrders.includes(order.id) && "selected"}>
                                     <TableCell>
                                          <Checkbox 
