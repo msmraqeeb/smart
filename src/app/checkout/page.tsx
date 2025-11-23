@@ -26,7 +26,7 @@ import { format } from 'date-fns';
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { locations } from "@/lib/locations";
-import { getCouponByCode } from "@/lib/data";
+import { getCouponByCode, getCoupons } from "@/lib/data";
 import type { Coupon } from "@/lib/types";
 
 
@@ -112,6 +112,56 @@ export default function CheckoutPage() {
     }
   }, [customerInfo.district]);
 
+    // Auto-apply best coupon
+  useEffect(() => {
+    const findAndApplyBestCoupon = async () => {
+        if (appliedCoupon) return; // Don't auto-apply if one is already manually applied
+        
+        const allCoupons = await getCoupons();
+        const now = new Date();
+
+        const validCoupons = allCoupons.filter(coupon => {
+            const is_active = coupon.status === 'active';
+            const not_expired = !coupon.expiresAt || coupon.expiresAt.toDate() >= now;
+            const meets_min_spend = !coupon.minSpend || cartTotal >= coupon.minSpend;
+            return is_active && not_expired && meets_min_spend;
+        });
+
+        if (validCoupons.length === 0) return;
+
+        let bestCoupon: Coupon | null = null;
+        let maxDiscount = 0;
+
+        for (const coupon of validCoupons) {
+            let currentDiscount = 0;
+            if (coupon.discountType === 'fixed') {
+                currentDiscount = coupon.discountValue;
+            } else if (coupon.discountType === 'percentage') {
+                currentDiscount = (cartTotal * coupon.discountValue) / 100;
+            }
+
+            if (currentDiscount > maxDiscount) {
+                maxDiscount = currentDiscount;
+                bestCoupon = coupon;
+            }
+        }
+
+        if (bestCoupon && maxDiscount > 0) {
+            setAppliedCoupon(bestCoupon);
+            setCouponDiscount(maxDiscount);
+            setCouponCode(bestCoupon.code);
+            toast({
+                title: "Best Deal Applied!",
+                description: `We've automatically applied the coupon "${bestCoupon.code}" to save you ${formatCurrency(maxDiscount)}.`,
+            });
+        }
+    };
+
+    if (cartTotal > 0) {
+        findAndApplyBestCoupon();
+    }
+  }, [cartTotal, appliedCoupon]);
+
   const subTotal = cartTotal;
   const grandTotal = subTotal + shippingCost - couponDiscount;
 
@@ -172,6 +222,18 @@ export default function CheckoutPage() {
         description: `You've saved ${formatCurrency(discount)}!`
     });
   };
+  
+   const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    setCouponDiscount(0);
+    setCouponError(null);
+    toast({
+        title: 'Coupon Removed',
+        variant: 'destructive',
+    });
+  };
+
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -360,13 +422,11 @@ export default function CheckoutPage() {
                                 onChange={(e) => setCouponCode(e.target.value)}
                                 disabled={!!appliedCoupon}
                             />
-                            <Button 
-                                type="button" 
-                                onClick={handleApplyCoupon}
-                                disabled={!!appliedCoupon}
-                            >
-                                Apply
-                            </Button>
+                             {appliedCoupon ? (
+                                <Button type="button" variant="destructive" onClick={handleRemoveCoupon}>Remove</Button>
+                            ) : (
+                                <Button type="button" onClick={handleApplyCoupon}>Apply</Button>
+                            )}
                         </div>
                         {couponError && <p className="text-sm text-destructive">{couponError}</p>}
                     </div>
@@ -401,6 +461,7 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
 
 
 
