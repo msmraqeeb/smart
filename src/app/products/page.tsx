@@ -20,6 +20,8 @@ import { CategorySidebar } from '@/components/category-sidebar';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { formatCurrency } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 // Helper function to get all descendant category slugs
 const getDescendantCategorySlugs = (
@@ -61,9 +63,7 @@ export default function ProductsPage() {
   const [loading, setLoading] = useState(true);
 
   // Get filter values from URL params
-  const initialCategory = searchParams.get('category') || 'all';
   const initialSearch = searchParams.get('q') || '';
-  const initialSort = searchParams.get('sort') || 'featured';
 
   const [searchQuery, setSearchQuery] = useState(initialSearch);
 
