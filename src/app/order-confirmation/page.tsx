@@ -1,9 +1,10 @@
 
+
 'use client';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useDoc, useFirestore } from '@/firebase';
 import { doc } from 'firebase/firestore';
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -19,11 +20,13 @@ import Link from 'next/link';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Package } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useCart } from '@/context/cart-context';
 
 function OrderConfirmationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orderId = searchParams.get('orderId');
+  const { clearCart } = useCart();
 
   const firestore = useFirestore();
   const orderRef = React.useMemo(() => {
@@ -32,6 +35,12 @@ function OrderConfirmationContent() {
   }, [firestore, orderId]);
 
   const { data: order, loading } = useDoc(orderRef);
+
+  useEffect(() => {
+    if (orderId) {
+      clearCart();
+    }
+  }, [orderId, clearCart]);
 
   React.useEffect(() => {
     if (!loading && !order && orderId) {

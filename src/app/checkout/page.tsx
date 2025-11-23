@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect, useState, useMemo } from "react";
 import { useAuth, useFirestore, useDoc } from "@/firebase";
-import { doc, setDoc, serverTimestamp, type Firestore } from "firebase/firestore";
+import { doc, setDoc, type Firestore } from "firebase/firestore";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { format } from 'date-fns';
@@ -44,7 +44,7 @@ const saveOrder = (db: Firestore, orderId: string, orderData: any): Promise<void
 
 
 export default function CheckoutPage() {
-  const { cartItems, cartTotal, clearCart } = useCart();
+  const { cartItems, cartTotal } = useCart();
   const router = useRouter();
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -163,7 +163,6 @@ export default function CheckoutPage() {
         });
 
         router.push(`/order-confirmation?orderId=${orderId}`);
-        clearCart();
 
     } catch (error) {
         console.error("Failed to place order:", error);
@@ -313,4 +312,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
 
