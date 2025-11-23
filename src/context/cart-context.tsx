@@ -100,18 +100,18 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     setCartItems([]);
   };
 
-  const cartTotal = cartItems.reduce(
+  const cartTotal = (cartItems || []).reduce(
     (total, item) => total + item.product.price * item.quantity,
     0
   );
 
-  const itemCount = cartItems.reduce(
+  const itemCount = (cartItems || []).reduce(
     (count, item) => count + item.quantity,
     0
   );
 
   const value = {
-    cartItems,
+    cartItems: cartItems || [],
     addToCart,
     removeFromCart,
     updateQuantity,
