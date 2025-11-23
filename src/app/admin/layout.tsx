@@ -14,6 +14,7 @@ import {
   LogOut,
   Leaf,
   Truck,
+  Ticket,
 } from "lucide-react";
 import React from "react";
 
@@ -22,6 +23,7 @@ const navLinks = [
   { href: "/admin/orders", icon: ListOrdered, label: "Orders" },
   { href: "/admin/products", icon: Package, label: "Products" },
   { href: "/admin/categories", icon: LayoutGrid, label: "Categories" },
+  { href: "/admin/coupons", icon: Ticket, label: "Coupons" },
   { href: "/admin/users", icon: Users, label: "Users" },
   { href: "/admin/shipping", icon: Truck, label: "Shipping" },
 ];
@@ -60,7 +62,7 @@ export default function AdminLayout({
                 href={link.href}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                  pathname === link.href && "bg-muted text-primary"
+                  pathname.startsWith(link.href) && "bg-muted text-primary"
                 )}
               >
                 <link.icon className="h-4 w-4" />

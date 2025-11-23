@@ -104,6 +104,20 @@
           "description": "An array of product IDs that the user has added to their wishlist."
         }
       }
+    },
+    "Coupon": {
+      "title": "Coupon",
+      "description": "Represents a discount coupon.",
+      "type": "object",
+      "properties": {
+        "code": { "type": "string" },
+        "discountType": { "type": "string", "enum": ["percentage", "fixed"] },
+        "discountValue": { "type": "number" },
+        "expiresAt": { "type": "string", "format": "date-time" },
+        "minSpend": { "type": "number" },
+        "status": { "type": "string", "enum": ["active", "inactive"] }
+      },
+      "required": ["code", "discountType", "discountValue", "expiresAt", "status"]
     }
   },
   "auth": {
@@ -125,6 +139,10 @@
     "/users/{userId}": {
       "schema": { "$ref": "#/entities/UserProfile" },
       "description": "Stores user profile information, including addresses and wishlist."
+    },
+    "/coupons/{couponId}": {
+      "schema": { "$ref": "#/entities/Coupon" },
+      "description": "Stores discount coupons."
     }
   }
 }

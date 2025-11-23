@@ -1,4 +1,5 @@
 
+
 export type Product = {
   id: string;
   slug: string;
@@ -45,4 +46,12 @@ export type Review = {
   }
 };
 
-    
+export type Coupon = {
+  id: string;
+  code: string;
+  discountType: 'percentage' | 'fixed';
+  discountValue: number;
+  expiresAt: any; // Firestore Timestamp
+  minSpend?: number;
+  status: 'active' | 'inactive';
+};
