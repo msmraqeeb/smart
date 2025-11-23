@@ -70,11 +70,11 @@ export function PopularItems() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           <div className="relative rounded-lg overflow-hidden lg:col-span-1 md:col-span-3 sm:col-span-2 row-span-2 group cursor-pointer">
               <Image 
-                src="https://picsum.photos/seed/promo/400/824"
+                src="https://picsum.photos/seed/grocery-shopping/400/824"
                 alt="Promotion"
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
-                data-ai-hint="woman groceries"
+                data-ai-hint="grocery shopping"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent p-6 flex flex-col justify-between">
                 <div>
