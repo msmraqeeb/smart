@@ -39,7 +39,7 @@ function OrderConfirmationContent() {
     if (orderId) {
       clearCart();
     }
-  }, [orderId]);
+  }, [orderId, clearCart]);
 
   React.useEffect(() => {
     if (!loading && !order && orderId) {
@@ -83,7 +83,7 @@ function OrderConfirmationContent() {
     )
   }
 
-  const subtotal = order.total - (order.shippingCost || 0);
+  const subtotal = order.subTotal || order.items.reduce((acc: number, item: any) => acc + item.price * item.quantity, 0);
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -142,6 +142,12 @@ function OrderConfirmationContent() {
                         <p className="text-muted-foreground">Subtotal</p>
                         <p>{formatCurrency(subtotal)}</p>
                     </div>
+                     {order.discount > 0 && (
+                      <div className="flex justify-between text-primary">
+                        <p>Discount {order.couponCode && `(${order.couponCode})`}</p>
+                        <p>-{formatCurrency(order.discount)}</p>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                         <p className="text-muted-foreground">Shipping</p>
                         <p>{formatCurrency(order.shippingCost)}</p>
