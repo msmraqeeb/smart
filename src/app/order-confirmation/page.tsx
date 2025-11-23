@@ -39,7 +39,7 @@ function OrderConfirmationContent() {
     if (orderId) {
       clearCart();
     }
-  }, [orderId, clearCart]);
+  }, [orderId]);
 
   React.useEffect(() => {
     if (!loading && !order && orderId) {
