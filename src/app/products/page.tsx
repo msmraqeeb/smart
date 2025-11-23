@@ -101,7 +101,15 @@ export default function ProductsPage() {
       maxPrice: max > 0 ? max : 1000,
     };
   }, [allProducts]);
+  
+  const [localMinPrice, setLocalMinPrice] = useState(searchParams.get('minPrice') || '0');
+  const [localMaxPrice, setLocalMaxPrice] = useState(searchParams.get('maxPrice') || maxPrice.toString());
 
+  useEffect(() => {
+      setLocalMinPrice(searchParams.get('minPrice') || '0');
+      setLocalMaxPrice(searchParams.get('maxPrice') || maxPrice.toString());
+  }, [searchParams, maxPrice]);
+  
   // Effect to update URL when local state changes from user interaction
   const handleFilterChange = (key: string, value: string | string[]) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -121,6 +129,13 @@ export default function ProductsPage() {
     }
     
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+  
+  const handlePriceInputChange = () => {
+     const params = new URLSearchParams(searchParams.toString());
+     params.set('minPrice', localMinPrice);
+     params.set('maxPrice', localMaxPrice);
+     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
   
   const filteredAndSortedProducts = useMemo(() => {
@@ -234,15 +249,23 @@ export default function ProductsPage() {
           <div className="space-y-4">
             <h3 className="font-headline text-2xl font-bold">Price</h3>
             <Slider
-                defaultValue={[maxPrice]}
                 max={maxPrice}
                 step={10}
-                value={[Number(searchParams.get('maxPrice') || maxPrice)]}
-                onValueChange={(value) => handleFilterChange('maxPrice', value[0].toString())}
+                value={[Number(localMinPrice), Number(localMaxPrice)]}
+                onValueChange={([min, max]) => {
+                    setLocalMinPrice(min.toString());
+                    setLocalMaxPrice(max.toString());
+                }}
+                onValueCommit={([min, max]) => {
+                    handleFilterChange('minPrice', min.toString());
+                    handleFilterChange('maxPrice', max.toString());
+                }}
             />
-             <div className="flex justify-between text-sm text-muted-foreground">
-                <span>{formatCurrency(0)}</span>
-                <span>{formatCurrency(Number(searchParams.get('maxPrice') || maxPrice))}</span>
+             <div className="flex items-center gap-2">
+                <Input value={localMinPrice} onChange={e => setLocalMinPrice(e.target.value)} className="w-1/2" placeholder="Min"/>
+                <span className="text-muted-foreground">-</span>
+                <Input value={localMaxPrice} onChange={e => setLocalMaxPrice(e.target.value)} className="w-1/2" placeholder="Max"/>
+                <Button onClick={handlePriceInputChange} size="sm">Go</Button>
             </div>
           </div>
           
