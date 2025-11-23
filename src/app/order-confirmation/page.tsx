@@ -1,5 +1,4 @@
 
-
 'use client';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useDoc, useFirestore } from '@/firebase';
@@ -111,10 +110,10 @@ function OrderConfirmationContent() {
                     </div>
                      <div className="text-left md:text-right">
                         <h3 className="font-semibold mb-2">Order Details</h3>
-                        <div className="text-muted-foreground">
+                        <div className="text-muted-foreground space-y-1">
                             <p>Date: {order.createdAt?.toDate().toLocaleDateString()}</p>
                             <p>Payment: {order.paymentMethod.toUpperCase()}</p>
-                            <p>Status: <Badge variant={order.status === 'Processing' ? 'secondary' : 'default'}>{order.status}</Badge></p>
+                            <div className='flex items-center justify-start md:justify-end gap-2'>Status: <Badge variant={order.status === 'Processing' ? 'secondary' : 'default'}>{order.status}</Badge></div>
                         </div>
                     </div>
                 </div>
