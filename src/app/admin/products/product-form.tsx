@@ -9,15 +9,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { Product, Category, ProductAttribute, Attribute } from "@/lib/types";
+import type { Product, Category, ProductAttribute, Attribute, ProductVariant } from "@/lib/types";
 import { getCategories, getAttributes } from "@/lib/data";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ImageUploader } from '@/components/image-uploader';
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { X, Trash2, PlusCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { X, Trash2, PlusCircle, Settings2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
+import { formatCurrency } from "@/lib/utils";
+import { v4 as uuidv4 } from 'uuid';
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
@@ -34,13 +35,20 @@ const formSchema = z.object({
     name: z.string().min(1, "Attribute name is required."),
     options: z.array(z.string().min(1, "Option name is required.")).min(1, "At least one option is required."),
   })).optional(),
+  variants: z.array(z.object({
+      id: z.string(),
+      sku: z.string().optional(),
+      price: z.coerce.number().positive("Price is required."),
+      salePrice: z.coerce.number().optional(),
+      attributes: z.record(z.string())
+  })).optional(),
 });
 
 type ProductFormValues = z.infer<typeof formSchema>;
 
 interface ProductFormProps {
   product?: Product;
-  onSubmit: (data: Omit<Product, 'id' | 'reviews' | 'imageUrl' | 'imageHint'> & {imageUrls: string[], attributes?: ProductAttribute[]}) => void;
+  onSubmit: (data: Omit<Product, 'id' | 'reviews' | 'imageUrl' | 'imageHint'> & {imageUrls: string[], attributes?: ProductAttribute[], variants?: ProductVariant[]}) => void;
 }
 
 export function ProductForm({ product, onSubmit }: ProductFormProps) {
@@ -67,6 +75,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
       featured: product?.featured || false,
       imageUrls: product?.imageUrls || [],
       attributes: product?.attributes || [],
+      variants: product?.variants?.map(v => ({...v, salePrice: v.salePrice || undefined })) || [],
     },
   });
 
@@ -74,6 +83,12 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
     control: form.control,
     name: "attributes",
   });
+
+  const { fields: variantFields, append: appendVariant, remove: removeVariant } = useFieldArray({
+      control: form.control,
+      name: "variants",
+  });
+
 
   const watchName = form.watch("name");
   const watchImageUrls = form.watch("imageUrls");
@@ -97,6 +112,11 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
     if (!dataToSubmit.salePrice) {
       delete dataToSubmit.salePrice;
     }
+    dataToSubmit.variants = dataToSubmit.variants?.map((v: any) => {
+        const variant = {...v};
+        if (!variant.salePrice) delete variant.salePrice;
+        return variant;
+    });
     onSubmit(dataToSubmit);
   };
 
@@ -133,6 +153,37 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
       flatten(topLevelCategories);
       return flattened;
   }, [categories]);
+
+  const generateVariants = () => {
+    const attributes = form.getValues('attributes');
+    if (!attributes || attributes.length === 0) {
+        alert("Please add at least one attribute with options first.");
+        return;
+    }
+
+    const combos = attributes.reduce((acc, attr) => {
+        if (acc.length === 0) {
+            return attr.options.map(opt => ({ [attr.name]: opt }));
+        }
+        return acc.flatMap(combo => 
+            attr.options.map(opt => ({ ...combo, [attr.name]: opt }))
+        );
+    }, [] as Record<string, string>[]);
+    
+    // Clear existing variants
+    removeVariant();
+
+    combos.forEach(combo => {
+        appendVariant({
+            id: uuidv4(),
+            attributes: combo,
+            price: form.getValues('price'),
+            salePrice: form.getValues('salePrice') || undefined,
+            sku: ''
+        });
+    });
+  };
+
 
   return (
     <Form {...form}>
@@ -217,10 +268,11 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
             name="price"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Price (in BDT)</FormLabel>
+                <FormLabel>Default Price</FormLabel>
                 <FormControl>
                     <Input type="number" step="0.01" placeholder="99.99" {...field} />
                 </FormControl>
+                <FormDescription>Base price. Variants can have their own prices.</FormDescription>
                 <FormMessage />
                 </FormItem>
             )}
@@ -230,7 +282,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
             name="salePrice"
             render={({ field }) => (
                 <FormItem>
-                <FormLabel>Sale Price (in BDT)</FormLabel>
+                <FormLabel>Default Sale Price</FormLabel>
                 <FormControl>
                     <Input type="number" step="0.01" placeholder="79.99" {...field} value={field.value ?? ''} />
                 </FormControl>
@@ -344,6 +396,82 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Attribute
                 </Button>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                 <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle>Product Variants</CardTitle>
+                        <CardDescription>Manage pricing and stock for each product variant.</CardDescription>
+                    </div>
+                    <Button type="button" onClick={generateVariants}>
+                        <Settings2 className="mr-2" />
+                        Generate Variants
+                    </Button>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                 {variantFields.map((field, index) => (
+                    <div key={field.id} className="p-4 border rounded-lg space-y-4 relative">
+                        <div className="flex justify-between items-start">
+                             <div className="font-semibold">
+                                {Object.values(field.attributes).join(' / ')}
+                             </div>
+                             <Button type="button" variant="ghost" size="icon" className="h-6 w-6 text-destructive absolute top-2 right-2" onClick={() => removeVariant(index)}>
+                                <X className="h-4 w-4" />
+                             </Button>
+                        </div>
+                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                             <FormField
+                                control={form.control}
+                                name={`variants.${index}.price`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Price</FormLabel>
+                                        <FormControl>
+                                            <Input type="number" step="0.01" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={form.control}
+                                name={`variants.${index}.salePrice`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Sale Price (Optional)</FormLabel>
+                                        <FormControl>
+                                            <Input type="number" step="0.01" {...field} value={field.value ?? ''} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name={`variants.${index}.sku`}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>SKU (Optional)</FormLabel>
+                                        <FormControl>
+                                            <Input {...field} value={field.value ?? ''} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                         </div>
+                    </div>
+                ))}
+                {variantFields.length === 0 && (
+                    <div className="text-center text-muted-foreground p-8 border-2 border-dashed rounded-lg">
+                        <p>No variants generated.</p>
+                        <p className="text-sm">Add attributes and options, then click "Generate Variants".</p>
+                    </div>
+                )}
             </CardContent>
         </Card>
 
