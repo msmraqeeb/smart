@@ -1,16 +1,15 @@
-
 'use client';
 import { ProductForm } from '../../product-form';
 import withAdminAuth from '@/components/withAdminAuth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFirestore } from '@/firebase';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { useRouter, useParams } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import type { Product } from '@/lib/types';
+import type { Product, Attribute } from '@/lib/types';
 import { useEffect, useState } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { getProductById } from '@/lib/data';
+import { getProductById, getAttributes } from '@/lib/data';
 
 function EditProductPage() {
     const firestore = useFirestore();
@@ -20,15 +19,20 @@ function EditProductPage() {
     const { toast } = useToast();
     const [product, setProduct] = useState<Product | null>(null);
     const [loading, setLoading] = useState(true);
+    const [globalAttributes, setGlobalAttributes] = useState<Attribute[]>([]);
 
     useEffect(() => {
         if (typeof id !== 'string') return;
-        const fetchProduct = async () => {
+        const fetchProductData = async () => {
             setLoading(true);
-            const fetchedProduct = await getProductById(id);
+            const [fetchedProduct, fetchedAttributes] = await Promise.all([
+                getProductById(id),
+                getAttributes()
+            ]);
 
             if (fetchedProduct) {
                 setProduct(fetchedProduct);
+                setGlobalAttributes(fetchedAttributes);
             } else {
                 toast({
                     variant: 'destructive',
@@ -38,13 +42,30 @@ function EditProductPage() {
             }
             setLoading(false);
         };
-        fetchProduct();
+        fetchProductData();
     }, [id, router, toast]);
 
     const handleSubmit = async (data: Omit<Product, 'id' | 'reviews' | 'imageUrl' | 'imageHint'> & {imageUrls: string[]}) => {
         if (!firestore || typeof id !== 'string') return;
         try {
+            // Update global attributes with new options if any
+            if (data.attributes && data.attributes.length > 0) {
+                for (const prodAttr of data.attributes) {
+                    const globalAttr = globalAttributes.find(ga => ga.name === prodAttr.name);
+                    if (globalAttr) {
+                        const newOptions = prodAttr.options.filter(opt => !globalAttr.values.includes(opt));
+                        if (newOptions.length > 0) {
+                            const attrRef = doc(firestore, "attributes", globalAttr.id);
+                            await updateDoc(attrRef, {
+                                values: arrayUnion(...newOptions)
+                            });
+                        }
+                    }
+                }
+            }
+
             await updateDoc(doc(firestore, "products", id), data as any);
+            
             toast({
                 title: "Product Updated",
                 description: `Product "${data.name}" has been successfully updated.`,
