@@ -60,7 +60,7 @@ export function ProductCard({ product }: ProductCardProps) {
         </div>
         <div className="mt-4">
              <Button
-                variant="outline"
+                variant="default"
                 className="w-full"
                 onClick={(e) => {
                     e.stopPropagation();
