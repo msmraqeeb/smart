@@ -1,4 +1,3 @@
-
 'use client';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -199,9 +198,9 @@ function AdminOrdersPage() {
                                 <TableHead className="w-[50px]">
                                     <Checkbox 
                                         onCheckedChange={handleSelectAll}
-                                        checked={isAllSelected}
-                                        aria-label="Select all rows"
+                                        checked={isAllSelected || isSomeSelected}
                                         indeterminate={isSomeSelected}
+                                        aria-label="Select all rows"
                                     />
                                 </TableHead>
                                 <TableHead>Order ID</TableHead>
@@ -257,5 +256,3 @@ function AdminOrdersPage() {
 }
 
 export default withAdminAuth(AdminOrdersPage);
-
-    
