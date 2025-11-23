@@ -10,7 +10,7 @@ import withAdminAuth from '@/components/withAdminAuth';
 import { Star, MoreHorizontal, Trash2, Reply } from 'lucide-react';
 import Link from 'next/link';
 import { useFirestore } from '@/firebase';
-import { doc, deleteDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, deleteDoc, updateDoc, serverTimestamp, getDocs, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
@@ -81,6 +81,10 @@ function AdminReviewsPage() {
 
     const fetchReviews = async () => {
         setLoading(true);
+        if (!firestore) {
+            setLoading(false);
+            return;
+        }
         const products = await getProducts();
         const allReviews: ReviewWithProduct[] = [];
         for (const product of products) {
@@ -100,6 +104,7 @@ function AdminReviewsPage() {
     };
 
     const getProductReviews = async (productId: string) => {
+        if (!firestore) return [];
         const querySnapshot = await getDocs(collection(doc(firestore, 'products', productId), 'reviews'));
         return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Review));
     }
@@ -107,7 +112,7 @@ function AdminReviewsPage() {
 
     useEffect(() => {
         fetchReviews();
-    }, []);
+    }, [firestore]);
     
     const handleDelete = async () => {
         if (!reviewToDelete || !firestore) return;
