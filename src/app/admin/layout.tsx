@@ -15,6 +15,7 @@ import {
   Leaf,
   Truck,
   Ticket,
+  BarChart,
 } from "lucide-react";
 import React from "react";
 
@@ -24,6 +25,7 @@ const navLinks = [
   { href: "/admin/products", icon: Package, label: "Products" },
   { href: "/admin/categories", icon: LayoutGrid, label: "Categories" },
   { href: "/admin/coupons", icon: Ticket, label: "Coupons" },
+  { href: "/admin/reports", icon: BarChart, label: "Reports" },
   { href: "/admin/users", icon: Users, label: "Users" },
   { href: "/admin/shipping", icon: Truck, label: "Shipping" },
 ];
