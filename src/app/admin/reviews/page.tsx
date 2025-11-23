@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 type ReviewWithProduct = Review & {
     productName: string;
     productId: string;
+    productSlug: string;
 };
 
 function AdminReviewsPage() {
@@ -40,6 +41,7 @@ function AdminReviewsPage() {
                         ...review,
                         productName: product.name,
                         productId: product.id,
+                        productSlug: product.slug,
                     });
                 });
             }
@@ -116,7 +118,7 @@ function AdminReviewsPage() {
                                 reviews.map(review => (
                                     <TableRow key={review.id}>
                                         <TableCell className='font-semibold'>
-                                            <Link href={`/products/${review.productId}`} className='hover:underline'>
+                                            <Link href={`/products/${review.productSlug}`} className='hover:underline'>
                                                 {review.productName}
                                             </Link>
                                         </TableCell>
