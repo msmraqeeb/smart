@@ -8,6 +8,7 @@
       "properties": {
         "name": { "type": "string" },
         "slug": { "type": "string" },
+        "sku": { "type": "string" },
         "description": { "type": "string" },
         "price": { "type": "number" },
         "salePrice": { "type": "number" },

@@ -19,6 +19,7 @@ import { ImageUploader } from '@/components/image-uploader';
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters."),
   slug: z.string().min(2, "Slug must be at least 2 characters.").refine(s => !s.includes(' '), "Slug cannot contain spaces."),
+  sku: z.string().optional(),
   description: z.string().min(10, "Description must be at least 10 characters."),
   price: z.coerce.number().positive("Price must be a positive number."),
   salePrice: z.coerce.number().optional().default(0),
@@ -48,6 +49,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
     defaultValues: {
       name: product?.name || "",
       slug: product?.slug || "",
+      sku: product?.sku || "",
       description: product?.description || "",
       price: product?.price || 0,
       salePrice: product?.salePrice || undefined,
@@ -112,19 +114,34 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-8">
-        <FormField
-          control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Product Name</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Organic Apples" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <div className="grid md:grid-cols-2 gap-8">
+            <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>Product Name</FormLabel>
+                <FormControl>
+                    <Input placeholder="e.g. Organic Apples" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+             <FormField
+            control={form.control}
+            name="sku"
+            render={({ field }) => (
+                <FormItem>
+                <FormLabel>SKU (Stock Keeping Unit)</FormLabel>
+                <FormControl>
+                    <Input placeholder="e.g. ORG-APL-001" {...field} />
+                </FormControl>
+                <FormMessage />
+                </FormItem>
+            )}
+            />
+        </div>
         <FormField
           control={form.control}
           name="slug"

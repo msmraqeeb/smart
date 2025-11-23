@@ -96,7 +96,7 @@ function AdminProductsPage() {
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[80px]">Image</TableHead>
-                                <TableHead>ID</TableHead>
+                                <TableHead>SKU</TableHead>
                                 <TableHead>Name</TableHead>
                                 <TableHead>Category</TableHead>
                                 <TableHead>Price</TableHead>
@@ -115,7 +115,7 @@ function AdminProductsPage() {
                                             className="rounded-md object-cover"
                                         />
                                     </TableCell>
-                                    <TableCell className="font-medium">{product.id.substring(0,8)}</TableCell>
+                                    <TableCell className="font-medium">{product.sku || 'N/A'}</TableCell>
                                     <TableCell>{product.name}</TableCell>
                                     <TableCell className="capitalize">{product.category}</TableCell>
                                     <TableCell>{formatCurrency(product.price)}</TableCell>
