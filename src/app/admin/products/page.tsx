@@ -1,15 +1,15 @@
 
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from '@/lib/utils';
-import { getProducts } from '@/lib/data';
-import type { Product } from '@/lib/types';
+import { getProducts, getCategories } from '@/lib/data';
+import type { Product, Category } from '@/lib/types';
 import withAdminAuth from '@/components/withAdminAuth';
-import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Trash2, Search } from 'lucide-react';
 import React from 'react';
 import Link from 'next/link';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
@@ -18,26 +18,38 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, deleteDoc } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import Image from 'next/image';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 function AdminProductsPage() {
-    const [products, setProducts] = React.useState<Product[]>([]);
+    const [allProducts, setAllProducts] = React.useState<Product[]>([]);
+    const [categories, setCategories] = React.useState<Category[]>([]);
     const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('all');
+    const [sortOrder, setSortOrder] = useState('created-desc');
+
     const { toast } = useToast();
     const firestore = useFirestore();
 
-    const fetchProducts = () => {
-        getProducts().then(products => {
+    const fetchProductsAndCategories = () => {
+        setLoading(true);
+        Promise.all([getProducts(), getCategories()]).then(([products, categoriesData]) => {
             const sorted = products.sort((a, b) => {
                 const aTime = a.createdAt?.toMillis() || 0;
                 const bTime = b.createdAt?.toMillis() || 0;
                 return bTime - aTime;
             });
-            setProducts(sorted);
+            setAllProducts(sorted);
+            setCategories(categoriesData);
+            setLoading(false);
         });
     }
 
     React.useEffect(() => {
-        fetchProducts();
+        fetchProductsAndCategories();
     }, []);
 
     const handleDelete = async () => {
@@ -50,7 +62,7 @@ function AdminProductsPage() {
                 description: `"${productToDelete.name}" has been successfully deleted.`,
             });
             setProductToDelete(null);
-            fetchProducts();
+            fetchProductsAndCategories(); // Refetch products
         } catch (error) {
             toast({
                 variant: 'destructive',
@@ -59,6 +71,38 @@ function AdminProductsPage() {
             });
         }
     };
+    
+    const filteredAndSortedProducts = useMemo(() => {
+        let products = [...allProducts];
+
+        // Filter by category
+        if (selectedCategory && selectedCategory !== 'all') {
+            products = products.filter(p => p.category === selectedCategory);
+        }
+
+        // Filter by search query (name)
+        if (searchQuery) {
+            products = products.filter(p =>
+                p.name.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+        }
+
+        // Sort products
+        switch (sortOrder) {
+            case 'price-asc':
+                products.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price));
+                break;
+            case 'price-desc':
+                products.sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price));
+                break;
+            case 'created-desc':
+            default:
+                // Already sorted by date descending on fetch
+                break;
+        }
+
+        return products;
+    }, [allProducts, searchQuery, selectedCategory, sortOrder]);
 
 
     return (
@@ -78,7 +122,7 @@ function AdminProductsPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                 <div>
                   {/* Title is now in the layout header */}
                 </div>
@@ -90,6 +134,39 @@ function AdminProductsPage() {
                 <CardHeader>
                     <CardTitle>All Products</CardTitle>
                     <CardDescription>View, edit, or delete products from the store.</CardDescription>
+                     <div className="mt-4 flex flex-col sm:flex-row gap-4">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input
+                                type="search"
+                                placeholder="Filter by name..."
+                                className="pl-8 w-full"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+                        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+                            <SelectTrigger className="w-full sm:w-[200px]">
+                                <SelectValue placeholder="Filter by category" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Categories</SelectItem>
+                                {categories.map(cat => (
+                                    <SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={sortOrder} onValueChange={setSortOrder}>
+                            <SelectTrigger className="w-full sm:w-[180px]">
+                                <SelectValue placeholder="Sort by" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="created-desc">Newest</SelectItem>
+                                <SelectItem value="price-asc">Price: Low to High</SelectItem>
+                                <SelectItem value="price-desc">Price: High to Low</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -104,7 +181,12 @@ function AdminProductsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {products.map(product => (
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="h-24 text-center">Loading products...</TableCell>
+                                </TableRow>
+                            ) : filteredAndSortedProducts.length > 0 ? (
+                                filteredAndSortedProducts.map(product => (
                                 <TableRow key={product.id}>
                                     <TableCell>
                                         <Image 
@@ -140,7 +222,14 @@ function AdminProductsPage() {
                                         </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
-                            ))}
+                            ))
+                            ) : (
+                                <TableRow>
+                                    <TableCell colSpan={6} className="h-24 text-center">
+                                        No products found.
+                                    </TableCell>
+                                </TableRow>
+                            )}
                         </TableBody>
                     </Table>
                 </CardContent>
