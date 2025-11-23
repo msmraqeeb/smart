@@ -33,6 +33,12 @@ export default function Home() {
     '/images/6cZ4n1758523882.png',
   ]
 
+  const bannerImages = [
+    "https://grocery-admin.getcommerce.xyz/banner/pwmR01758523026.png",
+    "https://grocery-admin.getcommerce.xyz/banner/2U0bX1758523017.png",
+    "https://grocery-admin.getcommerce.xyz/banner/IXglG1758523007.png"
+  ]
+
   return (
     <div className="container mx-auto px-4 py-8">
       <section className="mb-12 grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -93,6 +99,21 @@ export default function Home() {
       <FeaturedProducts />
 
       <PopularItems />
+      
+      <section className="mb-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {bannerImages.map((src, index) => (
+                  <div key={index} className="relative aspect-[2/1] w-full">
+                      <Image
+                        src={src}
+                        alt={`Promotional banner ${index + 1}`}
+                        fill
+                        className="rounded-lg object-cover"
+                      />
+                  </div>
+              ))}
+          </div>
+      </section>
 
       <section>
         <h2 className="font-headline mb-8 text-3xl font-bold text-center">
