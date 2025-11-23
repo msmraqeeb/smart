@@ -114,6 +114,9 @@ const ReviewDate = ({ date }: { date: any }) => {
     useEffect(() => {
         if (date && typeof date.toDate === 'function') {
             setFormattedDate(date.toDate().toLocaleString());
+        } else if (date && typeof date === 'string') {
+            // Handle string dates if they exist in replies
+            setFormattedDate(new Date(date).toLocaleString());
         }
     }, [date]);
 
