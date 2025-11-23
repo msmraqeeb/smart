@@ -63,7 +63,10 @@ function EditOrderPage() {
 
   useEffect(() => {
     if (initialOrder) {
-      setOrder(initialOrder);
+      setOrder({
+          ...initialOrder,
+          discount: initialOrder.discount || 0, // Ensure discount is a number
+      });
     }
   }, [initialOrder]);
 
@@ -83,6 +86,17 @@ function EditOrderPage() {
     });
   };
 
+  const handleNumericChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!order) return;
+    const { id, value } = e.target;
+    const numericValue = parseFloat(value);
+    if (!isNaN(numericValue) && numericValue >= 0) {
+        setOrder({ ...order, [id]: numericValue });
+    } else if (value === '') {
+         setOrder({ ...order, [id]: 0 });
+    }
+  }
+
   const handleItemChange = (itemIndex: number, field: string, value: string | number) => {
     if (!order) return;
     const newItems = [...order.items];
@@ -96,23 +110,18 @@ function EditOrderPage() {
         newItems[itemIndex] = { ...newItems[itemIndex], [field]: value };
     }
     
-    const newTotal = newItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
-
     setOrder({
         ...order,
         items: newItems,
-        total: newTotal
     });
   };
 
   const removeItem = (itemIndex: number) => {
     if (!order) return;
     const newItems = order.items.filter((_: any, index: number) => index !== itemIndex);
-    const newTotal = newItems.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
     setOrder({
         ...order,
         items: newItems,
-        total: newTotal,
     });
   };
 
@@ -137,12 +146,10 @@ function EditOrderPage() {
         price: product.price
     };
     const newItems = [...order.items, newItem];
-    const newTotal = newItems.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
 
     setOrder({
         ...order,
         items: newItems,
-        total: newTotal,
     });
     setIsAddProductDialogOpen(false);
     toast({
@@ -151,12 +158,26 @@ function EditOrderPage() {
     })
   };
 
+  const subtotal = useMemo(() => {
+    if (!order?.items) return 0;
+    return order.items.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0)
+  }, [order?.items]);
+
+  const total = useMemo(() => {
+      if (!order) return 0;
+      return subtotal + (order.shippingCost || 0) - (order.discount || 0);
+  }, [order, subtotal]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!firestore || typeof id !== 'string' || !order) return;
     
     // Create a copy of the order and remove the id field before saving
-    const orderToSave = { ...order };
+    const orderToSave = { 
+        ...order,
+        subTotal: subtotal,
+        total: total,
+     };
     delete orderToSave.id;
 
     updateOrder(firestore, id, orderToSave);
@@ -291,8 +312,24 @@ function EditOrderPage() {
                         </div>
                     )}
                 </div>
-                 <div className="mt-4 text-right">
-                    <p className="text-lg font-bold">Total: {formatCurrency(order.total)}</p>
+                 <div className="mt-6 space-y-4 max-w-sm ml-auto">
+                    <div className='flex justify-between items-center'>
+                        <Label>Subtotal</Label>
+                        <p className='font-medium'>{formatCurrency(subtotal)}</p>
+                    </div>
+                     <div className='flex justify-between items-center gap-4'>
+                        <Label htmlFor="shippingCost">Shipping Cost</Label>
+                        <Input id="shippingCost" type="number" step="0.01" value={order.shippingCost} onChange={handleNumericChange} className="w-28" />
+                    </div>
+                     <div className='flex justify-between items-center gap-4'>
+                        <Label htmlFor="discount">Discount</Label>
+                        <Input id="discount" type="number" step="0.01" value={order.discount} onChange={handleNumericChange} className="w-28" />
+                    </div>
+                    <Separator />
+                    <div className='flex justify-between items-center text-lg font-bold'>
+                        <p>Total</p>
+                        <p>{formatCurrency(total)}</p>
+                    </div>
                 </div>
             </section>
 
