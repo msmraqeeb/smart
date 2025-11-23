@@ -1,3 +1,4 @@
+
 'use client';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
@@ -47,7 +48,7 @@ function AdminOrdersPage() {
 
         return orders.filter(order =>
             order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            order.customer?.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+            order.customer?.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
         );
     }, [orders, searchQuery]);
 
