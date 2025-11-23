@@ -35,7 +35,7 @@ export async function generateMetadata(
       title: product.name,
       description: product.description.substring(0, 160),
       images: [primaryImageUrl, ...previousImages],
-      type: 'product',
+      type: 'website',
     },
     twitter: {
         card: 'summary_large_image',
@@ -133,5 +133,3 @@ export default async function ProductDetailPage({
     </div>
   );
 }
-
-    
