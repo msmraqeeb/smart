@@ -15,6 +15,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Timestamp } from "firebase/firestore";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
   code: z.string().min(3, "Code must be at least 3 characters.").max(50).transform(val => val.toUpperCase()),
@@ -23,6 +24,7 @@ const formSchema = z.object({
   expiresAt: z.date().optional(),
   minSpend: z.coerce.number().optional().default(0),
   status: z.enum(["active", "inactive"]),
+  autoApply: z.boolean().default(false),
 }).refine(data => {
     if (data.discountType === 'percentage' && (data.discountValue <= 0 || data.discountValue > 100)) {
         return false;
@@ -52,6 +54,7 @@ export function CouponForm({ coupon, onSubmit }: CouponFormProps) {
       expiresAt: coupon?.expiresAt ? coupon.expiresAt.toDate() : undefined,
       minSpend: coupon?.minSpend || undefined,
       status: coupon?.status || "active",
+      autoApply: coupon?.autoApply || false,
     },
   });
 
@@ -203,6 +206,28 @@ export function CouponForm({ coupon, onSubmit }: CouponFormProps) {
                         </SelectContent>
                     </Select>
                 <FormMessage />
+                </FormItem>
+            )}
+        />
+         <FormField
+            control={form.control}
+            name="autoApply"
+            render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <FormControl>
+                    <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                    />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                    <FormLabel>
+                    Automatically Apply Coupon
+                    </FormLabel>
+                    <FormDescription>
+                    If checked, this coupon will be automatically applied at checkout if its conditions are met and it's the best deal available.
+                    </FormDescription>
+                </div>
                 </FormItem>
             )}
         />

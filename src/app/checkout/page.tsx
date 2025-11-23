@@ -121,10 +121,11 @@ export default function CheckoutPage() {
         const now = new Date();
 
         const validCoupons = allCoupons.filter(coupon => {
+            const is_auto_apply = coupon.autoApply === true;
             const is_active = coupon.status === 'active';
             const not_expired = !coupon.expiresAt || coupon.expiresAt.toDate() >= now;
             const meets_min_spend = !coupon.minSpend || cartTotal >= coupon.minSpend;
-            return is_active && not_expired && meets_min_spend;
+            return is_auto_apply && is_active && not_expired && meets_min_spend;
         });
 
         if (validCoupons.length === 0) return;
@@ -461,7 +462,4 @@ export default function CheckoutPage() {
     </div>
   );
 }
-
-
-
 

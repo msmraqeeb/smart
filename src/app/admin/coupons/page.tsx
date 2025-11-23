@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { getCoupons } from '@/lib/data';
 import type { Coupon } from '@/lib/types';
 import withAdminAuth from '@/components/withAdminAuth';
-import { MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 import { useFirestore } from '@/firebase';
 import { doc, deleteDoc } from 'firebase/firestore';
@@ -92,6 +92,7 @@ function AdminCouponsPage() {
                                 <TableHead>Min. Spend</TableHead>
                                 <TableHead>Expires At</TableHead>
                                 <TableHead>Status</TableHead>
+                                <TableHead>Auto Apply</TableHead>
                                 <TableHead className="text-right">Actions</TableHead>
                             </TableRow>
                         </TableHeader>
@@ -110,6 +111,14 @@ function AdminCouponsPage() {
                                         <Badge variant={coupon.status === 'active' ? 'default' : 'destructive'}>
                                             {coupon.status}
                                         </Badge>
+                                    </TableCell>
+                                     <TableCell>
+                                        {coupon.autoApply && (
+                                            <Badge variant="secondary" className='flex items-center gap-1'>
+                                                <CheckCircle2 className="h-3 w-3" />
+                                                Yes
+                                            </Badge>
+                                        )}
                                     </TableCell>
                                     <TableCell className="text-right">
                                         <DropdownMenu>

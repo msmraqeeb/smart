@@ -54,4 +54,5 @@ export type Coupon = {
   expiresAt: any; // Firestore Timestamp
   minSpend?: number;
   status: 'active' | 'inactive';
+  autoApply?: boolean;
 };

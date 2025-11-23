@@ -115,9 +115,10 @@
         "discountValue": { "type": "number" },
         "expiresAt": { "type": "string", "format": "date-time" },
         "minSpend": { "type": "number" },
-        "status": { "type": "string", "enum": ["active", "inactive"] }
+        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "autoApply": { "type": "boolean", "description": "If true, this coupon will be applied automatically if conditions are met." }
       },
-      "required": ["code", "discountType", "discountValue", "expiresAt", "status"]
+      "required": ["code", "discountType", "discountValue", "status"]
     }
   },
   "auth": {
