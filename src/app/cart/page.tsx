@@ -60,41 +60,47 @@ export default function CartPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {cartItems.map((item) => (
-                    <TableRow key={item.product.id}>
-                      <TableCell className="hidden md:table-cell">
-                        <Image
-                          src={item.product.imageUrls?.[0] || item.product.imageUrl}
-                          alt={item.product.name}
-                          width={64}
-                          height={64}
-                          className="rounded-md object-cover"
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        <Link href={`/products/${item.product.slug}`}>{item.product.name}</Link>
-                      </TableCell>
-                      <TableCell>
-                         <div className="flex items-center justify-center gap-2">
-                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.product.id, item.quantity - 1)}>-</Button>
-                            <span className="w-10 text-center">{item.quantity}</span>
-                            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.product.id, item.quantity + 1)}>+</Button>
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(item.product.price * item.quantity)}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => removeFromCart(item.product.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {cartItems.map((item) => {
+                    const itemPrice = item.variant?.price || item.product.price;
+                    return (
+                        <TableRow key={item.id}>
+                        <TableCell className="hidden md:table-cell">
+                            <Image
+                            src={item.product.imageUrls?.[0] || item.product.imageUrl}
+                            alt={item.product.name}
+                            width={64}
+                            height={64}
+                            className="rounded-md object-cover"
+                            />
+                        </TableCell>
+                        <TableCell className="font-medium">
+                            <Link href={`/products/${item.product.slug}`}>{item.product.name}</Link>
+                             {item.variant && (
+                                <p className="text-sm text-muted-foreground">{Object.values(item.variant.attributes).join(' / ')}</p>
+                            )}
+                        </TableCell>
+                        <TableCell>
+                            <div className="flex items-center justify-center gap-2">
+                                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity - 1)}>-</Button>
+                                <span className="w-10 text-center">{item.quantity}</span>
+                                <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</Button>
+                            </div>
+                        </TableCell>
+                        <TableCell className="text-right">
+                            {formatCurrency(itemPrice * item.quantity)}
+                        </TableCell>
+                        <TableCell>
+                            <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => removeFromCart(item.id)}
+                            >
+                            <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </TableCell>
+                        </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
@@ -138,5 +144,3 @@ export default function CartPage() {
     </div>
   );
 }
-
-    

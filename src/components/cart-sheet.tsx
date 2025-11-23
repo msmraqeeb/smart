@@ -47,7 +47,7 @@ export function CartSheet() {
             <ScrollArea className="flex-1 pr-4">
               <div className="flex flex-col gap-4 py-4">
                 {cartItems.map((item) => (
-                  <div key={item.product.id} className="flex items-start gap-4">
+                  <div key={item.id} className="flex items-start gap-4">
                     <Image
                       src={item.product.imageUrls?.[0] || item.product.imageUrl}
                       alt={item.product.name}
@@ -57,15 +57,18 @@ export function CartSheet() {
                     />
                     <div className="flex-1">
                       <p className="font-semibold">{item.product.name}</p>
+                       {item.variant && (
+                        <p className="text-sm text-muted-foreground">{Object.values(item.variant.attributes).join(' / ')}</p>
+                      )}
                       <p className="text-sm text-muted-foreground">
-                        {item.quantity} x {formatCurrency(item.product.price)}
+                        {item.quantity} x {formatCurrency(item.variant?.price || item.product.price)}
                       </p>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="text-muted-foreground hover:text-destructive"
-                      onClick={() => removeFromCart(item.product.id)}
+                      onClick={() => removeFromCart(item.id)}
                     >
                       <X className="h-4 w-4" />
                     </Button>

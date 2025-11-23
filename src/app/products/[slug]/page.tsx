@@ -4,10 +4,10 @@ import Image from "next/image";
 import { getProductBySlug } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { AddToCartButton } from "@/components/add-to-cart-button";
 import { Reviews } from "@/components/reviews";
 import { Badge } from "@/components/ui/badge";
 import type { Product } from "@/lib/types";
+import { ProductVariantSelector } from "@/components/product-variant-selector";
 
 
 export default async function ProductDetailPage({
@@ -22,8 +22,35 @@ export default async function ProductDetailPage({
   }
   
   const hasSalePrice = product.salePrice && product.salePrice > 0;
-  const displayPrice = hasSalePrice ? product.salePrice : product.price;
   const primaryImageUrl = product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : product.imageUrl;
+  
+  const hasVariants = product.variants && product.variants.length > 0;
+  let priceDisplay: React.ReactNode;
+  
+  if (hasVariants) {
+      const prices = product.variants!.map(v => v.price);
+      const minPrice = Math.min(...prices);
+      const maxPrice = Math.max(...prices);
+      if (minPrice === maxPrice) {
+          priceDisplay = <p className="text-3xl font-bold text-primary">{formatCurrency(minPrice)}</p>;
+      } else {
+          priceDisplay = <p className="text-3xl font-bold text-primary">{formatCurrency(minPrice)} - {formatCurrency(maxPrice)}</p>;
+      }
+  } else {
+      const displayPrice = hasSalePrice ? product.salePrice : product.price;
+      priceDisplay = (
+          <div className="flex items-baseline gap-4">
+              <p className="text-3xl font-bold text-primary">
+                  {formatCurrency(displayPrice!)}
+              </p>
+              {hasSalePrice && (
+                  <p className="text-xl font-medium text-muted-foreground line-through">
+                      {formatCurrency(product.price)}
+                  </p>
+              )}
+          </div>
+      );
+  }
   
   // Convert complex objects to plain objects for Client Components
   const plainProduct: Product = JSON.parse(JSON.stringify(product));
@@ -40,7 +67,7 @@ export default async function ProductDetailPage({
             height={600}
             className="rounded-lg object-cover w-full aspect-square shadow-lg"
           />
-           {hasSalePrice && (
+           {hasSalePrice && !hasVariants && (
             <Badge variant="destructive" className="absolute top-4 left-4 text-base">
                 SALE
             </Badge>
@@ -48,17 +75,8 @@ export default async function ProductDetailPage({
         </div>
         <div className="flex flex-col gap-4">
           <h1 className="font-headline text-4xl font-bold">{product.name}</h1>
-          <div className="flex items-baseline gap-4">
-            <p className="text-3xl font-bold text-primary">
-                {formatCurrency(displayPrice!)}
-            </p>
-             {hasSalePrice && (
-                <p className="text-xl font-medium text-muted-foreground line-through">
-                    {formatCurrency(product.price)}
-                </p>
-            )}
-          </div>
-          <p className="text-muted-foreground">{product.description}</p>
+          
+          <ProductVariantSelector product={plainProduct} initialPriceDisplay={priceDisplay} />
           
           <Separator />
           
@@ -68,8 +86,6 @@ export default async function ProductDetailPage({
           </div>
           
           <Separator />
-
-          <AddToCartButton product={plainProduct} />
 
         </div>
       </div>

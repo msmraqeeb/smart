@@ -37,7 +37,7 @@ export default function OrderDetailsPage() {
     return <div>Order not found.</div>;
   }
 
-  const subtotal = order.total - (order.shippingCost || 0);
+  const subtotal = order.total - (order.shippingCost || 0) + (order.discount || 0);
 
   return (
     <Card>
@@ -64,11 +64,14 @@ export default function OrderDetailsPage() {
         </CardHeader>
         <CardContent className="space-y-6">
             <div className="space-y-4">
-                {order.items.map((item: any) => (
-                    <div key={item.id} className="flex items-center justify-between">
+                {order.items.map((item: any, index: number) => (
+                    <div key={`${item.id}-${index}`} className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <div>
                                 <p className="font-medium">{item.name}</p>
+                                {item.variant?.attributes && (
+                                    <p className="text-sm text-muted-foreground">{Object.values(item.variant.attributes).join(' / ')}</p>
+                                )}
                                 <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                             </div>
                         </div>
@@ -86,6 +89,12 @@ export default function OrderDetailsPage() {
                     <p className="text-muted-foreground">Shipping ({order.shippingZone})</p>
                     <p>{formatCurrency(order.shippingCost)}</p>
                 </div>
+                {order.discount > 0 && (
+                    <div className="flex justify-between text-primary">
+                        <p>Discount {order.couponCode && `(${order.couponCode})`}</p>
+                        <p>-{formatCurrency(order.discount)}</p>
+                    </div>
+                )}
                 <Separator />
                  <div className="flex justify-between font-bold text-lg">
                     <p>Total</p>
@@ -105,5 +114,3 @@ export default function OrderDetailsPage() {
     </Card>
   );
 }
-
-    

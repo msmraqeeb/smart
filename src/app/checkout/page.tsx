@@ -161,7 +161,7 @@ export default function CheckoutPage() {
     if (cartTotal > 0) {
         findAndApplyBestCoupon();
     }
-  }, [cartTotal, appliedCoupon]);
+  }, [cartTotal, appliedCoupon, toast]);
 
   const subTotal = cartTotal;
   const grandTotal = subTotal + shippingCost - couponDiscount;
@@ -259,7 +259,11 @@ export default function CheckoutPage() {
         id: item.product.id,
         name: item.product.name,
         quantity: item.quantity,
-        price: item.product.price,
+        price: item.variant?.price || item.product.price,
+        variant: item.variant ? {
+            id: item.variant.id,
+            attributes: item.variant.attributes,
+        } : null,
       })),
       subTotal: subTotal,
       shippingCost: shippingCost,
@@ -401,15 +405,18 @@ export default function CheckoutPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     {cartItems.map(item => (
-                        <div key={item.product.id} className="flex items-center justify-between">
+                        <div key={item.id} className="flex items-center justify-between">
                             <div className="flex items-center gap-4">
                                 <Image src={item.product.imageUrls?.[0] || item.product.imageUrl} alt={item.product.name} width={48} height={48} className="rounded-md" />
                                 <div>
                                     <p className="font-medium">{item.product.name}</p>
+                                     {item.variant && (
+                                        <p className="text-sm text-muted-foreground">{Object.values(item.variant.attributes).join(' / ')}</p>
+                                     )}
                                     <p className="text-sm text-muted-foreground">Qty: {item.quantity}</p>
                                 </div>
                             </div>
-                            <p>{formatCurrency(item.product.price * item.quantity)}</p>
+                            <p>{formatCurrency((item.variant?.price || item.product.price) * item.quantity)}</p>
                         </div>
                     ))}
                     <Separator />
@@ -462,4 +469,5 @@ export default function CheckoutPage() {
     </div>
   );
 }
+
 

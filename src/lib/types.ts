@@ -51,6 +51,7 @@ export type Attribute = {
 }
 
 export type CartItem = {
+  id: string; // Combination of product.id and variant.id
   product: Product;
   quantity: number;
   variant?: ProductVariant;
