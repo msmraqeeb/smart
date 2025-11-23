@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { getProducts, getCategories } from '@/lib/data';
 import type { Product, Category } from '@/lib/types';
@@ -54,6 +54,8 @@ const getAverageRating = (reviews: any[] | undefined) => {
   return reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length;
 }
 
+const PRODUCTS_PER_PAGE = 12;
+
 export default function ProductsPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -63,6 +65,11 @@ export default function ProductsPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Pagination state
+  const [displayedProducts, setDisplayedProducts] = useState<Product[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  
   // Get filter values from URL params
   const initialSearch = searchParams.get('q') || '';
 
@@ -175,6 +182,34 @@ export default function ProductsPage() {
 
     return products;
   }, [allProducts, categories, searchParams]);
+
+  useEffect(() => {
+    setPage(1);
+    const newProducts = filteredAndSortedProducts.slice(0, PRODUCTS_PER_PAGE);
+    setDisplayedProducts(newProducts);
+    setHasMore(filteredAndSortedProducts.length > PRODUCTS_PER_PAGE);
+  }, [filteredAndSortedProducts]);
+
+  const loadMoreProducts = useCallback(() => {
+    if (loading || !hasMore) return;
+    const nextPage = page + 1;
+    const newProducts = filteredAndSortedProducts.slice(0, nextPage * PRODUCTS_PER_PAGE);
+    setDisplayedProducts(newProducts);
+    setPage(nextPage);
+    setHasMore(newProducts.length < filteredAndSortedProducts.length);
+  }, [page, hasMore, loading, filteredAndSortedProducts]);
+
+  const observer = useRef<IntersectionObserver>();
+  const lastProductElementRef = useCallback((node: HTMLDivElement) => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+        if (entries[0].isIntersecting && hasMore) {
+            loadMoreProducts();
+        }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, hasMore, loadMoreProducts]);
   
   const currentCategorySlugs = searchParams.getAll('category');
   let categoryTitle = 'All Products';
@@ -295,7 +330,7 @@ export default function ProductsPage() {
             </Select>
           </div>
 
-          {loading ? (
+          {loading && displayedProducts.length === 0 ? (
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="space-y-2">
@@ -305,12 +340,22 @@ export default function ProductsPage() {
                 </div>
               ))}
             </div>
-          ) : filteredAndSortedProducts.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredAndSortedProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
-            </div>
+          ) : displayedProducts.length > 0 ? (
+            <>
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {displayedProducts.map((product, index) => {
+                    if (displayedProducts.length === index + 1) {
+                        return (
+                            <div ref={lastProductElementRef} key={product.id}>
+                                <ProductCard product={product} />
+                            </div>
+                        );
+                    }
+                    return <ProductCard key={product.id} product={product} />;
+                })}
+                </div>
+                {loading && <p className='text-center mt-4'>Loading more products...</p>}
+            </>
           ) : (
             <div className="text-center py-16">
                 <h2 className="text-2xl font-semibold">No Products Found</h2>
