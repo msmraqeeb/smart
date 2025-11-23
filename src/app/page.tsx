@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCategories } from "@/lib/data";
 import { FeaturedProducts } from "@/components/featured-products";
+import { PopularItems } from "@/components/popular-items";
 import { ArrowRight, ShieldCheck, Truck, CircleDollarSign, Headset, PackageCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Category } from "@/lib/types";
@@ -90,6 +91,8 @@ export default function Home() {
       </section>
 
       <FeaturedProducts />
+
+      <PopularItems />
 
       <section>
         <h2 className="font-headline mb-8 text-3xl font-bold text-center">
