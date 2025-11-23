@@ -6,9 +6,18 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCategories } from "@/lib/data";
 import { FeaturedProducts } from "@/components/featured-products";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, ShieldCheck, Truck, CircleDollarSign, Headset, PackageCheck } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Category } from "@/lib/types";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+
+const featureIcons = [
+    { icon: Headset, label: "Online Support" },
+    { icon: PackageCheck, label: "Official Product" },
+    { icon: Truck, label: "Fastest Delivery" },
+    { icon: ShieldCheck, label: "Secure Payment" },
+    { icon: CircleDollarSign, label: "Genuine Product" },
+];
 
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -17,19 +26,66 @@ export default function Home() {
     getCategories().then(setCategories);
   }, []);
 
+  const sliderImages = [
+    '/6cZ4n1758523882.png',
+    '/6cZ4n1758523882.png',
+  ]
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <section className="mb-16 rounded-lg bg-green-100/50 p-8 text-center shadow-lg dark:bg-green-900/20">
-        <h1 className="font-headline text-4xl font-bold tracking-tight text-primary md:text-5xl lg:text-6xl">
-          Welcome to GetMart
-        </h1>
-        <p className="mt-4 max-w-2xl mx-auto text-lg text-foreground/80">
-          Freshness delivered to your doorstep. Explore our curated selection of
-          high-quality products.
-        </p>
-        <Button asChild size="lg" className="mt-8 bg-accent text-accent-foreground hover:bg-accent/90">
-          <Link href="/products">Shop Now</Link>
-        </Button>
+      <section className="mb-12 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2">
+            <Carousel
+                opts={{ align: "start", loop: true, }}
+                className="w-full"
+            >
+                <CarouselContent>
+                    {sliderImages.map((src, index) => (
+                        <CarouselItem key={index}>
+                           <div className="relative aspect-[2/1] w-full">
+                             <Image
+                                src={src}
+                                alt={`Slider image ${index + 1}`}
+                                fill
+                                className="rounded-lg object-cover"
+                             />
+                           </div>
+                        </CarouselItem>
+                    ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-4" />
+                <CarouselNext className="right-4" />
+            </Carousel>
+        </div>
+        <div className="flex flex-col gap-6">
+          <div className="relative w-full h-full">
+            <Image
+              src="/nX5IF1758523833.png"
+              alt="Snacks offer"
+              fill
+              className="rounded-lg object-cover"
+            />
+          </div>
+          <div className="relative w-full h-full">
+            <Image
+              src="/xHSRB1758523707.png"
+              alt="Eggs offer"
+              fill
+              className="rounded-lg object-cover"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className="mb-16">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 rounded-lg bg-muted/50 p-4">
+              {featureIcons.map(feature => (
+                  <div key={feature.label} className="flex flex-col items-center justify-center gap-2 text-center">
+                    <feature.icon className="h-8 w-8 text-primary" />
+                    <p className="text-sm font-semibold text-muted-foreground">{feature.label}</p>
+                  </div>
+              ))}
+          </div>
       </section>
 
       <FeaturedProducts />
