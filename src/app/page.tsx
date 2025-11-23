@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from "next/image";
@@ -27,8 +28,8 @@ export default function Home() {
   }, []);
 
   const sliderImages = [
-    '/6cZ4n1758523882.png',
-    '/6cZ4n1758523882.png',
+    '/images/6cZ4n1758523882.png',
+    '/images/6cZ4n1758523882.png',
   ]
 
   return (
@@ -60,7 +61,7 @@ export default function Home() {
         <div className="flex flex-col gap-6">
           <div className="relative w-full h-full">
             <Image
-              src="/nX5IF1758523833.png"
+              src="/images/nX5IF1758523833.png"
               alt="Snacks offer"
               fill
               className="rounded-lg object-cover"
@@ -68,7 +69,7 @@ export default function Home() {
           </div>
           <div className="relative w-full h-full">
             <Image
-              src="/xHSRB1758523707.png"
+              src="/images/xHSRB1758523707.png"
               alt="Eggs offer"
               fill
               className="rounded-lg object-cover"
