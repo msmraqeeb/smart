@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode, useEffect } from "react";
+import React, { createContext, useContext, useState, ReactNode, useEffect, useCallback } from "react";
 import type { CartItem, Product } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -96,9 +96,9 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
     );
   };
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCartItems([]);
-  };
+  }, []);
 
   const cartTotal = (cartItems || []).reduce(
     (total, item) => total + item.product.price * item.quantity,
