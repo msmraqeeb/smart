@@ -16,6 +16,7 @@ import { useRouter } from "next/navigation";
 import { ImageUploader } from '@/components/image-uploader';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { X, Trash2, PlusCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 
 const formSchema = z.object({
@@ -76,6 +77,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
 
   const watchName = form.watch("name");
   const watchImageUrls = form.watch("imageUrls");
+  const watchAttributes = form.watch("attributes");
 
   useEffect(() => {
     if (watchImageUrls.length > 0) {
@@ -101,7 +103,6 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
   const handleSelectGlobalAttribute = (index: number, attributeId: string) => {
     const selectedAttr = globalAttributes.find(attr => attr.id === attributeId);
     if (selectedAttr) {
-      // Only update the name, leave options empty for manual entry
       updateAttribute(index, { name: selectedAttr.name, options: [] });
     }
   };
@@ -281,50 +282,59 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
                 <FormDescription>Add options like size or color. This will be used to create product variants.</FormDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                 {attributeFields.map((field, index) => (
-                    <div key={field.id} className="space-y-4 p-4 border rounded-md relative">
-                         <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            className="absolute top-1 right-1 h-6 w-6 text-destructive"
-                            onClick={() => removeAttribute(index)}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
-                        
-                        <div className="space-y-2">
-                          <FormLabel>Use Global Attribute (Optional)</FormLabel>
-                          <Select onValueChange={(value) => handleSelectGlobalAttribute(index, value)}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Select a global attribute..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {globalAttributes.map(attr => (
-                                    <SelectItem key={attr.id} value={attr.id}>{attr.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                          </Select>
+                 {attributeFields.map((field, index) => {
+                    const currentAttributeName = watchAttributes?.[index]?.name;
+                    const globalAttribute = globalAttributes.find(attr => attr.name === currentAttributeName);
+                    
+                    return (
+                        <div key={field.id} className="space-y-4 p-4 border rounded-md relative">
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="absolute top-1 right-1 h-6 w-6 text-destructive"
+                                onClick={() => removeAttribute(index)}
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
+                            
+                            <div className="space-y-2">
+                            <FormLabel>Use Global Attribute (Optional)</FormLabel>
+                            <Select onValueChange={(value) => handleSelectGlobalAttribute(index, value)}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select a global attribute..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {globalAttributes.map(attr => (
+                                        <SelectItem key={attr.id} value={attr.id}>{attr.name}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            </div>
+                            
+                            <div className="flex flex-col md:flex-row gap-4 items-start">
+                                <FormField
+                                    control={form.control}
+                                    name={`attributes.${index}.name`}
+                                    render={({ field }) => (
+                                        <FormItem className="flex-1 w-full md:w-1/3">
+                                            <FormLabel>Attribute Name</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="e.g. Color" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <AttributeOptions 
+                                    fieldName={`attributes.${index}.options`}
+                                    globalAttribute={globalAttribute}
+                                    form={form} 
+                                />
+                            </div>
                         </div>
-                        
-                        <div className="flex flex-col md:flex-row gap-4 items-start">
-                            <FormField
-                                control={form.control}
-                                name={`attributes.${index}.name`}
-                                render={({ field }) => (
-                                    <FormItem className="flex-1 w-full md:w-1/3">
-                                        <FormLabel>Attribute Name</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="e.g. Color" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <AttributeOptions fieldName={`attributes.${index}.options`} form={form} />
-                        </div>
-                    </div>
-                ))}
+                    );
+                })}
                 <Button
                     type="button"
                     variant="outline"
@@ -371,7 +381,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
 }
 
 
-function AttributeOptions({ fieldName, form }: { fieldName: `attributes.${number}.options`, form: any }) {
+function AttributeOptions({ fieldName, globalAttribute, form }: { fieldName: `attributes.${number}.options`, globalAttribute?: Attribute, form: any }) {
     const { control } = useFormContext<ProductFormValues>();
     const { fields, append, remove } = useFieldArray({
         control,
@@ -379,14 +389,19 @@ function AttributeOptions({ fieldName, form }: { fieldName: `attributes.${number
     });
 
     const [inputValue, setInputValue] = useState('');
+    const currentOptions = form.watch(fieldName) || [];
 
-    const handleAddOption = () => {
-        const trimmedValue = inputValue.trim();
-        if (trimmedValue && !form.getValues(fieldName)?.includes(trimmedValue)) {
+    const handleAddOption = (option: string) => {
+        const trimmedValue = option.trim();
+        if (trimmedValue && !currentOptions.includes(trimmedValue)) {
             append(trimmedValue);
             setInputValue('');
         }
     };
+    
+    const availableGlobalOptions = globalAttribute?.values.filter(
+        (value) => !currentOptions.includes(value)
+    ) || [];
 
     return (
         <div className="flex-2 w-full md:w-2/3">
@@ -399,13 +414,32 @@ function AttributeOptions({ fieldName, form }: { fieldName: `attributes.${number
                     onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                             e.preventDefault();
-                            handleAddOption();
+                            handleAddOption(inputValue);
                         }
                     }}
                 />
-                <Button type="button" onClick={handleAddOption}>Add</Button>
+                <Button type="button" onClick={() => handleAddOption(inputValue)}>Add</Button>
             </div>
              <FormDescription>Enter an option and click Add or press Enter. These are the choices for the attribute.</FormDescription>
+             
+             {availableGlobalOptions.length > 0 && (
+                <div className="mt-2 space-y-2">
+                    <p className="text-xs text-muted-foreground">Available options for '{globalAttribute?.name}':</p>
+                    <div className="flex flex-wrap gap-1">
+                        {availableGlobalOptions.map(value => (
+                            <Badge 
+                                key={value} 
+                                variant="secondary" 
+                                className="cursor-pointer hover:bg-primary/20"
+                                onClick={() => handleAddOption(value)}
+                            >
+                                {value}
+                            </Badge>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className="mt-2 flex flex-wrap gap-2">
                 {fields.map((field, index) => (
                     <div key={field.id} className="flex items-center gap-1 bg-muted rounded-full px-3 py-1 text-sm">
