@@ -1,6 +1,6 @@
 
 'use client';
-import { useForm, useFieldArray } from "react-hook-form";
+import { useForm, useFieldArray, useFormContext } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { Product, Category, ProductAttribute, ProductVariant } from "@/lib/types";
-import { getCategories } from "@/lib/data";
+import type { Product, Category, ProductAttribute, Attribute } from "@/lib/types";
+import { getCategories, getAttributes } from "@/lib/data";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ImageUploader } from '@/components/image-uploader';
@@ -44,10 +44,12 @@ interface ProductFormProps {
 
 export function ProductForm({ product, onSubmit }: ProductFormProps) {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [globalAttributes, setGlobalAttributes] = useState<Attribute[]>([]);
   const router = useRouter();
 
   useEffect(() => {
     getCategories().then(setCategories);
+    getAttributes().then(setGlobalAttributes);
   }, []);
   
   const form = useForm<ProductFormValues>({
@@ -67,7 +69,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
     },
   });
 
-  const { fields: attributeFields, append: appendAttribute, remove: removeAttribute } = useFieldArray({
+  const { fields: attributeFields, append: appendAttribute, remove: removeAttribute, update: updateAttribute } = useFieldArray({
     control: form.control,
     name: "attributes",
   });
@@ -94,6 +96,13 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
       delete dataToSubmit.salePrice;
     }
     onSubmit(dataToSubmit);
+  };
+
+  const handleSelectGlobalAttribute = (index: number, attributeId: string) => {
+    const selectedAttr = globalAttributes.find(attr => attr.id === attributeId);
+    if (selectedAttr) {
+      updateAttribute(index, { name: selectedAttr.name, options: selectedAttr.values });
+    }
   };
   
   const sortedCategories = useMemo(() => {
@@ -272,7 +281,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
             </CardHeader>
             <CardContent className="space-y-4">
                  {attributeFields.map((field, index) => (
-                    <div key={field.id} className="flex flex-col md:flex-row gap-4 items-start p-4 border rounded-md relative">
+                    <div key={field.id} className="space-y-4 p-4 border rounded-md relative">
                          <Button
                             type="button"
                             variant="ghost"
@@ -282,27 +291,44 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
                         >
                             <X className="h-4 w-4" />
                         </Button>
-                        <FormField
-                            control={form.control}
-                            name={`attributes.${index}.name`}
-                            render={({ field }) => (
-                                <FormItem className="flex-1 w-full md:w-1/3">
-                                    <FormLabel>Attribute Name</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="e.g. Color" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <AttributeOptions fieldName={`attributes.${index}.options`} />
+                        
+                        <div className="space-y-2">
+                          <FormLabel>Use Global Attribute (Optional)</FormLabel>
+                          <Select onValueChange={(value) => handleSelectGlobalAttribute(index, value)}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a global attribute..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {globalAttributes.map(attr => (
+                                    <SelectItem key={attr.id} value={attr.id}>{attr.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="flex flex-col md:flex-row gap-4 items-start">
+                            <FormField
+                                control={form.control}
+                                name={`attributes.${index}.name`}
+                                render={({ field }) => (
+                                    <FormItem className="flex-1 w-full md:w-1/3">
+                                        <FormLabel>Attribute Name</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="e.g. Color" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <AttributeOptions fieldName={`attributes.${index}.options`} form={form} />
+                        </div>
                     </div>
                 ))}
                 <Button
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => appendAttribute({ name: '', options: [''] })}
+                    onClick={() => appendAttribute({ name: '', options: [] })}
                 >
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Add Attribute
@@ -344,7 +370,7 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
 }
 
 
-function AttributeOptions({ fieldName }: { fieldName: `attributes.${number}.options` }) {
+function AttributeOptions({ fieldName, form }: { fieldName: `attributes.${number}.options`, form: any }) {
     const { control } = useFormContext<ProductFormValues>();
     const { fields, append, remove } = useFieldArray({
         control,
@@ -354,8 +380,9 @@ function AttributeOptions({ fieldName }: { fieldName: `attributes.${number}.opti
     const [inputValue, setInputValue] = useState('');
 
     const handleAddOption = () => {
-        if (inputValue.trim() !== '') {
-            append(inputValue.trim());
+        const trimmedValue = inputValue.trim();
+        if (trimmedValue && !form.getValues(fieldName)?.includes(trimmedValue)) {
+            append(trimmedValue);
             setInputValue('');
         }
     };
