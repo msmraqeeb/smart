@@ -17,6 +17,7 @@ import {
   Ticket,
   BarChart,
   ClipboardList,
+  Star,
 } from "lucide-react";
 import React from "react";
 
@@ -27,6 +28,7 @@ const navLinks = [
   { href: "/admin/categories", icon: LayoutGrid, label: "Categories" },
   { href: "/admin/attributes", icon: ClipboardList, label: "Attributes" },
   { href: "/admin/coupons", icon: Ticket, label: "Coupons" },
+  { href: "/admin/reviews", icon: Star, label: "Reviews" },
   { href: "/admin/reports", icon: BarChart, label: "Reports" },
   { href: "/admin/users", icon: Users, label: "Users" },
   { href: "/admin/shipping", icon: Truck, label: "Shipping" },
