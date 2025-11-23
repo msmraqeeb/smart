@@ -130,6 +130,33 @@ function AdminProductsPage() {
         return products;
     }, [allProducts, searchQuery, selectedCategory, sortOrder, categories]);
 
+    const sortedCategoriesForFilter = useMemo(() => {
+        const categoryMap = new Map(categories.map(c => [c.id, { ...c, children: [] as Category[] }]));
+        const topLevelCategories: (Category & { children: Category[] })[] = [];
+
+        categories.forEach(category => {
+            if (category.parentId && categoryMap.has(category.parentId)) {
+                categoryMap.get(category.parentId)?.children.push(categoryMap.get(category.id)!);
+            } else {
+                topLevelCategories.push(categoryMap.get(category.id)!);
+            }
+        });
+
+        const flattened: Category[] = [];
+        const flatten = (cats: (Category & { children: Category[] })[], depth = 0) => {
+            cats.sort((a, b) => a.name.localeCompare(b.name));
+            for (const cat of cats) {
+                flattened.push({ ...cat, name: `${'— '.repeat(depth)}${cat.name}` });
+                if (cat.children.length > 0) {
+                    flatten(cat.children, depth + 1);
+                }
+            }
+        };
+
+        flatten(topLevelCategories);
+        return flattened;
+    }, [categories]);
+
 
     return (
         <div>
@@ -177,7 +204,7 @@ function AdminProductsPage() {
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="all">All Categories</SelectItem>
-                                {categories.map(cat => (
+                                {sortedCategoriesForFilter.map(cat => (
                                     <SelectItem key={cat.id} value={cat.slug}>{cat.name}</SelectItem>
                                 ))}
                             </SelectContent>
