@@ -4,6 +4,9 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/com
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuLabel, DropdownMenuItem, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from '@/lib/utils';
 import withAdminAuth from '@/components/withAdminAuth';
@@ -13,10 +16,12 @@ import { useFirestore } from "@/firebase";
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Pencil, MoreHorizontal, Search } from "lucide-react";
+import { Pencil, MoreHorizontal, Search, Calendar as CalendarIcon, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
+import { format, isSameDay } from 'date-fns';
+import { cn } from "@/lib/utils";
 
 type Order = {
     id: string;
@@ -31,6 +36,8 @@ function AdminOrdersPage() {
     const { toast } = useToast();
     
     const [searchQuery, setSearchQuery] = useState('');
+    const [filterDate, setFilterDate] = useState<Date | undefined>();
+    const [filterStatus, setFilterStatus] = useState('all');
     const [selectedOrders, setSelectedOrders] = useState<string[]>([]);
     const [statusToUpdate, setStatusToUpdate] = useState<string | null>(null);
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -44,13 +51,19 @@ function AdminOrdersPage() {
 
     const filteredOrders = useMemo(() => {
         if (!orders) return [];
-        if (!searchQuery) return orders;
+        
+        return orders.filter(order => {
+            const searchMatch = !searchQuery || 
+                order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                order.customer?.fullName?.toLowerCase().includes(searchQuery.toLowerCase());
+            
+            const dateMatch = !filterDate || (order.createdAt && isSameDay(order.createdAt.toDate(), filterDate));
 
-        return orders.filter(order =>
-            order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            order.customer?.fullName?.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [orders, searchQuery]);
+            const statusMatch = filterStatus === 'all' || order.status === filterStatus;
+
+            return searchMatch && dateMatch && statusMatch;
+        });
+    }, [orders, searchQuery, filterDate, filterStatus]);
 
 
     const handleSelectAll = (checked: boolean | 'indeterminate') => {
@@ -124,6 +137,14 @@ function AdminOrdersPage() {
             setIsDeleteDialogOpen(false);
         }
     }
+    
+    const clearFilters = () => {
+        setSearchQuery('');
+        setFilterDate(undefined);
+        setFilterStatus('all');
+    }
+    
+    const hasActiveFilters = searchQuery || filterDate || filterStatus !== 'all';
 
 
     const isAllSelected = filteredOrders ? selectedOrders.length === filteredOrders.length && filteredOrders.length > 0 : false;
@@ -177,13 +198,13 @@ function AdminOrdersPage() {
             </AlertDialog>
             <Card>
                 <CardHeader>
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div className="flex-1">
                             <CardTitle>All Orders</CardTitle>
                             <CardDescription>View and manage all customer orders.</CardDescription>
                         </div>
-                         <div className="flex items-center gap-2 w-full md:w-auto">
-                            <div className="relative flex-1 md:flex-auto">
+                         <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto">
+                            <div className="relative flex-1 sm:flex-auto w-full">
                                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                                 <Input
                                     type="search"
@@ -196,7 +217,7 @@ function AdminOrdersPage() {
                             {selectedOrders.length > 0 && (
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
-                                        <Button variant="outline">
+                                        <Button variant="outline" className="w-full sm:w-auto">
                                             Actions ({selectedOrders.length})
                                         </Button>
                                     </DropdownMenuTrigger>
@@ -218,14 +239,56 @@ function AdminOrdersPage() {
                     </div>
                 </CardHeader>
                 <CardContent>
+                    <div className="flex items-center gap-2 px-4 py-2 border-t border-b bg-muted/50">
+                        <Popover>
+                            <PopoverTrigger asChild>
+                                <Button
+                                variant={"outline"}
+                                className={cn(
+                                    "w-[240px] justify-start text-left font-normal",
+                                    !filterDate && "text-muted-foreground"
+                                )}
+                                >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {filterDate ? format(filterDate, "PPP") : <span>Filter by date...</span>}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                                <Calendar
+                                mode="single"
+                                selected={filterDate}
+                                onSelect={setFilterDate}
+                                initialFocus
+                                />
+                            </PopoverContent>
+                        </Popover>
+                        <Select value={filterStatus} onValueChange={setFilterStatus}>
+                            <SelectTrigger className="w-[180px]">
+                                <SelectValue placeholder="Filter by status..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Statuses</SelectItem>
+                                <SelectItem value="Processing">Processing</SelectItem>
+                                <SelectItem value="Shipped">Shipped</SelectItem>
+                                <SelectItem value="Delivered">Delivered</SelectItem>
+                                <SelectItem value="Cancelled">Cancelled</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        {hasActiveFilters && (
+                           <Button variant="ghost" onClick={clearFilters}>
+                                <X className="mr-2 h-4 w-4" />
+                                Clear Filters
+                            </Button>
+                        )}
+                    </div>
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-[50px]">
                                     <Checkbox 
                                         onCheckedChange={handleSelectAll}
-                                        checked={isAllSelected}
-                                        indeterminate={isSomeSelected}
+                                        checked={filteredOrders.length > 0 && selectedOrders.length === filteredOrders.length}
+                                        indeterminate={selectedOrders.length > 0 && selectedOrders.length < filteredOrders.length}
                                         aria-label="Select all rows"
                                     />
                                 </TableHead>
