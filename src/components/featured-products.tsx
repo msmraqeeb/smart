@@ -7,7 +7,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { ProductCard } from "@/components/product-card";
-import { getFeaturedProducts } from "@/lib/data";
+import { getSaleProducts } from "@/lib/data";
 import { Product } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { Skeleton } from "./ui/skeleton";
@@ -16,12 +16,12 @@ import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
 
 export function FeaturedProducts() {
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [saleProducts, setSaleProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getFeaturedProducts().then(products => {
-        setFeaturedProducts(products);
+    getSaleProducts().then(products => {
+        setSaleProducts(products);
         setLoading(false);
     });
   }, []);
@@ -56,7 +56,7 @@ export function FeaturedProducts() {
           className="w-full"
         >
           <CarouselContent className="-ml-2">
-            {featuredProducts.map((product) => (
+            {saleProducts.map((product) => (
               <CarouselItem
                 key={product.id}
                 className="md:basis-1/2 lg:basis-1/4 pl-2"
