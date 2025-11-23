@@ -1,4 +1,3 @@
-
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { getProductBySlug } from "@/lib/data";
@@ -8,6 +7,44 @@ import { Reviews } from "@/components/reviews";
 import { Badge } from "@/components/ui/badge";
 import type { Product } from "@/lib/types";
 import { ProductVariantSelector } from "@/components/product-variant-selector";
+import { Metadata, ResolvingMetadata } from 'next';
+
+type Props = {
+  params: { slug: string };
+};
+
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const product = await getProductBySlug(params.slug);
+
+  if (!product) {
+    return {
+      title: 'Product Not Found',
+    };
+  }
+
+  const previousImages = (await parent).openGraph?.images || [];
+  const primaryImageUrl = product.imageUrls && product.imageUrls.length > 0 ? product.imageUrls[0] : product.imageUrl;
+
+  return {
+    title: `${product.name} | GetMart`,
+    description: product.description.substring(0, 160),
+    openGraph: {
+      title: product.name,
+      description: product.description.substring(0, 160),
+      images: [primaryImageUrl, ...previousImages],
+      type: 'product.item',
+    },
+    twitter: {
+        card: 'summary_large_image',
+        title: product.name,
+        description: product.description.substring(0, 160),
+        images: [primaryImageUrl],
+    },
+  };
+}
 
 
 export default async function ProductDetailPage({
