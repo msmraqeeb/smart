@@ -53,6 +53,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+       {
+        protocol: 'https',
+        hostname: 'grocery-admin.getcommerce.xyz',
+        port: '',
+        pathname: '/**',
+      },
     ],
   },
 };
