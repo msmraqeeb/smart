@@ -76,16 +76,6 @@ export function PopularItems() {
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                 data-ai-hint="woman fruits"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent p-6 flex flex-col justify-between">
-                <div>
-                  <h3 className="text-3xl font-bold text-white font-headline">Products</h3>
-                </div>
-                 <div>
-                    <Button variant="secondary" asChild className="bg-yellow-400 hover:bg-yellow-500 text-black rounded-full">
-                      <Link href="/products">Shop Now <ArrowRight className="ml-2 h-4 w-4" /></Link>
-                    </Button>
-                 </div>
-              </div>
           </div>
           {popularProducts.map(product => (
             <ProductCard key={product.id} product={product} />
