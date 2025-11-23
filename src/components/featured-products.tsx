@@ -11,6 +11,9 @@ import { getFeaturedProducts } from "@/lib/data";
 import { Product } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { Skeleton } from "./ui/skeleton";
+import Link from "next/link";
+import { Button } from "./ui/button";
+import { ArrowRight } from "lucide-react";
 
 export function FeaturedProducts() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
@@ -25,14 +28,24 @@ export function FeaturedProducts() {
 
   return (
     <section className="mb-16">
-      <h2 className="font-headline mb-8 text-3xl font-bold text-center">
-        Featured Products
-      </h2>
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="font-headline text-3xl font-bold relative">
+            Today's Hot Sale
+            <span className="absolute -bottom-2 left-0 w-16 h-1 bg-primary"></span>
+        </h2>
+        <Button asChild variant="link" className="text-primary">
+            <Link href="/products">
+                VIEW ALL ITEMS <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+        </Button>
+      </div>
+
       {loading ? (
         <div className="flex justify-center gap-4">
-            <Skeleton className="w-full md:w-1/2 lg:w-1/3 h-96" />
-            <Skeleton className="w-full md:w-1/2 lg:w-1/3 h-96 hidden md:block" />
-            <Skeleton className="w-full md:w-1/2 lg:w-1/3 h-96 hidden lg:block" />
+            <Skeleton className="w-full md:w-1/2 lg:w-1/4 h-80" />
+            <Skeleton className="w-full md:w-1/2 lg:w-1/4 h-80 hidden md:block" />
+            <Skeleton className="w-full md:w-1/2 lg:w-1/4 h-80 hidden lg:block" />
+            <Skeleton className="w-full md:w-1/2 lg:w-1/4 h-80 hidden lg:block" />
         </div>
       ) : (
         <Carousel
@@ -42,11 +55,11 @@ export function FeaturedProducts() {
           }}
           className="w-full"
         >
-          <CarouselContent>
+          <CarouselContent className="-ml-2">
             {featuredProducts.map((product) => (
               <CarouselItem
                 key={product.id}
-                className="md:basis-1/2 lg:basis-1/3"
+                className="md:basis-1/2 lg:basis-1/4 pl-2"
               >
                 <div className="p-1">
                   <ProductCard product={product} />
