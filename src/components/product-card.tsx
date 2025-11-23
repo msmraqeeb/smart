@@ -1,3 +1,4 @@
+
 'use client';
 
 import Image from "next/image";
@@ -60,15 +61,14 @@ export function ProductCard({ product }: ProductCardProps) {
         <div className="mt-4">
              <Button
                 variant="outline"
-                size="icon"
-                className="rounded-full w-8 h-8 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                className="w-full"
                 onClick={(e) => {
                     e.stopPropagation();
                     addToCart(product, 1);
                 }}
             >
-                <ShoppingCart className="h-4 w-4" />
-                <span className="sr-only">Add to cart</span>
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Add to Cart
             </Button>
         </div>
       </CardContent>
