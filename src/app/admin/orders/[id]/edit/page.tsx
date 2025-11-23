@@ -23,7 +23,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import React, { useEffect, useState, useMemo } from 'react';
 import { Separator } from '@/components/ui/separator';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Search } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { getProducts } from '@/lib/data';
 import type { Product } from '@/lib/types';
@@ -60,6 +60,7 @@ function EditOrderPage() {
   const [order, setOrder] = useState<any | null>(null);
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
+  const [productSearchQuery, setProductSearchQuery] = useState('');
 
   useEffect(() => {
     if (initialOrder) {
@@ -152,6 +153,7 @@ function EditOrderPage() {
         items: newItems,
     });
     setIsAddProductDialogOpen(false);
+    setProductSearchQuery('');
     toast({
         title: "Item Added",
         description: `${product.name} has been added to the order.`
@@ -188,6 +190,10 @@ function EditOrderPage() {
     });
     router.push('/admin/orders');
   };
+  
+  const filteredProducts = useMemo(() => {
+    return allProducts.filter(p => p.name.toLowerCase().includes(productSearchQuery.toLowerCase()));
+  }, [allProducts, productSearchQuery]);
 
   if (loading || !order) {
     return <div>Loading...</div>;
@@ -249,12 +255,22 @@ function EditOrderPage() {
                             <DialogHeader>
                                 <DialogTitle>Add Product to Order</DialogTitle>
                             </DialogHeader>
+                             <div className="relative">
+                                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                                <Input
+                                    type="search"
+                                    placeholder="Search products..."
+                                    className="pl-8 w-full"
+                                    value={productSearchQuery}
+                                    onChange={(e) => setProductSearchQuery(e.target.value)}
+                                />
+                            </div>
                             <ScrollArea className="h-[60vh]">
                                 <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4'>
-                                    {allProducts.map(product => (
+                                    {filteredProducts.map(product => (
                                         <Card key={product.id}>
                                             <CardHeader className="p-0">
-                                                <Image src={product.imageUrl} alt={product.name} width={200} height={200} className="w-full aspect-square object-cover rounded-t-lg" />
+                                                <Image src={product.imageUrls?.[0] || product.imageUrl} alt={product.name} width={200} height={200} className="w-full aspect-square object-cover rounded-t-lg" />
                                             </CardHeader>
                                             <CardContent className="p-4">
                                                 <h4 className='font-semibold'>{product.name}</h4>
