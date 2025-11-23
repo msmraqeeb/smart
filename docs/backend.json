@@ -58,6 +58,20 @@
       },
       "required": ["name", "slug", "imageUrl"]
     },
+    "Attribute": {
+      "title": "Attribute",
+      "description": "Represents a global product attribute like 'Color' or 'Size'.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "The name of the attribute (e.g., 'Color')." },
+        "values": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "The possible values for the attribute (e.g., ['Red', 'Green', 'Blue'])."
+        }
+      },
+      "required": ["name", "values"]
+    },
     "Order": {
       "title": "Order",
       "description": "Represents a customer's order.",
@@ -159,6 +173,10 @@
     "/categories/{categoryId}": {
       "schema": { "$ref": "#/entities/Category" },
       "description": "Stores product categories."
+    },
+    "/attributes/{attributeId}": {
+      "schema": { "$ref": "#/entities/Attribute" },
+      "description": "Stores global product attributes."
     },
     "/orders/{orderId}": {
       "schema": { "$ref": "#/entities/Order" },

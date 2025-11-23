@@ -1,6 +1,6 @@
 
 
-import type { Product, Category, Review, Coupon } from './types';
+import type { Product, Category, Review, Coupon, Attribute } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 import { collection, getDocs, doc, getDoc, query, where, orderBy } from 'firebase/firestore';
 import { initializeFirebase } from '@/firebase';
@@ -58,6 +58,27 @@ export async function getCategories(): Promise<Category[]> {
     }
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
 }
+
+export async function getAttributes(): Promise<Attribute[]> {
+    if (!firestore) return [];
+    const attributesCollection = collection(firestore, 'attributes');
+    const snapshot = await getDocs(query(attributesCollection, orderBy('name')));
+    if (snapshot.empty) {
+        return [];
+    }
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Attribute));
+}
+
+export async function getAttributeById(id: string): Promise<Attribute | null> {
+    if (!firestore) return null;
+    const docRef = doc(firestore, "attributes", id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        return { id: docSnap.id, ...docSnap.data() } as Attribute;
+    }
+    return null;
+}
+
 
 export async function getCoupons(): Promise<Coupon[]> {
     if (!firestore) return [];

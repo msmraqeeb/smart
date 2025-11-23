@@ -44,6 +44,12 @@ export type Category = {
   children?: Category[];
 };
 
+export type Attribute = {
+  id: string;
+  name: string;
+  values: string[];
+}
+
 export type CartItem = {
   product: Product;
   quantity: number;
