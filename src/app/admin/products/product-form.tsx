@@ -101,7 +101,8 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
   const handleSelectGlobalAttribute = (index: number, attributeId: string) => {
     const selectedAttr = globalAttributes.find(attr => attr.id === attributeId);
     if (selectedAttr) {
-      updateAttribute(index, { name: selectedAttr.name, options: selectedAttr.values });
+      // Only update the name, leave options empty for manual entry
+      updateAttribute(index, { name: selectedAttr.name, options: [] });
     }
   };
   
