@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
@@ -236,6 +237,7 @@ export default function ProductsPage() {
                 defaultValue={[maxPrice]}
                 max={maxPrice}
                 step={10}
+                value={[Number(searchParams.get('maxPrice') || maxPrice)]}
                 onValueChange={(value) => handleFilterChange('maxPrice', value[0].toString())}
             />
              <div className="flex justify-between text-sm text-muted-foreground">
