@@ -70,11 +70,11 @@ export function PopularItems() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
           <div className="relative rounded-lg overflow-hidden lg:col-span-1 md:col-span-3 sm:col-span-2 row-span-2 group cursor-pointer">
               <Image 
-                src="https://picsum.photos/seed/grocery-shopping/400/824"
+                src="https://images.unsplash.com/photo-1598512752271-33f913a53133?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHx3b21hbiUyMHdpdGglMjBmcnVpdHN8ZW58MHx8fHwxNzE5NDI4Mjg3fDA&ixlib=rb-4.0.3&q=80&w=1080"
                 alt="Promotion"
                 fill
                 className="object-cover transition-transform duration-300 group-hover:scale-105"
-                data-ai-hint="grocery shopping"
+                data-ai-hint="woman fruits"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent p-6 flex flex-col justify-between">
                 <div>
