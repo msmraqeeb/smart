@@ -1,6 +1,6 @@
 
 'use client';
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
@@ -9,11 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import type { Product, Category } from "@/lib/types";
+import type { Product, Category, ProductAttribute, ProductVariant } from "@/lib/types";
 import { getCategories } from "@/lib/data";
 import React, { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ImageUploader } from '@/components/image-uploader';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { X, Trash2, PlusCircle } from "lucide-react";
 
 
 const formSchema = z.object({
@@ -27,13 +29,17 @@ const formSchema = z.object({
   brand: z.string().optional(),
   featured: z.boolean(),
   imageUrls: z.array(z.string().url()).min(1, "At least one image is required."),
+  attributes: z.array(z.object({
+    name: z.string().min(1, "Attribute name is required."),
+    options: z.array(z.string().min(1, "Option name is required.")).min(1, "At least one option is required."),
+  })).optional(),
 });
 
 type ProductFormValues = z.infer<typeof formSchema>;
 
 interface ProductFormProps {
   product?: Product;
-  onSubmit: (data: Omit<Product, 'id' | 'reviews' | 'imageUrl' | 'imageHint'> & {imageUrls: string[]}) => void;
+  onSubmit: (data: Omit<Product, 'id' | 'reviews' | 'imageUrl' | 'imageHint'> & {imageUrls: string[], attributes?: ProductAttribute[]}) => void;
 }
 
 export function ProductForm({ product, onSubmit }: ProductFormProps) {
@@ -57,7 +63,13 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
       brand: product?.brand || "",
       featured: product?.featured || false,
       imageUrls: product?.imageUrls || [],
+      attributes: product?.attributes || [],
     },
+  });
+
+  const { fields: attributeFields, append: appendAttribute, remove: removeAttribute } = useFieldArray({
+    control: form.control,
+    name: "attributes",
   });
 
   const watchName = form.watch("name");
@@ -84,32 +96,32 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
     onSubmit(dataToSubmit);
   };
   
-    const sortedCategories = useMemo(() => {
-        const categoryMap = new Map(categories.map(c => [c.id, { ...c, children: [] as Category[] }]));
-        const topLevelCategories: (Category & { children: Category[] })[] = [];
+  const sortedCategories = useMemo(() => {
+      const categoryMap = new Map(categories.map(c => [c.id, { ...c, children: [] as Category[] }]));
+      const topLevelCategories: (Category & { children: Category[] })[] = [];
 
-        categories.forEach(category => {
-            if (category.parentId && categoryMap.has(category.parentId)) {
-                categoryMap.get(category.parentId)?.children.push(categoryMap.get(category.id)!);
-            } else {
-                topLevelCategories.push(categoryMap.get(category.id)!);
-            }
-        });
+      categories.forEach(category => {
+          if (category.parentId && categoryMap.has(category.parentId)) {
+              categoryMap.get(category.parentId)?.children.push(categoryMap.get(category.id)!);
+          } else {
+              topLevelCategories.push(categoryMap.get(category.id)!);
+          }
+      });
 
-        const flattened: Category[] = [];
-        const flatten = (cats: (Category & { children: Category[] })[], depth = 0) => {
-            cats.sort((a, b) => a.name.localeCompare(b.name));
-            for (const cat of cats) {
-                flattened.push({ ...cat, name: `${'— '.repeat(depth)}${cat.name}` });
-                if (cat.children.length > 0) {
-                    flatten(cat.children, depth + 1);
-                }
-            }
-        };
+      const flattened: Category[] = [];
+      const flatten = (cats: (Category & { children: Category[] })[], depth = 0) => {
+          cats.sort((a, b) => a.name.localeCompare(b.name));
+          for (const cat of cats) {
+              flattened.push({ ...cat, name: `${'— '.repeat(depth)}${cat.name}` });
+              if (cat.children.length > 0) {
+                  flatten(cat.children, depth + 1);
+              }
+          }
+      };
 
-        flatten(topLevelCategories);
-        return flattened;
-    }, [categories]);
+      flatten(topLevelCategories);
+      return flattened;
+  }, [categories]);
 
   return (
     <Form {...form}>
@@ -253,6 +265,51 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
           )}
         />
         
+        <Card>
+            <CardHeader>
+                <CardTitle>Product Attributes</CardTitle>
+                <FormDescription>Add options like size or color. This will be used to create product variants.</FormDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                 {attributeFields.map((field, index) => (
+                    <div key={field.id} className="flex flex-col md:flex-row gap-4 items-start p-4 border rounded-md relative">
+                         <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="absolute top-1 right-1 h-6 w-6 text-destructive"
+                            onClick={() => removeAttribute(index)}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                        <FormField
+                            control={form.control}
+                            name={`attributes.${index}.name`}
+                            render={({ field }) => (
+                                <FormItem className="flex-1 w-full md:w-1/3">
+                                    <FormLabel>Attribute Name</FormLabel>
+                                    <FormControl>
+                                        <Input placeholder="e.g. Color" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <AttributeOptions fieldName={`attributes.${index}.options`} />
+                    </div>
+                ))}
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => appendAttribute({ name: '', options: [''] })}
+                >
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Attribute
+                </Button>
+            </CardContent>
+        </Card>
+
         <FormField
             control={form.control}
             name="featured"
@@ -285,3 +342,53 @@ export function ProductForm({ product, onSubmit }: ProductFormProps) {
     </Form>
   );
 }
+
+
+function AttributeOptions({ fieldName }: { fieldName: `attributes.${number}.options` }) {
+    const { control } = useFormContext<ProductFormValues>();
+    const { fields, append, remove } = useFieldArray({
+        control,
+        name: fieldName,
+    });
+
+    const [inputValue, setInputValue] = useState('');
+
+    const handleAddOption = () => {
+        if (inputValue.trim() !== '') {
+            append(inputValue.trim());
+            setInputValue('');
+        }
+    };
+
+    return (
+        <div className="flex-2 w-full md:w-2/3">
+            <FormLabel>Options</FormLabel>
+            <div className="flex gap-2">
+                <Input
+                    placeholder="e.g. Red"
+                    value={inputValue}
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddOption();
+                        }
+                    }}
+                />
+                <Button type="button" onClick={handleAddOption}>Add</Button>
+            </div>
+             <FormDescription>Enter an option and click Add or press Enter. These are the choices for the attribute.</FormDescription>
+            <div className="mt-2 flex flex-wrap gap-2">
+                {fields.map((field, index) => (
+                    <div key={field.id} className="flex items-center gap-1 bg-muted rounded-full px-3 py-1 text-sm">
+                        <span>{form.getValues(`${fieldName}.${index}`)}</span>
+                        <button type="button" onClick={() => remove(index)} className="text-muted-foreground hover:text-destructive">
+                            <X className="h-3 w-3" />
+                        </button>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
+}
+

@@ -15,7 +15,33 @@
         "category": { "type": "string" },
         "brand": { "type": "string" },
         "featured": { "type": "boolean" },
-        "imageUrls": { "type": "array", "items": { "type": "string" } }
+        "imageUrls": { "type": "array", "items": { "type": "string" } },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "options": { "type": "array", "items": { "type": "string" } }
+            },
+            "required": ["name", "options"]
+          }
+        },
+        "variants": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "sku": { "type": "string" },
+              "price": { "type": "number" },
+              "salePrice": { "type": "number" },
+              "imageUrls": { "type": "array", "items": { "type": "string" } },
+              "attributes": { "type": "object" }
+            },
+            "required": ["id", "price", "attributes"]
+          }
+        }
       },
       "required": ["name", "slug", "price", "category", "imageUrls"]
     },
@@ -58,7 +84,8 @@
               "id": { "type": "string" },
               "name": { "type": "string" },
               "quantity": { "type": "number" },
-              "price": { "type": "number" }
+              "price": { "type": "number" },
+              "variant": { "type": "object" }
             },
             "required": ["id", "name", "quantity", "price"]
           }

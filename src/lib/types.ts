@@ -1,5 +1,19 @@
 
 
+export type ProductAttribute = {
+  name: string;
+  options: string[];
+};
+
+export type ProductVariant = {
+    id: string;
+    sku?: string;
+    price: number;
+    salePrice?: number;
+    imageUrls?: string[];
+    attributes: Record<string, string>;
+};
+
 export type Product = {
   id: string;
   slug: string;
@@ -16,6 +30,8 @@ export type Product = {
   featured: boolean;
   reviews?: Review[];
   createdAt?: any;
+  attributes?: ProductAttribute[];
+  variants?: ProductVariant[];
 };
 
 export type Category = {
@@ -31,6 +47,7 @@ export type Category = {
 export type CartItem = {
   product: Product;
   quantity: number;
+  variant?: ProductVariant;
 };
 
 export type Review = {
