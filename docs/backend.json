@@ -160,6 +160,19 @@
         "autoApply": { "type": "boolean", "description": "If true, this coupon will be applied automatically if conditions are met." }
       },
       "required": ["code", "discountType", "discountValue", "status"]
+    },
+    "Review": {
+      "title": "Review",
+      "description": "Represents a customer review for a product.",
+      "type": "object",
+      "properties": {
+        "author": { "type": "string" },
+        "rating": { "type": "number" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "userId": { "type": "string" }
+      },
+      "required": ["author", "rating", "text", "createdAt", "userId"]
     }
   },
   "auth": {
@@ -169,6 +182,10 @@
     "/products/{productId}": {
       "schema": { "$ref": "#/entities/Product" },
       "description": "Stores individual product listings."
+    },
+    "/products/{productId}/reviews/{reviewId}": {
+      "schema": { "$ref": "#/entities/Review" },
+      "description": "Stores reviews for a specific product."
     },
     "/categories/{categoryId}": {
       "schema": { "$ref": "#/entities/Category" },

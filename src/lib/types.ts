@@ -1,5 +1,6 @@
 
 
+
 export type ProductAttribute = {
   name: string;
   options: string[];
@@ -60,9 +61,10 @@ export type CartItem = {
 export type Review = {
   id: string;
   author: string;
-  date: string;
+  createdAt: any; // Firestore Timestamp
   rating: number;
   text: string;
+  userId: string;
   reply?: {
     author: string;
     date: string;

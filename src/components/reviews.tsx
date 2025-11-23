@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -11,6 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from './ui/separator';
+import { useAuth, useCollection, useFirestore } from '@/firebase';
+import { collection, addDoc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 
 const StarRating = ({ rating, onRate, size = 'md' }: { rating: number, onRate?: (rating: number) => void, size?: 'sm' | 'md' }) => {
     const starSize = size === 'sm' ? 'h-4 w-4' : 'h-5 w-5';
@@ -31,13 +34,19 @@ const StarRating = ({ rating, onRate, size = 'md' }: { rating: number, onRate?: 
     );
 };
 
-const ReviewForm = ({ onSubmit }: { onSubmit: (review: { text: string, rating: number }) => void }) => {
+const ReviewForm = ({ productId, onSubmit }: { productId: string, onSubmit: () => void }) => {
     const [rating, setRating] = useState(0);
     const [text, setText] = useState('');
+    const { user } = useAuth();
+    const firestore = useFirestore();
     const { toast } = useToast();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!user) {
+            toast({ variant: 'destructive', title: 'You must be logged in to leave a review.' });
+            return;
+        }
         if (rating === 0) {
             toast({ variant: 'destructive', title: 'Please select a rating' });
             return;
@@ -46,9 +55,27 @@ const ReviewForm = ({ onSubmit }: { onSubmit: (review: { text: string, rating: n
             toast({ variant: 'destructive', title: 'Please write your review' });
             return;
         }
-        onSubmit({ text, rating });
-        setText('');
-        setRating(0);
+
+        if (!firestore) return;
+
+        const reviewData = {
+            author: user.displayName || 'Anonymous',
+            rating,
+            text,
+            createdAt: serverTimestamp(),
+            userId: user.uid,
+        };
+        
+        try {
+            await addDoc(collection(firestore, 'products', productId, 'reviews'), reviewData);
+            toast({ title: "Review Submitted", description: "Thank you for your feedback!" });
+            setText('');
+            setRating(0);
+            onSubmit(); // Callback to potentially refetch reviews
+        } catch (error) {
+             console.error("Error submitting review:", error);
+            toast({ variant: 'destructive', title: 'Failed to submit review' });
+        }
     };
 
     return (
@@ -81,11 +108,13 @@ const Label = ({htmlFor, className, children} : {htmlFor?: string, className?: s
     <label htmlFor={htmlFor} className={cn('text-sm font-medium', className)}>{children}</label>
 )
 
-const ReviewDate = ({ date }: { date: string }) => {
+const ReviewDate = ({ date }: { date: any }) => {
     const [formattedDate, setFormattedDate] = useState('');
 
     useEffect(() => {
-        setFormattedDate(new Date(date).toLocaleString());
+        if (date && typeof date.toDate === 'function') {
+            setFormattedDate(date.toDate().toLocaleString());
+        }
     }, [date]);
 
     return <p className="text-xs text-muted-foreground">{formattedDate}</p>;
@@ -93,11 +122,18 @@ const ReviewDate = ({ date }: { date: string }) => {
 
 
 export function Reviews({ product }: { product: Product }) {
-    const [reviews, setReviews] = useState<Review[]>(product.reviews || []);
-    const { toast } = useToast();
+    const firestore = useFirestore();
+    
+    const reviewsQuery = useMemo(() => {
+        if (!firestore) return null;
+        return query(collection(firestore, 'products', product.id, 'reviews'), orderBy('createdAt', 'desc'));
+    }, [firestore, product.id]);
+
+    const { data: reviews, loading: reviewsLoading } = useCollection<Review>(reviewsQuery);
+
 
     const reviewSummary = useMemo(() => {
-        if (reviews.length === 0) {
+        if (!reviews || reviews.length === 0) {
             return {
                 average: 0,
                 total: 0,
@@ -131,18 +167,6 @@ export function Reviews({ product }: { product: Product }) {
         };
     }, [reviews]);
     
-    const handleReviewSubmit = (review: { text: string; rating: number; }) => {
-        const newReview: Review = {
-            id: (reviews.length + 1).toString(),
-            author: 'Admin', // Placeholder for logged in user
-            date: new Date().toISOString(),
-            rating: review.rating,
-            text: review.text,
-        };
-        setReviews(prev => [newReview, ...prev]);
-        toast({ title: "Review Submitted", description: "Thank you for your feedback!" });
-    };
-
     return (
         <div className="space-y-12">
             <h2 className="font-headline text-3xl font-bold">Reviews</h2>
@@ -160,7 +184,7 @@ export function Reviews({ product }: { product: Product }) {
                         </div>
                     </div>
                     <div>
-                         <p className="text-lg"><span className="font-bold">{reviewSummary.recommended}%</span> Recommended ({reviews.filter(r => r.rating >= 4).length} of {reviews.length})</p>
+                         <p className="text-lg"><span className="font-bold">{reviewSummary.recommended}%</span> Recommended ({reviews ? reviews.filter(r => r.rating >= 4).length : 0} of {reviews ? reviews.length : 0})</p>
                     </div>
                     <div className="space-y-2">
                         {[5, 4, 3, 2, 1].map(star => (
@@ -172,12 +196,14 @@ export function Reviews({ product }: { product: Product }) {
                         ))}
                     </div>
                 </div>
-                <ReviewForm onSubmit={handleReviewSubmit} />
+                <ReviewForm productId={product.id} onSubmit={() => { /* The useCollection hook handles refetching */ }} />
             </div>
 
             <Separator />
 
-            {reviews.length > 0 ? (
+            {reviewsLoading ? (
+                <p className="text-center text-muted-foreground">Loading reviews...</p>
+            ) : reviews && reviews.length > 0 ? (
                 <div className="space-y-8">
                     {reviews.map(review => (
                         <div key={review.id} className="flex gap-4">
@@ -188,7 +214,7 @@ export function Reviews({ product }: { product: Product }) {
                                <div className="flex items-center justify-between">
                                  <div>
                                     <p className="font-bold">{review.author}</p>
-                                    <ReviewDate date={review.date} />
+                                    <ReviewDate date={review.createdAt} />
                                  </div>
                                   <StarRating rating={review.rating} size="sm" />
                                </div>

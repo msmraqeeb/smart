@@ -1,5 +1,6 @@
 
 
+
 import type { Product, Category, Review, Coupon, Attribute } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 import { collection, getDocs, doc, getDoc, query, where, orderBy } from 'firebase/firestore';
@@ -7,7 +8,15 @@ import { initializeFirebase } from '@/firebase';
 
 const { firestore } = initializeFirebase();
 
-const reviews: Review[] = [];
+const getReviews = async (productId: string): Promise<Review[]> => {
+    if (!productId) return [];
+    const reviewsCollection = collection(firestore, 'products', productId, 'reviews');
+    const snapshot = await getDocs(query(reviewsCollection, orderBy('createdAt', 'desc')));
+    if (snapshot.empty) {
+        return [];
+    }
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Review));
+};
 
 export async function getProducts(): Promise<Product[]> {
     const productsCollection = collection(firestore, 'products');
@@ -15,7 +24,11 @@ export async function getProducts(): Promise<Product[]> {
     if (snapshot.empty) {
         return [];
     }
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), reviews: reviews } as Product));
+    const products = await Promise.all(snapshot.docs.map(async (doc) => {
+        const reviews = await getReviews(doc.id);
+        return { id: doc.id, ...doc.data(), reviews } as Product;
+    }));
+    return products;
 }
 
 export async function getProductById(id: string): Promise<Product | undefined> {
@@ -23,7 +36,8 @@ export async function getProductById(id: string): Promise<Product | undefined> {
     const productDocRef = doc(firestore, 'products', id);
     const snapshot = await getDoc(productDocRef);
     if (snapshot.exists()) {
-        return { id: snapshot.id, ...snapshot.data(), reviews: reviews } as Product;
+        const reviews = await getReviews(id);
+        return { id: snapshot.id, ...snapshot.data(), reviews } as Product;
     }
     return undefined;
 }
@@ -37,7 +51,8 @@ export async function getProductBySlug(slug: string): Promise<Product | undefine
         return undefined;
     }
     const doc = snapshot.docs[0];
-    return { id: doc.id, ...doc.data(), reviews: reviews } as Product;
+    const reviews = await getReviews(doc.id);
+    return { id: doc.id, ...doc.data(), reviews } as Product;
 }
 
 export async function getFeaturedProducts(): Promise<Product[]> {
@@ -47,7 +62,11 @@ export async function getFeaturedProducts(): Promise<Product[]> {
     if (snapshot.empty) {
         return [];
     }
-    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), reviews: reviews } as Product));
+     const products = await Promise.all(snapshot.docs.map(async (doc) => {
+        const reviews = await getReviews(doc.id);
+        return { id: doc.id, ...doc.data(), reviews } as Product;
+    }));
+    return products;
 }
 
 export async function getCategories(): Promise<Category[]> {
