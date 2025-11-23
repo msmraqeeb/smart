@@ -1,6 +1,5 @@
 
 
-
 export type ProductAttribute = {
   name: string;
   options: string[];
@@ -67,7 +66,7 @@ export type Review = {
   userId: string;
   reply?: {
     author: string;
-    date: string;
+    date: any; // Firestore Timestamp
     text: string;
   }
 };

@@ -7,15 +7,18 @@ import { Button } from "@/components/ui/button";
 import { getProducts } from '@/lib/data';
 import type { Product, Review } from '@/lib/types';
 import withAdminAuth from '@/components/withAdminAuth';
-import { Star, MoreHorizontal, Trash2 } from 'lucide-react';
+import { Star, MoreHorizontal, Trash2, Reply } from 'lucide-react';
 import Link from 'next/link';
 import { useFirestore } from '@/firebase';
-import { doc, deleteDoc } from 'firebase/firestore';
+import { doc, deleteDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 type ReviewWithProduct = Review & {
     productName: string;
@@ -23,10 +26,56 @@ type ReviewWithProduct = Review & {
     productSlug: string;
 };
 
+function ReplyDialog({ review, onReply, onOpenChange, open }: { review: ReviewWithProduct, onReply: (text: string) => void, open: boolean, onOpenChange: (open: boolean) => void }) {
+    const [replyText, setReplyText] = useState(review.reply?.text || '');
+    
+    useEffect(() => {
+        if (open) {
+            setReplyText(review.reply?.text || '');
+        }
+    }, [open, review]);
+
+    const handleReplySubmit = () => {
+        onReply(replyText);
+    };
+
+    return (
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Reply to review</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                    <blockquote className="border-l-2 pl-6 italic">
+                        "{review.text}"
+                    </blockquote>
+                    <div className="space-y-2">
+                        <Label htmlFor="reply-text">Your Reply</Label>
+                        <Textarea 
+                            id="reply-text" 
+                            value={replyText}
+                            onChange={(e) => setReplyText(e.target.value)}
+                            placeholder="Write your reply here..."
+                            rows={4}
+                        />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <DialogClose asChild>
+                        <Button variant="ghost">Cancel</Button>
+                    </DialogClose>
+                    <Button onClick={handleReplySubmit}>Submit Reply</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 function AdminReviewsPage() {
     const [reviews, setReviews] = useState<ReviewWithProduct[]>([]);
     const [loading, setLoading] = useState(true);
     const [reviewToDelete, setReviewToDelete] = useState<ReviewWithProduct | null>(null);
+    const [reviewToReply, setReviewToReply] = useState<ReviewWithProduct | null>(null);
     const firestore = useFirestore();
     const { toast } = useToast();
 
@@ -34,22 +83,27 @@ function AdminReviewsPage() {
         setLoading(true);
         const products = await getProducts();
         const allReviews: ReviewWithProduct[] = [];
-        products.forEach(product => {
-            if (product.reviews) {
-                product.reviews.forEach(review => {
-                    allReviews.push({
-                        ...review,
-                        productName: product.name,
-                        productId: product.id,
-                        productSlug: product.slug,
-                    });
+        for (const product of products) {
+            const productReviews = await getProductReviews(product.id);
+            productReviews.forEach(review => {
+                allReviews.push({
+                    ...review,
+                    productName: product.name,
+                    productId: product.id,
+                    productSlug: product.slug,
                 });
-            }
-        });
+            });
+        }
         allReviews.sort((a, b) => b.createdAt.toDate() - a.createdAt.toDate());
         setReviews(allReviews);
         setLoading(false);
     };
+
+    const getProductReviews = async (productId: string) => {
+        const querySnapshot = await getDocs(collection(doc(firestore, 'products', productId), 'reviews'));
+        return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Review));
+    }
+
 
     useEffect(() => {
         fetchReviews();
@@ -74,9 +128,45 @@ function AdminReviewsPage() {
             });
         }
     };
+    
+    const handleReply = async (replyText: string) => {
+        if (!reviewToReply || !firestore) return;
+
+        const reviewRef = doc(firestore, "products", reviewToReply.productId, "reviews", reviewToReply.id);
+        
+        try {
+            await updateDoc(reviewRef, {
+                reply: {
+                    text: replyText,
+                    author: "Store Owner",
+                    date: serverTimestamp(),
+                }
+            });
+            toast({
+                title: "Reply Submitted",
+                description: "Your reply has been added to the review."
+            });
+            setReviewToReply(null);
+            fetchReviews();
+        } catch(error) {
+            toast({
+                variant: 'destructive',
+                title: "Error submitting reply",
+                description: "There was a problem submitting your reply.",
+            });
+        }
+    }
 
     return (
         <div>
+            {reviewToReply && (
+                 <ReplyDialog 
+                    review={reviewToReply} 
+                    onReply={handleReply} 
+                    open={!!reviewToReply}
+                    onOpenChange={(open) => !open && setReviewToReply(null)}
+                />
+            )}
             <AlertDialog open={!!reviewToDelete} onOpenChange={(open) => !open && setReviewToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -129,7 +219,10 @@ function AdminReviewsPage() {
                                                 <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
                                             </div>
                                         </TableCell>
-                                        <TableCell className='max-w-xs truncate'>{review.text}</TableCell>
+                                        <TableCell className='max-w-xs'>
+                                            <p className='truncate'>{review.text}</p>
+                                            {review.reply && <p className='text-xs text-green-600 truncate mt-1'>Replied: "{review.reply.text}"</p>}
+                                        </TableCell>
                                         <TableCell>{format(review.createdAt.toDate(), 'PPP')}</TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>
@@ -139,6 +232,10 @@ function AdminReviewsPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent>
+                                                    <DropdownMenuItem onClick={() => setReviewToReply(review)}>
+                                                        <Reply className="mr-2 h-4 w-4" />
+                                                        {review.reply ? 'Edit Reply' : 'Reply'}
+                                                    </DropdownMenuItem>
                                                     <DropdownMenuItem
                                                         className="text-destructive"
                                                         onClick={() => setReviewToDelete(review)}
