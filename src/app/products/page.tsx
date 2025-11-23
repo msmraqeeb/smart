@@ -14,9 +14,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, Star } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CategorySidebar } from '@/components/category-sidebar';
+import { Slider } from '@/components/ui/slider';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 // Helper function to get all descendant category slugs
 const getDescendantCategorySlugs = (
@@ -43,6 +46,11 @@ const getDescendantCategorySlugs = (
   return slugsToFilter;
 };
 
+const getAverageRating = (reviews: any[] | undefined) => {
+  if (!reviews || reviews.length === 0) return 0;
+  return reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length;
+}
+
 export default function ProductsPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -58,8 +66,6 @@ export default function ProductsPage() {
   const initialSort = searchParams.get('sort') || 'featured';
 
   const [searchQuery, setSearchQuery] = useState(initialSearch);
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory);
-  const [sortOrder, setSortOrder] = useState(initialSort);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -75,23 +81,36 @@ export default function ProductsPage() {
     fetchInitialData();
   }, []);
 
-  // Effect to update local state when URL params change (e.g. browser back/forward)
-  useEffect(() => {
-    setSelectedCategory(searchParams.get('category') || 'all');
-    setSearchQuery(searchParams.get('q') || '');
-    setSortOrder(searchParams.get('sort') || 'featured');
-  }, [searchParams]);
+  const { brands, maxPrice } = useMemo(() => {
+    if (allProducts.length === 0) return { brands: [], maxPrice: 1000 };
+    
+    const brandsSet = new Set(allProducts.map(p => p.brand).filter(Boolean) as string[]);
+    const max = Math.ceil(Math.max(...allProducts.map(p => p.price)));
+    
+    return {
+      brands: Array.from(brandsSet).sort(),
+      maxPrice: max > 0 ? max : 1000,
+    };
+  }, [allProducts]);
 
   // Effect to update URL when local state changes from user interaction
-  const handleFilterChange = (key: string, value: string) => {
+  const handleFilterChange = (key: string, value: string | string[]) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (value && value !== 'all') {
-      params.set(key, value);
+    
+    // For array values (like brands), handle them specially
+    if (Array.isArray(value)) {
+        params.delete(key); // Clear existing values
+        if (value.length > 0) {
+            value.forEach(v => params.append(key, v));
+        }
     } else {
-      params.delete(key);
+        if (value && value !== 'all') {
+            params.set(key, value);
+        } else {
+            params.delete(key);
+        }
     }
     
-    // When category changes, reset to first page if pagination were implemented
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
   
@@ -100,6 +119,10 @@ export default function ProductsPage() {
     const currentCategory = searchParams.get('category');
     const currentQuery = searchParams.get('q');
     const currentSort = searchParams.get('sort') || 'featured';
+    const minPrice = searchParams.get('minPrice');
+    const maxPriceParam = searchParams.get('maxPrice');
+    const selectedBrands = searchParams.getAll('brands');
+    const selectedRating = searchParams.get('rating');
 
     // Filter by category (including sub-categories)
     if (currentCategory && currentCategory !== 'all') {
@@ -115,6 +138,25 @@ export default function ProductsPage() {
         p.description.toLowerCase().includes(currentQuery.toLowerCase())
       );
     }
+    
+    // Filter by price
+    if (minPrice) {
+        products = products.filter(p => (p.salePrice || p.price) >= Number(minPrice));
+    }
+    if (maxPriceParam) {
+        products = products.filter(p => (p.salePrice || p.price) <= Number(maxPriceParam));
+    }
+
+    // Filter by brand
+    if (selectedBrands.length > 0) {
+        products = products.filter(p => p.brand && selectedBrands.includes(p.brand));
+    }
+
+    // Filter by rating
+    if (selectedRating) {
+        products = products.filter(p => getAverageRating(p.reviews) >= Number(selectedRating));
+    }
+
 
     // Sort products
     switch (currentSort) {
@@ -139,10 +181,79 @@ export default function ProductsPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid md:grid-cols-4 gap-8">
-        <div className="md:col-span-1">
+        <aside className="md:col-span-1 space-y-8">
           <CategorySidebar categories={categories} />
-        </div>
-        <div className="md:col-span-3">
+
+          {/* Price Filter */}
+          <div className="space-y-4">
+            <h3 className="font-headline text-2xl font-bold">Price</h3>
+            <Slider
+                defaultValue={[maxPrice]}
+                max={maxPrice}
+                step={10}
+                onValueChange={(value) => handleFilterChange('maxPrice', value[0].toString())}
+            />
+             <div className="flex justify-between text-sm text-muted-foreground">
+                <span>{formatCurrency(0)}</span>
+                <span>{formatCurrency(Number(searchParams.get('maxPrice') || maxPrice))}</span>
+            </div>
+          </div>
+          
+          {/* Brands Filter */}
+           <div className="space-y-4">
+            <h3 className="font-headline text-2xl font-bold">Brands</h3>
+             <div className="space-y-2">
+                {brands.map(brand => (
+                    <div key={brand} className="flex items-center space-x-2">
+                        <Checkbox 
+                            id={`brand-${brand}`} 
+                            checked={searchParams.getAll('brands').includes(brand)}
+                            onCheckedChange={(checked) => {
+                                const currentBrands = searchParams.getAll('brands');
+                                const newBrands = checked 
+                                    ? [...currentBrands, brand]
+                                    : currentBrands.filter(b => b !== brand);
+                                handleFilterChange('brands', newBrands);
+                            }}
+                        />
+                        <Label htmlFor={`brand-${brand}`} className="font-normal">{brand}</Label>
+                    </div>
+                ))}
+             </div>
+           </div>
+
+            {/* Ratings Filter */}
+            <div className="space-y-4">
+                <h3 className="font-headline text-2xl font-bold">Rating</h3>
+                <div className="flex flex-col items-start gap-2">
+                    {[4, 3, 2, 1].map(rating => (
+                        <Button 
+                            key={rating}
+                            variant="link"
+                            className="p-0 h-auto text-muted-foreground hover:text-primary"
+                            onClick={() => handleFilterChange('rating', rating.toString())}
+                        >
+                            <div className="flex items-center gap-2">
+                                {Array.from({length: 5}).map((_, i) => (
+                                    <Star key={i} className={`h-4 w-4 ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'fill-muted stroke-muted-foreground'}`}/>
+                                ))}
+                                <span className="text-sm">& up</span>
+                            </div>
+                        </Button>
+                    ))}
+                     <Button 
+                        variant="link" 
+                        size="sm" 
+                        className="p-0 h-auto text-primary"
+                        onClick={() => handleFilterChange('rating', '')}
+                    >
+                        Clear rating
+                    </Button>
+                </div>
+            </div>
+
+        </aside>
+        <main className="md:col-span-3">
           <div className="mb-8">
             <h1 className="font-headline text-4xl font-bold">
               {currentCategory ? currentCategory.name : 'All Products'}
@@ -162,7 +273,7 @@ export default function ProductsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
             </div>
             
-            <Select value={sortOrder} onValueChange={(value) => handleFilterChange('sort', value)}>
+            <Select value={searchParams.get('sort') || 'featured'} onValueChange={(value) => handleFilterChange('sort', value)}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
@@ -196,7 +307,7 @@ export default function ProductsPage() {
                 <p className="text-muted-foreground mt-2">Try adjusting your filters or search terms.</p>
             </div>
           )}
-        </div>
+        </main>
       </div>
     </div>
   );
