@@ -21,6 +21,31 @@ import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+// Helper function to get all descendant category slugs
+const getDescendantCategorySlugs = (
+    parentSlug: string,
+    allCategories: Category[]
+): string[] => {
+  const parentCategory = allCategories.find((c) => c.slug === parentSlug);
+  if (!parentCategory) {
+    return [parentSlug];
+  }
+
+  let slugsToFilter = [parentSlug];
+  const childrenToProcess: string[] = [parentCategory.id];
+  
+  while (childrenToProcess.length > 0) {
+    const currentParentId = childrenToProcess.shift();
+    const children = allCategories.filter((c) => c.parentId === currentParentId);
+    for (const child of children) {
+      slugsToFilter.push(child.slug);
+      childrenToProcess.push(child.id);
+    }
+  }
+
+  return slugsToFilter;
+};
+
 function AdminProductsPage() {
     const [allProducts, setAllProducts] = React.useState<Product[]>([]);
     const [categories, setCategories] = React.useState<Category[]>([]);
@@ -77,7 +102,8 @@ function AdminProductsPage() {
 
         // Filter by category
         if (selectedCategory && selectedCategory !== 'all') {
-            products = products.filter(p => p.category === selectedCategory);
+            const categorySlugsToFilter = getDescendantCategorySlugs(selectedCategory, categories);
+            products = products.filter(p => categorySlugsToFilter.includes(p.category));
         }
 
         // Filter by search query (name)
@@ -102,7 +128,7 @@ function AdminProductsPage() {
         }
 
         return products;
-    }, [allProducts, searchQuery, selectedCategory, sortOrder]);
+    }, [allProducts, searchQuery, selectedCategory, sortOrder, categories]);
 
 
     return (

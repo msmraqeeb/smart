@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -18,6 +17,31 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CategorySidebar } from '@/components/category-sidebar';
+
+// Helper function to get all descendant category slugs
+const getDescendantCategorySlugs = (
+  parentSlug: string,
+  allCategories: Category[]
+): string[] => {
+  const parentCategory = allCategories.find((c) => c.slug === parentSlug);
+  if (!parentCategory) {
+    return [parentSlug];
+  }
+
+  let slugsToFilter = [parentSlug];
+  const childrenToProcess: string[] = [parentCategory.id];
+  
+  while (childrenToProcess.length > 0) {
+    const currentParentId = childrenToProcess.shift();
+    const children = allCategories.filter((c) => c.parentId === currentParentId);
+    for (const child of children) {
+      slugsToFilter.push(child.slug);
+      childrenToProcess.push(child.id);
+    }
+  }
+
+  return slugsToFilter;
+};
 
 export default function ProductsPage() {
   const router = useRouter();
@@ -77,9 +101,10 @@ export default function ProductsPage() {
     const currentQuery = searchParams.get('q');
     const currentSort = searchParams.get('sort') || 'featured';
 
-    // Filter by category
+    // Filter by category (including sub-categories)
     if (currentCategory && currentCategory !== 'all') {
-      products = products.filter(p => p.category === currentCategory);
+      const categorySlugsToFilter = getDescendantCategorySlugs(currentCategory, categories);
+      products = products.filter(p => categorySlugsToFilter.includes(p.category));
     }
 
     // Filter by search query
@@ -106,7 +131,7 @@ export default function ProductsPage() {
     }
 
     return products;
-  }, [allProducts, searchParams]);
+  }, [allProducts, categories, searchParams]);
   
   const currentCategorySlug = searchParams.get('category');
   const currentCategory = categories.find(c => c.slug === currentCategorySlug);
