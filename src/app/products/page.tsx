@@ -25,27 +25,28 @@ import { Button } from '@/components/ui/button';
 
 // Helper function to get all descendant category slugs
 const getDescendantCategorySlugs = (
-  parentSlug: string,
+  parentSlugs: string[],
   allCategories: Category[]
 ): string[] => {
-  const parentCategory = allCategories.find((c) => c.slug === parentSlug);
-  if (!parentCategory) {
-    return [parentSlug];
-  }
+  let allSlugsToFilter = new Set<string>(parentSlugs);
 
-  let slugsToFilter = [parentSlug];
-  const childrenToProcess: string[] = [parentCategory.id];
-  
-  while (childrenToProcess.length > 0) {
-    const currentParentId = childrenToProcess.shift();
-    const children = allCategories.filter((c) => c.parentId === currentParentId);
-    for (const child of children) {
-      slugsToFilter.push(child.slug);
-      childrenToProcess.push(child.id);
-    }
-  }
+  parentSlugs.forEach(parentSlug => {
+      const parentCategory = allCategories.find((c) => c.slug === parentSlug);
+      if (!parentCategory) return;
 
-  return slugsToFilter;
+      const childrenToProcess: string[] = [parentCategory.id];
+      
+      while (childrenToProcess.length > 0) {
+        const currentParentId = childrenToProcess.shift();
+        const children = allCategories.filter((c) => c.parentId === currentParentId);
+        for (const child of children) {
+          allSlugsToFilter.add(child.slug);
+          childrenToProcess.push(child.id);
+        }
+      }
+  });
+
+  return Array.from(allSlugsToFilter);
 };
 
 const getAverageRating = (reviews: any[] | undefined) => {
@@ -116,7 +117,7 @@ export default function ProductsPage() {
   
   const filteredAndSortedProducts = useMemo(() => {
     let products = [...allProducts];
-    const currentCategory = searchParams.get('category');
+    const currentCategories = searchParams.getAll('category');
     const currentQuery = searchParams.get('q');
     const currentSort = searchParams.get('sort') || 'featured';
     const minPrice = searchParams.get('minPrice');
@@ -125,8 +126,8 @@ export default function ProductsPage() {
     const selectedRating = searchParams.get('rating');
 
     // Filter by category (including sub-categories)
-    if (currentCategory && currentCategory !== 'all') {
-      const categorySlugsToFilter = getDescendantCategorySlugs(currentCategory, categories);
+    if (currentCategories.length > 0) {
+      const categorySlugsToFilter = getDescendantCategorySlugs(currentCategories, categories);
       products = products.filter(p => categorySlugsToFilter.includes(p.category));
     }
 
@@ -175,14 +176,23 @@ export default function ProductsPage() {
     return products;
   }, [allProducts, categories, searchParams]);
   
-  const currentCategorySlug = searchParams.get('category');
-  const currentCategory = categories.find(c => c.slug === currentCategorySlug);
+  const currentCategorySlugs = searchParams.getAll('category');
+  let categoryTitle = 'All Products';
+  if (currentCategorySlugs.length === 1) {
+      categoryTitle = categories.find(c => c.slug === currentCategorySlugs[0])?.name || 'Products';
+  } else if (currentCategorySlugs.length > 1) {
+      categoryTitle = 'Multiple Categories';
+  }
+
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="grid md:grid-cols-4 gap-8">
         <aside className="md:col-span-1 space-y-8">
-          <CategorySidebar categories={categories} />
+          <CategorySidebar
+            categories={categories}
+            onCategoryChange={(slugs) => handleFilterChange('category', slugs)}
+          />
 
           {/* Price Filter */}
           <div className="space-y-4">
@@ -256,7 +266,7 @@ export default function ProductsPage() {
         <main className="md:col-span-3">
           <div className="mb-8">
             <h1 className="font-headline text-4xl font-bold">
-              {currentCategory ? currentCategory.name : 'All Products'}
+              {categoryTitle}
             </h1>
             <p className="text-muted-foreground mt-2">Browse our collection of high-quality products.</p>
           </div>

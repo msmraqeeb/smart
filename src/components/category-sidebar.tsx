@@ -3,16 +3,10 @@
 
 import { useMemo } from 'react';
 import type { Category } from '@/lib/types';
-import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { Button } from './ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 interface CategoryWithChildren extends Category {
   children: CategoryWithChildren[];
@@ -20,49 +14,46 @@ interface CategoryWithChildren extends Category {
 
 interface CategorySidebarProps {
   categories: Category[];
+  onCategoryChange: (selectedSlugs: string[]) => void;
 }
 
-const CategoryLink = ({
+const CategoryItem = ({
   category,
-  isActive,
+  onCategoryChange,
+  selectedCategories,
 }: {
   category: Category;
-  isActive: boolean;
-}) => (
-  <Button
-    asChild
-    variant="link"
-    className={cn(
-      'h-auto justify-start p-0 text-base font-normal text-muted-foreground transition-colors hover:text-primary hover:no-underline',
-      isActive && 'font-semibold text-primary'
-    )}
-  >
-    <Link href={`/products?category=${category.slug}`}>{category.name}</Link>
-  </Button>
-);
+  onCategoryChange: (slug: string, isSelected: boolean) => void;
+  selectedCategories: string[];
+}) => {
+  const isSelected = selectedCategories.includes(category.slug);
 
-const SubCategoryList = ({
-  categories,
-  currentCategorySlug,
-}: {
-  categories: CategoryWithChildren[];
-  currentCategorySlug: string | null;
-}) => (
-  <div className="flex flex-col space-y-2 pl-6">
-    {categories.map((subCategory) => (
-      <CategoryLink
-        key={subCategory.id}
-        category={subCategory}
-        isActive={currentCategorySlug === subCategory.slug}
+  return (
+    <div className="flex items-center space-x-2">
+      <Checkbox
+        id={`category-${category.slug}`}
+        checked={isSelected}
+        onCheckedChange={(checked) => onCategoryChange(category.slug, !!checked)}
       />
-    ))}
-  </div>
-);
+      <Label
+        htmlFor={`category-${category.slug}`}
+        className={cn(
+          'font-normal cursor-pointer',
+          isSelected && 'font-semibold text-primary'
+        )}
+      >
+        {category.name}
+      </Label>
+    </div>
+  );
+};
 
 export function CategorySidebar({ categories }: CategorySidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const currentCategorySlug = searchParams.get('category');
+
+  const selectedCategories = searchParams.getAll('category');
 
   const categoryTree = useMemo(() => {
     const categoryMap = new Map<string, CategoryWithChildren>();
@@ -80,56 +71,58 @@ export function CategorySidebar({ categories }: CategorySidebarProps) {
       }
     });
 
-    topLevelCategories.sort((a,b) => a.name.localeCompare(b.name));
-    topLevelCategories.forEach(c => c.children.sort((a,b) => a.name.localeCompare(b.name)));
+    topLevelCategories.sort((a, b) => a.name.localeCompare(b.name));
+    topLevelCategories.forEach(c => c.children.sort((a, b) => a.name.localeCompare(b.name)));
 
     return topLevelCategories;
   }, [categories]);
 
+  const handleCategoryChange = (slug: string, isSelected: boolean) => {
+    const params = new URLSearchParams(searchParams.toString());
+    const currentCategories = params.getAll('category');
+
+    if (isSelected) {
+      if (!currentCategories.includes(slug)) {
+        params.append('category', slug);
+      }
+    } else {
+      params.delete('category');
+      currentCategories.filter(c => c !== slug).forEach(c => params.append('category', c));
+    }
+
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  };
+
   if (pathname !== '/products') {
     return null;
   }
-  
-  const activeTopLevelCategory = useMemo(() => {
-    if (!currentCategorySlug) return null;
-    const findParent = (slug: string): CategoryWithChildren | null => {
-        const cat = categories.find(c => c.slug === slug);
-        if (!cat) return null;
-        if (!cat.parentId) return categoryMap.get(cat.id)!;
-        return findParent(categories.find(c => c.id === cat.parentId)!.slug);
-    }
-    const categoryMap = new Map<string, CategoryWithChildren>(categoryTree.map(c => [c.id, c]));
-    return findParent(currentCategorySlug);
-  }, [currentCategorySlug, categories, categoryTree]);
-
-
-  const defaultOpenValue = activeTopLevelCategory ? [activeTopLevelCategory.slug] : [];
 
   return (
     <div className="space-y-4">
-        <h3 className="font-headline text-2xl font-bold">Categories</h3>
-        <Accordion type="multiple" defaultValue={defaultOpenValue} className="w-full">
-            {categoryTree.map((category) => (
-            <AccordionItem value={category.slug} key={category.id}>
-                <AccordionTrigger
-                className={cn(
-                    'py-2 text-lg font-medium hover:no-underline',
-                    (currentCategorySlug === category.slug || activeTopLevelCategory?.id === category.id) && 'text-primary'
-                )}
-                >
-                <Link href={`/products?category=${category.slug}`} className='hover:text-primary transition-colors'>{category.name}</Link>
-                </AccordionTrigger>
-                {category.children.length > 0 && (
-                <AccordionContent>
-                    <SubCategoryList
-                    categories={category.children}
-                    currentCategorySlug={currentCategorySlug}
-                    />
-                </AccordionContent>
-                )}
-            </AccordionItem>
-            ))}
-        </Accordion>
+      <h3 className="font-headline text-2xl font-bold">Categories</h3>
+      <div className="space-y-2">
+        {categoryTree.map((category) => (
+          <div key={category.id} className="space-y-2">
+            <CategoryItem
+              category={category}
+              onCategoryChange={handleCategoryChange}
+              selectedCategories={selectedCategories}
+            />
+            {category.children.length > 0 && (
+              <div className="pl-6 space-y-2">
+                {category.children.map(child => (
+                  <CategoryItem
+                    key={child.id}
+                    category={child}
+                    onCategoryChange={handleCategoryChange}
+                    selectedCategories={selectedCategories}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
