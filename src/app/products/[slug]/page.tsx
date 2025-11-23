@@ -4,7 +4,6 @@ import Image from "next/image";
 import { getProductBySlug } from "@/lib/data";
 import { formatCurrency } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
-import { AIRecommendations } from "@/components/ai-recommendations";
 import { AddToCartButton } from "@/components/add-to-cart-button";
 import { Reviews } from "@/components/reviews";
 import { Badge } from "@/components/ui/badge";
@@ -75,10 +74,6 @@ export default async function ProductDetailPage({
         </div>
       </div>
       
-      <div className="mt-16">
-         <AIRecommendations />
-      </div>
-
       <div className="mt-16">
         <Reviews product={plainProduct} />
       </div>
