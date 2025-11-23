@@ -28,22 +28,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { locations } from "@/lib/locations";
 
 
-const saveOrder = (db: Firestore, orderId: string, orderData: any) => {
+const saveOrder = (db: Firestore, orderId: string, orderData: any): Promise<void> => {
   const orderRef = doc(db, "orders", orderId);
-  setDoc(orderRef, orderData)
-    .then(() => {
-        // This part runs on success.
-    })
+  return setDoc(orderRef, orderData)
     .catch(async (serverError) => {
-      // Create the rich, contextual error asynchronously.
       const permissionError = new FirestorePermissionError({
         path: orderRef.path,
         operation: 'create',
         requestResourceData: orderData,
       } satisfies SecurityRuleContext);
-
-      // Emit the error with the global error emitter
       errorEmitter.emit('permission-error', permissionError);
+      throw serverError;
     });
 };
 
@@ -152,21 +147,32 @@ export default function CheckoutPage() {
       })),
       total: grandTotal,
       status: "Processing",
-      createdAt: serverTimestamp(),
+      createdAt: new Date(),
       userId: user?.uid || null,
       paymentMethod,
       shippingCost,
       shippingZone,
     };
 
-    saveOrder(firestore, orderId, orderData);
+    try {
+        await saveOrder(firestore, orderId, orderData);
 
-    toast({
-      title: "Order Placed!",
-      description: "Thank you for your purchase. Your order is being processed.",
-    });
-    clearCart();
-    router.push("/");
+        toast({
+            title: "Order Placed!",
+            description: "Thank you for your purchase. Redirecting...",
+        });
+
+        router.push(`/order-confirmation?orderId=${orderId}`);
+        clearCart();
+
+    } catch (error) {
+        console.error("Failed to place order:", error);
+        toast({
+            variant: "destructive",
+            title: "Order Failed",
+            description: "There was a problem placing your order. Please try again.",
+        });
+    }
   }
 
   const selectedDistrict = locations.find(loc => loc.district === customerInfo.district);
@@ -308,4 +314,3 @@ export default function CheckoutPage() {
   );
 }
 
-    

@@ -36,6 +36,7 @@
       "description": "Represents a customer's order.",
       "type": "object",
       "properties": {
+        "id": { "type": "string" },
         "customer": {
           "type": "object",
           "properties": {
@@ -69,7 +70,7 @@
         "shippingCost": { "type": "number" },
         "shippingZone": { "type": "string" }
       },
-      "required": ["customer", "items", "total", "status", "createdAt", "paymentMethod", "shippingCost", "shippingZone"]
+      "required": ["id", "customer", "items", "total", "status", "createdAt", "paymentMethod", "shippingCost", "shippingZone"]
     },
     "UserProfile": {
       "title": "User Profile",
@@ -126,5 +127,3 @@
     }
   }
 }
-
-    
