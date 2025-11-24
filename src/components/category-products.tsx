@@ -24,8 +24,10 @@ interface CategoryProductsProps {
 export function CategoryProducts({ categorySlug, title }: CategoryProductsProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     getProducts().then(allProducts => {
         const categoryProducts = allProducts.filter(p => p.category === categorySlug).slice(0, 10);
         setProducts(categoryProducts);
@@ -33,7 +35,7 @@ export function CategoryProducts({ categorySlug, title }: CategoryProductsProps)
     });
   }, [categorySlug]);
 
-  if (loading) {
+  if (loading && isClient) {
       return (
          <section className="mb-16">
             <div className="flex justify-between items-center mb-8">
