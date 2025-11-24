@@ -33,14 +33,14 @@ export function ProductCard({ product }: ProductCardProps) {
   const discountPercentage = calculateDiscountPercentage();
 
   return (
-    <Card className="group h-full flex flex-col border-none shadow-none rounded-lg overflow-hidden transition-all hover:shadow-lg">
-        <Link href={`/products/${product.slug}`} className="block bg-white p-4 relative">
+    <Card className="group h-full flex flex-col rounded-lg overflow-hidden transition-all shadow-sm">
+        <Link href={`/products/${product.slug}`} className="block bg-white p-4 relative overflow-hidden">
             <Image
                 src={primaryImageUrl}
                 alt={product.name}
                 width={200}
                 height={200}
-                className="aspect-square w-full object-contain transition-transform group-hover:scale-105"
+                className="aspect-square w-full object-contain transition-transform duration-300 group-hover:scale-105"
             />
             {discountPercentage > 0 && (
                 <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground">{discountPercentage}%</Badge>
