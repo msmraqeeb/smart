@@ -116,7 +116,7 @@ export default function Home() {
           </div>
       </section>
 
-      <CategoryProducts categorySlug="food" title="Food" />
+      <CategoryProducts categorySlug="frozen-fish" title="Frozen Fish" />
 
       <section>
         <h2 className="font-headline mb-8 text-3xl font-bold text-center">
