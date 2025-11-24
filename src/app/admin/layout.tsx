@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import {
   LayoutDashboard,
   Package,
@@ -12,7 +13,6 @@ import {
   LayoutGrid,
   Users,
   LogOut,
-  Leaf,
   Truck,
   Ticket,
   BarChart,
@@ -56,8 +56,8 @@ export default function AdminLayout({
       <aside className="hidden w-64 flex-col border-r bg-background sm:flex">
         <div className="flex h-[60px] items-center border-b px-6">
           <Link href="/admin" className="flex items-center gap-2 font-semibold">
-            <Leaf className="h-6 w-6 text-primary" />
-            <span className="">GetMart Admin</span>
+            <Image src="/images/SMart Logo.png" alt="SMart Logo" width={24} height={24} className="h-6 w-6" />
+            <span className="">SMart Admin</span>
           </Link>
         </div>
         <div className="flex-1 overflow-auto py-2">

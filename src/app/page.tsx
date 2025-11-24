@@ -4,7 +4,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCategories } from "@/lib/data";
 import { FeaturedProducts } from "@/components/featured-products";
 import { PopularItems } from "@/components/popular-items";
@@ -149,7 +149,7 @@ export default function Home() {
 
       <section className="py-16 bg-muted/30 rounded-lg">
         <div className="container mx-auto px-4 text-center">
-            <h2 className="font-headline text-3xl font-bold mb-4">Know More GetMart Online Groceries Shop</h2>
+            <h2 className="font-headline text-3xl font-bold mb-4">Know More SMart Online Groceries Shop</h2>
             <p className="max-w-4xl mx-auto text-muted-foreground mb-8">
               Our top-rated online grocery store is your solution for a convenient, high-quality, and sustainable shopping experience. We bring the entire store to you, offering an extensive selection of fresh produce and household essentials, backed by our commitment to customer satisfaction.
             </p>

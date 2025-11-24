@@ -8,7 +8,7 @@ import { FirebaseClientProvider } from "@/firebase/client-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GetMart",
+  title: "SMart",
   description: "Your one-stop shop for fresh products.",
 };
 

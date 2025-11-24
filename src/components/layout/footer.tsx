@@ -1,6 +1,6 @@
 
 import Link from "next/link";
-import { Leaf, MapPin, Phone, Mail, Send, Facebook, Twitter, Instagram } from "lucide-react";
+import { MapPin, Phone, Mail, Send, Facebook, Twitter, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
@@ -45,11 +45,11 @@ export function Footer() {
     <footer className="bg-gray-800 text-gray-300">
       <div className="container mx-auto px-4 pt-16 pb-8">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
-          {/* Column 1: GetMart Info */}
+          {/* Column 1: SMart Info */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <Leaf className="h-8 w-8 text-primary" />
-              <span className="font-headline text-2xl font-bold text-white">GetMart</span>
+              <Image src="/images/SMart Logo.png" alt="SMart Logo" width={32} height={32} className="h-8 w-8" />
+              <span className="font-headline text-2xl font-bold text-white">SMart</span>
             </Link>
             <p className="text-sm mb-4">Top-rated online grocery store</p>
             <ul className="space-y-2 text-sm">

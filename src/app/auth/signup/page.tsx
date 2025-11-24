@@ -13,7 +13,8 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Leaf, AlertTriangle, CheckCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useAuth } from "@/firebase";
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from "firebase/auth";
@@ -90,9 +91,9 @@ export default function SignupPage() {
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-            <Leaf className="mx-auto h-10 w-10 text-primary" />
+            <Image src="/images/SMart Logo.png" alt="SMart Logo" width={40} height={40} className="mx-auto h-10 w-10" />
           <CardTitle className="font-headline text-2xl">Create an Account</CardTitle>
-          <CardDescription>Join GetMart to start shopping for fresh products.</CardDescription>
+          <CardDescription>Join SMart to start shopping for fresh products.</CardDescription>
         </CardHeader>
         <form onSubmit={handleSignup}>
           <CardContent className="space-y-4">

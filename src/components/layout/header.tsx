@@ -1,7 +1,8 @@
 
 'use client';
 import Link from "next/link";
-import { Leaf, Menu, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown } from "lucide-react";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { CartSheet } from "@/components/cart-sheet";
 import {
@@ -96,8 +97,8 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-6 flex items-center gap-2">
-          <Leaf className="h-6 w-6 text-primary" />
-          <span className="font-headline text-lg font-bold">GetMart</span>
+          <Image src="/images/SMart Logo.png" alt="SMart Logo" width={24} height={24} className="h-6 w-6" />
+          <span className="font-headline text-lg font-bold">SMart</span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
            <Link
@@ -141,8 +142,8 @@ export function Header() {
             </SheetTrigger>
             <SheetContent side="left">
                <Link href="/" className="mr-6 flex items-center gap-2 mb-4">
-                  <Leaf className="h-6 w-6 text-primary" />
-                  <span className="font-headline text-lg font-bold">GetMart</span>
+                  <Image src="/images/SMart Logo.png" alt="SMart Logo" width={24} height={24} className="h-6 w-6" />
+                  <span className="font-headline text-lg font-bold">SMart</span>
                 </Link>
               <nav className="flex flex-col gap-4">
                 {navLinks.map((link) => (
