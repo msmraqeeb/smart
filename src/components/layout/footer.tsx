@@ -100,8 +100,8 @@ export function Footer() {
                 <h3 className="font-bold text-white mb-2">Download App on Mobile :</h3>
                 <p className="text-xs mb-2">15% discount on your first purchase</p>
                 <div className="flex gap-2">
-                    <a href="#"><Image src="/images/google-play.png" alt="Get it on Google Play" width={135} height={40} /></a>
-                    <a href="#"><Image src="/images/app-store.png" alt="Download on the App Store" width={120} height={40} /></a>
+                    <a href="#"><Image src="https://grocery.getcommerce.xyz/assets/images/google-play.svg" alt="Get it on Google Play" width={135} height={40} /></a>
+                    <a href="#"><Image src="https://grocery.getcommerce.xyz/assets/images/app-store.svg" alt="Download on the App Store" width={120} height={40} /></a>
                 </div>
             </div>
           </div>
