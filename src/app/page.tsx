@@ -116,7 +116,7 @@ export default function Home() {
           </div>
       </section>
 
-      <CategoryProducts categorySlug="frozen-fish" title="Frozen Fish" />
+      <CategoryProducts categorySlug="food" title="Food" />
 
       <section>
         <h2 className="font-headline mb-8 text-3xl font-bold text-center">
@@ -141,11 +141,6 @@ export default function Home() {
                     {category.name}
                   </CardTitle>
                 </CardContent>
-                <CardFooter className="p-4 pt-0">
-                   <Button variant="link" className="w-full text-primary">
-                      Shop Now <ArrowRight className="ml-2 h-4 w-4" />
-                   </Button>
-                </CardFooter>
               </Card>
             </Link>
           ))}

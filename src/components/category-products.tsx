@@ -1,20 +1,38 @@
 
 'use client';
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import { ProductCard } from "@/components/product-card";
-import { getProducts } from "@/lib/data";
-import { Product } from "@/lib/types";
+import { getProducts, getCategories } from "@/lib/data";
+import type { Product, Category } from "@/lib/types";
 import { useEffect, useState, useMemo } from "react";
 import { Skeleton } from "./ui/skeleton";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { ArrowRight } from "lucide-react";
+
+// Helper function to get all descendant category slugs
+const getDescendantCategorySlugs = (
+  parentSlug: string,
+  allCategories: Category[]
+): string[] => {
+  const parentCategory = allCategories.find((c) => c.slug === parentSlug);
+  if (!parentCategory) {
+    return [parentSlug];
+  }
+
+  let slugsToFilter = [parentSlug];
+  const childrenToProcess: string[] = [parentCategory.id];
+  
+  while (childrenToProcess.length > 0) {
+    const currentParentId = childrenToProcess.shift();
+    const children = allCategories.filter((c) => c.parentId === currentParentId);
+    for (const child of children) {
+      slugsToFilter.push(child.slug);
+      childrenToProcess.push(child.id);
+    }
+  }
+
+  return slugsToFilter;
+};
 
 interface CategoryProductsProps {
   categorySlug: string;
@@ -23,16 +41,23 @@ interface CategoryProductsProps {
 
 export function CategoryProducts({ categorySlug, title }: CategoryProductsProps) {
   const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-    getProducts().then(allProducts => {
-        const categoryProducts = allProducts.filter(p => p.category === categorySlug).slice(0, 10);
+    const fetchData = async () => {
+        const [allProducts, allCategories] = await Promise.all([getProducts(), getCategories()]);
+        
+        const categorySlugs = getDescendantCategorySlugs(categorySlug, allCategories);
+        const categoryProducts = allProducts.filter(p => categorySlugs.includes(p.category)).slice(0, 10);
+        
         setProducts(categoryProducts);
+        setCategories(allCategories);
         setLoading(false);
-    });
+    };
+    fetchData();
   }, [categorySlug]);
 
   if (loading && isClient) {
@@ -63,7 +88,7 @@ export function CategoryProducts({ categorySlug, title }: CategoryProductsProps)
   }
 
   if (products.length === 0) {
-      return null; // Don't render the section if there are no products
+      return null;
   }
 
   return (
