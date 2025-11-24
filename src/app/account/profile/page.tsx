@@ -53,11 +53,11 @@ export default function AccountProfilePage() {
         <div className="space-y-8">
             <Card>
                 <CardHeader>
-                    <CardTitle>Profile Details</CardTitle>
-                    <CardDescription>Update your name and email address.</CardDescription>
+                    <CardTitle>Login & Security</CardTitle>
+                    <CardDescription>Update your name, email, and password.</CardDescription>
                 </CardHeader>
-                <form onSubmit={handleProfileUpdate}>
-                    <CardContent className="space-y-4">
+                 <CardContent>
+                    <form onSubmit={handleProfileUpdate} className="space-y-4">
                         <div className="space-y-2">
                             <Label htmlFor="name">Full Name</Label>
                             <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
@@ -67,17 +67,16 @@ export default function AccountProfilePage() {
                             <Input id="email" type="email" value={email} disabled />
                              <p className="text-xs text-muted-foreground">Email address cannot be changed.</p>
                         </div>
-                    </CardContent>
-                    <CardFooter>
-                        <Button type="submit">Save Changes</Button>
-                    </CardFooter>
-                </form>
+                         <div className="flex justify-end">
+                            <Button type="submit">Save Name</Button>
+                        </div>
+                    </form>
+                 </CardContent>
             </Card>
 
             <Card>
                 <CardHeader>
                     <CardTitle>Password Change</CardTitle>
-                    <CardDescription>Update your password.</CardDescription>
                 </CardHeader>
                  <form onSubmit={handlePasswordChange}>
                     <CardContent className="space-y-4">

@@ -18,7 +18,7 @@ export default function WishlistPage() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Your Wishlist</CardTitle>
+                <CardTitle>Saved Items</CardTitle>
                 <CardDescription>Products you've saved for later.</CardDescription>
             </CardHeader>
             <CardContent>
@@ -77,7 +77,7 @@ export default function WishlistPage() {
                 ) : (
                     <div className="text-center text-muted-foreground py-8">
                         <Heart className="mx-auto h-16 w-16 text-muted-foreground/30" />
-                        <p className="mt-4">Your wishlist is empty.</p>
+                        <p className="mt-4">Your saved items list is empty.</p>
                         <p className="text-sm">Click the heart on a product to save it here.</p>
                         <Button asChild className="mt-4">
                             <Link href="/products">Find Products</Link>
