@@ -57,7 +57,6 @@ export default function AdminLayout({
         <div className="flex h-[60px] items-center border-b px-6">
           <Link href="/admin" className="flex items-center gap-2 font-semibold">
             <Image src="/images/SMart Logo.png" alt="SMart Logo" width={24} height={24} className="h-6 w-6" />
-            <span className="">SMart Admin</span>
           </Link>
         </div>
         <div className="flex-1 overflow-auto py-2">

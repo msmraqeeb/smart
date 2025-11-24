@@ -49,7 +49,6 @@ export function Footer() {
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
               <Image src="/images/SMart Logo.png" alt="SMart Logo" width={32} height={32} className="h-8 w-8" />
-              <span className="font-headline text-2xl font-bold text-white">SMart</span>
             </Link>
             <p className="text-sm mb-4">Top-rated online grocery store</p>
             <ul className="space-y-2 text-sm">

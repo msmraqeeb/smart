@@ -98,7 +98,6 @@ export function Header() {
       <div className="container flex h-16 items-center">
         <Link href="/" className="mr-6 flex items-center gap-2">
           <Image src="/images/SMart Logo.png" alt="SMart Logo" width={24} height={24} className="h-6 w-6" />
-          <span className="font-headline text-lg font-bold">SMart</span>
         </Link>
         <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
            <Link
@@ -143,7 +142,6 @@ export function Header() {
             <SheetContent side="left">
                <Link href="/" className="mr-6 flex items-center gap-2 mb-4">
                   <Image src="/images/SMart Logo.png" alt="SMart Logo" width={24} height={24} className="h-6 w-6" />
-                  <span className="font-headline text-lg font-bold">SMart</span>
                 </Link>
               <nav className="flex flex-col gap-4">
                 {navLinks.map((link) => (
