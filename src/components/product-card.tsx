@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import type { Product } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import { useCart } from "@/context/cart-context";
-import { ShoppingCart } from "lucide-react";
+import { useWishlist } from "@/context/wishlist-context";
+import { ShoppingCart, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface ProductCardProps {
   product: Product;
@@ -17,8 +19,22 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
+  const { wishlistItems, addToWishlist, removeFromWishlist } = useWishlist();
 
   if (!product) return null;
+
+  const isWishlisted = wishlistItems.some(item => item.id === product.id);
+
+  const handleWishlistToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isWishlisted) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(product);
+    }
+  };
+
 
   const hasSalePrice = product.salePrice && product.salePrice > 0;
   const displayPrice = hasSalePrice ? product.salePrice : product.price;
@@ -42,6 +58,14 @@ export function ProductCard({ product }: ProductCardProps) {
                 height={200}
                 className="aspect-square w-full object-contain transition-transform duration-300 group-hover:scale-105"
             />
+            <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 left-2 rounded-full bg-white/50 text-muted-foreground hover:bg-white/80 hover:text-red-500"
+                onClick={handleWishlistToggle}
+            >
+                <Heart className={cn("h-5 w-5", isWishlisted && "fill-red-500 text-red-500")} />
+            </Button>
             {discountPercentage > 0 && (
                 <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground">{discountPercentage}%</Badge>
             )}
