@@ -51,9 +51,9 @@ export function Footer() {
               <Leaf className="h-8 w-8 text-primary" />
               <span className="font-headline text-2xl font-bold text-white">GetMart</span>
             </Link>
-            <p className="text-sm mb-4">Islamic Lifestyle and Needs Solution in UK</p>
+            <p className="text-sm mb-4">Top-rated online grocery store</p>
             <ul className="space-y-2 text-sm">
-                <li className="flex items-center gap-3"><MapPin className="h-4 w-4" /> London, UK</li>
+                <li className="flex items-center gap-3"><MapPin className="h-4 w-4" /> Dhaka, Bangladesh</li>
                 <li className="flex items-center gap-3"><Phone className="h-4 w-4" /> +8801234567890</li>
                 <li className="flex items-center gap-3"><Mail className="h-4 w-4" /> sample@example.com</li>
             </ul>
