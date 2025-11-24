@@ -96,10 +96,10 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <Link href="/" className="mr-6 flex items-center gap-2">
-          <Image src="/images/SMart Logo.png" alt="SMart Logo" width={100} height={30} className="h-8 w-auto" />
+        <Link href="/" className="mr-6 flex items-center">
+          <Image src="/images/SMart Logo.png" alt="SMart Logo" width={80} height={24} className="h-6 w-auto" />
         </Link>
-        <nav className="hidden items-center gap-6 text-sm font-medium md:flex">
+        <nav className="hidden items-center gap-4 text-sm font-medium md:flex">
            <Link
               href="/"
               className={cn("transition-colors hover:text-foreground/80", pathname === "/" ? "text-foreground" : "text-foreground/60")}
@@ -140,7 +140,7 @@ export function Header() {
               </Button>
             </SheetTrigger>
             <SheetContent side="left">
-               <Link href="/" className="mr-6 flex items-center gap-2 mb-4">
+               <Link href="/" className="mr-6 flex items-center mb-4">
                   <Image src="/images/SMart Logo.png" alt="SMart Logo" width={100} height={30} className="h-8 w-auto" />
                 </Link>
               <nav className="flex flex-col gap-4">

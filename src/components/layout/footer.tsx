@@ -47,7 +47,7 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
           {/* Column 1: SMart Info */}
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center gap-2 mb-4">
+            <Link href="/" className="flex items-center mb-4">
               <Image src="/images/SMart Logo.png" alt="SMart Logo" width={120} height={36} className="h-9 w-auto" />
             </Link>
             <p className="text-sm mb-4">Top-rated online grocery store</p>
