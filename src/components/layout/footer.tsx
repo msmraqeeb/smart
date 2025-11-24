@@ -48,7 +48,7 @@ export function Footer() {
           {/* Column 1: SMart Info */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <Image src="/images/SMart Logo.png" alt="SMart Logo" width={32} height={32} className="h-8 w-8" />
+              <Image src="/images/SMart Logo.png" alt="SMart Logo" width={120} height={36} className="h-9 w-auto" />
             </Link>
             <p className="text-sm mb-4">Top-rated online grocery store</p>
             <ul className="space-y-2 text-sm">
