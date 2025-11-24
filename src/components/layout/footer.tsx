@@ -1,4 +1,3 @@
-
 import Link from "next/link";
 import { MapPin, Phone, Mail, Send, Facebook, Twitter, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,7 +47,7 @@ export function Footer() {
           {/* Column 1: SMart Info */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center mb-4">
-              <Image src="/images/SMart Logo.png" alt="SMart Logo" width={120} height={36} className="h-9 w-auto" />
+              <Image src="/images/smart-logo.png" alt="SMart Logo" width={120} height={36} className="h-9 w-auto" />
             </Link>
             <p className="text-sm mb-4">Top-rated online grocery store</p>
             <ul className="space-y-2 text-sm">

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -48,7 +47,7 @@ export default function AdminLoginPage() {
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <Image src="/images/SMart Logo.png" alt="SMart Logo" width={120} height={36} className="mx-auto h-9 w-auto" />
+          <Image src="/images/smart-logo.png" alt="SMart Logo" width={120} height={36} className="mx-auto h-9 w-auto" />
           <CardTitle className="font-headline text-2xl">Admin Login</CardTitle>
           <CardDescription>Enter your admin credentials to access the dashboard.</CardDescription>
         </CardHeader>

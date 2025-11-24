@@ -91,7 +91,7 @@ export default function SignupPage() {
     <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-            <Image src="/images/SMart Logo.png" alt="SMart Logo" width={40} height={40} className="mx-auto h-10 w-10" />
+            <Image src="/images/smart-logo.png" alt="SMart Logo" width={40} height={40} className="mx-auto h-10 w-10" />
           <CardTitle className="font-headline text-2xl">Create an Account</CardTitle>
           <CardDescription>Join SMart to start shopping for fresh products.</CardDescription>
         </CardHeader>
