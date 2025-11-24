@@ -112,7 +112,7 @@ export function Footer() {
                 Copyright © {new Date().getFullYear()} GetCommerce Powered by <Link href="#" className="text-primary hover:underline">Getcommerce</Link>
             </p>
              <div className="max-w-xs">
-                <Image src="/images/payment-methods.png" alt="Payment methods" width={300} height={25} />
+                <Image src="https://grocery-admin.getcommerce.xyz/company_logo/Y1tvJ1757408926.png" alt="Payment methods" width={300} height={25} />
             </div>
         </div>
       </div>
