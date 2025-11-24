@@ -12,6 +12,7 @@ import { ArrowRight, ShieldCheck, Truck, CircleDollarSign, Headset, PackageCheck
 import { useEffect, useState } from "react";
 import type { Category } from "@/lib/types";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import { CategoryProducts } from "@/components/category-products";
 
 const featureIcons = [
     { icon: Headset, label: "Online Support" },
@@ -114,6 +115,8 @@ export default function Home() {
               ))}
           </div>
       </section>
+
+      <CategoryProducts categorySlug="food" title="Food" />
 
       <section>
         <h2 className="font-headline mb-8 text-3xl font-bold text-center">

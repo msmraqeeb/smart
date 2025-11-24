@@ -33,14 +33,14 @@ export function ProductCard({ product }: ProductCardProps) {
   const discountPercentage = calculateDiscountPercentage();
 
   return (
-    <Card className="group h-full flex flex-col border-none shadow-none rounded-lg overflow-hidden transition-all hover:-translate-y-1 hover:shadow-lg">
+    <Card className="group h-full flex flex-col border-none shadow-none rounded-lg overflow-hidden transition-all hover:shadow-lg">
         <Link href={`/products/${product.slug}`} className="block bg-white p-4 relative">
             <Image
                 src={primaryImageUrl}
                 alt={product.name}
                 width={200}
                 height={200}
-                className="aspect-square w-full object-contain"
+                className="aspect-square w-full object-contain transition-transform group-hover:scale-105"
             />
             {discountPercentage > 0 && (
                 <Badge className="absolute top-2 right-2 bg-primary text-primary-foreground">{discountPercentage}%</Badge>
@@ -48,28 +48,32 @@ export function ProductCard({ product }: ProductCardProps) {
         </Link>
       <CardContent className="p-4 flex-1 flex flex-col justify-between">
         <div>
-            <div className="flex items-baseline gap-2">
-                <p className="text-lg font-semibold text-primary">{formatCurrency(displayPrice!)}</p>
-                {hasSalePrice && (
-                    <p className="text-sm font-medium text-muted-foreground line-through">{formatCurrency(product.price)}</p>
-                )}
+            <div className="flex justify-between items-start">
+                <div>
+                     <div className="flex items-baseline gap-2">
+                        <p className="text-md font-semibold text-primary">{formatCurrency(displayPrice!)}</p>
+                        {hasSalePrice && (
+                            <p className="text-sm font-medium text-muted-foreground line-through">{formatCurrency(product.price)}</p>
+                        )}
+                    </div>
+                    <p className="mt-1 text-sm text-foreground h-10 overflow-hidden">
+                        <Link href={`/products/${product.slug}`} className="hover:text-primary transition-colors">
+                            {product.name}
+                        </Link>
+                    </p>
+                </div>
+                 <Button
+                    variant="outline"
+                    size="icon"
+                    className="rounded-full w-9 h-9 flex-shrink-0 border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        addToCart(product, 1);
+                    }}
+                >
+                    <ShoppingCart className="h-4 w-4" />
+                </Button>
             </div>
-            <p className="mt-2 text-sm text-foreground h-10 overflow-hidden">
-                {product.name}
-            </p>
-        </div>
-        <div className="mt-4">
-             <Button
-                variant="default"
-                className="w-full"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    addToCart(product, 1);
-                }}
-            >
-                <ShoppingCart className="mr-2 h-4 w-4" />
-                Add to Cart
-            </Button>
         </div>
       </CardContent>
     </Card>
