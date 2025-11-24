@@ -118,7 +118,7 @@ export default function Home() {
 
       <CategoryProducts categorySlug="food" title="Food" />
 
-      <section>
+      <section className="mb-16">
         <h2 className="font-headline mb-8 text-3xl font-bold text-center">
           Shop by Category
         </h2>
@@ -144,6 +144,40 @@ export default function Home() {
               </Card>
             </Link>
           ))}
+        </div>
+      </section>
+
+      <section className="py-16 bg-muted/30 rounded-lg">
+        <div className="container mx-auto px-4 text-center">
+            <h2 className="font-headline text-3xl font-bold mb-4">Know More GetMart Online Groceries Shop</h2>
+            <p className="max-w-4xl mx-auto text-muted-foreground mb-8">
+              Our top-rated online grocery store is your solution for a convenient, high-quality, and sustainable shopping experience. We bring the entire store to you, offering an extensive selection of fresh produce and household essentials, backed by our commitment to customer satisfaction.
+            </p>
+            
+            <div className="max-w-4xl mx-auto text-left">
+              <h3 className="font-headline text-2xl font-semibold mb-4 text-center">Why Choose Us?</h3>
+              <ul className="space-y-4">
+                <li className="flex items-start gap-3">
+                  <span className="text-primary mt-1">&#8226;</span>
+                  <p><span className="font-bold">Unmatched Convenience:</span> Shop from home, avoid crowds and lines, and enjoy fast, reliable delivery straight to your doorstep.</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-primary mt-1">&#8226;</span>
+                   <p><span className="font-bold">Smart & Healthy Choices:</span> Easily access detailed nutritional facts and a diverse range of products, including global cuisines and dietary-specific options (organic, gluten-free, etc.), to plan healthier meals.</p>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-primary mt-1">&#8226;</span>
+                  <p><span className="font-bold">Value & Savings:</span> Benefit from exclusive online deals and competitive pricing to get the best value for your family.</p>
+                </li>
+                 <li className="flex items-start gap-3">
+                  <span className="text-primary mt-1">&#8226;</span>
+                  <p><span className="font-bold">Eco-Friendly Impact:</span> Contribute to a greener planet with our optimized delivery routes and eco-friendly packaging options.</p>
+                </li>
+              </ul>
+              <p className="mt-8 text-muted-foreground text-center">
+                Join the growing number of satisfied customers. Shop now and experience the difference in quality, convenience, and service!
+              </p>
+            </div>
         </div>
       </section>
     </div>
