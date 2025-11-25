@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
@@ -14,15 +12,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Search, Star } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CategorySidebar } from '@/components/category-sidebar';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-import { formatCurrency } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { ProductSearch } from '@/components/product-search';
+import { Star } from 'lucide-react';
+
 
 // Helper function to get all descendant category slugs
 const getDescendantCategorySlugs = (
@@ -72,10 +71,6 @@ export default function ProductsPage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   
-  // Get filter values from URL params
-  const initialSearch = searchParams.get('q') || '';
-
-  const [searchQuery, setSearchQuery] = useState(initialSearch);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -387,18 +382,7 @@ export default function ProductsPage() {
             <p className="text-muted-foreground mt-2">Browse our collection of high-quality products.</p>
           </div>
 
-          <div className="mb-8 flex flex-col gap-4 md:flex-row">
-            <div className="relative flex-1">
-              <Input 
-                placeholder="Search products..." 
-                className="pl-10" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleFilterChange('q', searchQuery)}
-              />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            </div>
-            
+          <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center justify-end">
             <Select value={searchParams.get('sort') || 'featured'} onValueChange={(value) => handleFilterChange('sort', value)}>
               <SelectTrigger className="w-full md:w-[180px]">
                 <SelectValue placeholder="Sort by" />
@@ -448,4 +432,3 @@ export default function ProductsPage() {
     </div>
   );
 }
-
