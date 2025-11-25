@@ -34,7 +34,7 @@ body {
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --header-background: 110 33% 23%;
+    --header-background: 148 100% 31%;
   }
   .dark {
     --background: 120 25% 10%;
@@ -57,7 +57,7 @@ body {
     --border: 120 25% 25%;
     --input: 120 25% 25%;
     --ring: 145 100% 31%;
-    --header-background: 110 33% 23%;
+    --header-background: 148 100% 31%;
   }
 }
 
