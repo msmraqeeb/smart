@@ -197,10 +197,9 @@ export default function ProductsPage() {
         const ratingNum = Number(selectedRating);
         products = products.filter(p => {
             const avgRating = getAverageRating(p.reviews);
-            if (ratingNum === 5) {
-                return avgRating === 5;
-            }
-            return avgRating >= ratingNum;
+            // Show products with an average rating that falls within the selected star
+            // e.g., for 3 stars, show ratings from 3.0 to 3.99
+            return avgRating >= ratingNum && avgRating < (ratingNum + 1);
         });
     }
 
@@ -364,7 +363,7 @@ export default function ProductsPage() {
                                 {Array.from({length: 5}).map((_, i) => (
                                     <Star key={i} className={`h-4 w-4 ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'fill-muted stroke-muted-foreground'}`}/>
                                 ))}
-                                <span className="text-sm">{rating === 5 ? '5 stars only' : `& up`}</span>
+                                <span className="text-sm">{rating} star{rating > 1 && 's'}</span>
                             </div>
                         </Button>
                     ))}
@@ -449,3 +448,4 @@ export default function ProductsPage() {
     </div>
   );
 }
+
