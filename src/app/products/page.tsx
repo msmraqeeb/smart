@@ -364,7 +364,7 @@ export default function ProductsPage() {
                                 {Array.from({length: 5}).map((_, i) => (
                                     <Star key={i} className={`h-4 w-4 ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'fill-muted stroke-muted-foreground'}`}/>
                                 ))}
-                                <span className="text-sm">{rating === 5 ? '' : '& up'}</span>
+                                <span className="text-sm">{rating === 5 ? '5 stars only' : `& up`}</span>
                             </div>
                         </Button>
                     ))}
@@ -449,4 +449,3 @@ export default function ProductsPage() {
     </div>
   );
 }
-

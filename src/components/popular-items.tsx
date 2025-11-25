@@ -1,10 +1,11 @@
 
+
 'use client';
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { getFeaturedProducts } from '@/lib/data';
+import { getFeaturedProducts, getProducts } from '@/lib/data';
 import type { Product } from '@/lib/types';
 import { ProductCard } from './product-card';
 import { Button } from './ui/button';

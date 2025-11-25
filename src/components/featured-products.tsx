@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Carousel,
@@ -7,7 +8,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { ProductCard } from "@/components/product-card";
-import { getSaleProducts } from "@/lib/data";
+import { getSaleProducts, getProducts } from "@/lib/data";
 import { Product } from "@/lib/types";
 import { useEffect, useState } from "react";
 import { Skeleton } from "./ui/skeleton";

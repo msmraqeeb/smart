@@ -1,8 +1,4 @@
 
-
-
-
-
 import type { Product, Category, Review, Coupon, Attribute } from './types';
 import { PlaceHolderImages } from './placeholder-images';
 import { collection, getDocs, doc, getDoc, query, where, orderBy } from 'firebase/firestore';
@@ -27,8 +23,8 @@ export async function getProducts(): Promise<Product[]> {
         return [];
     }
     const products = await Promise.all(snapshot.docs.map(async (doc) => {
-        // Not fetching all reviews for performance on list pages
-        return { id: doc.id, ...doc.data() } as Product;
+        const reviews = await getReviews(doc.id);
+        return { id: doc.id, ...doc.data(), reviews } as Product;
     }));
     return products;
 }
@@ -65,8 +61,8 @@ export async function getSaleProducts(): Promise<Product[]> {
         return [];
     }
      const products = await Promise.all(snapshot.docs.map(async (doc) => {
-        // Not fetching all reviews for performance on list pages
-        return { id: doc.id, ...doc.data() } as Product;
+        const reviews = await getReviews(doc.id);
+        return { id: doc.id, ...doc.data(), reviews } as Product;
     }));
     return products;
 }
@@ -79,8 +75,8 @@ export async function getFeaturedProducts(): Promise<Product[]> {
         return [];
     }
      const products = await Promise.all(snapshot.docs.map(async (doc) => {
-        // Not fetching all reviews for performance on list pages
-        return { id: doc.id, ...doc.data() } as Product;
+        const reviews = await getReviews(doc.id);
+        return { id: doc.id, ...doc.data(), reviews } as Product;
     }));
     return products;
 }
