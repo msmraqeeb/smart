@@ -194,7 +194,14 @@ export default function ProductsPage() {
 
     // Filter by rating
     if (selectedRating) {
-        products = products.filter(p => getAverageRating(p.reviews) >= Number(selectedRating));
+        const ratingNum = Number(selectedRating);
+        products = products.filter(p => {
+            const avgRating = getAverageRating(p.reviews);
+            if (ratingNum === 5) {
+                return avgRating === 5;
+            }
+            return avgRating >= ratingNum;
+        });
     }
 
 
@@ -346,7 +353,7 @@ export default function ProductsPage() {
             <div className="space-y-4">
                 <h3 className="font-headline text-2xl font-bold">Rating</h3>
                 <div className="flex flex-col items-start gap-2">
-                    {[4, 3, 2, 1].map(rating => (
+                    {[5, 4, 3, 2, 1].map(rating => (
                         <Button 
                             key={rating}
                             variant="link"
@@ -357,7 +364,7 @@ export default function ProductsPage() {
                                 {Array.from({length: 5}).map((_, i) => (
                                     <Star key={i} className={`h-4 w-4 ${i < rating ? 'fill-yellow-400 text-yellow-400' : 'fill-muted stroke-muted-foreground'}`}/>
                                 ))}
-                                <span className="text-sm">& up</span>
+                                <span className="text-sm">{rating === 5 ? '' : '& up'}</span>
                             </div>
                         </Button>
                     ))}
@@ -442,3 +449,4 @@ export default function ProductsPage() {
     </div>
   );
 }
+
