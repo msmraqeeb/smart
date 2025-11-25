@@ -100,17 +100,6 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      {/* Top Bar */}
-      <div className="bg-primary/10 text-xs text-primary font-medium">
-          <div className="container mx-auto px-4 h-8 flex items-center justify-between">
-              <div>About Us</div>
-              <div className="flex items-center gap-4">
-                  <Link href="/account" className="hover:underline">My account</Link>
-                  <Link href="/account/wishlist" className="hover:underline">Wishlist</Link>
-              </div>
-          </div>
-      </div>
-      
       {/* Main Header */}
       <div className="bg-[hsl(var(--header-background))] text-white">
         <div className="container mx-auto px-4 flex h-20 items-center justify-between gap-8">
