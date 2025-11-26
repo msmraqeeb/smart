@@ -8,6 +8,7 @@ import { formatCurrency } from '@/lib/utils';
 import { AddToCartButton } from './add-to-cart-button';
 import { Badge } from './ui/badge';
 import { Phone } from 'lucide-react';
+import Link from 'next/link';
 
 const WhatsAppIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
@@ -78,6 +79,29 @@ export function ProductVariantSelector({ product, initialPriceDisplay }: Product
     priceDisplay = initialPriceDisplay;
   }
   
+  const WHATSAPP_NUMBER = "8801234567890";
+  const CALL_NUMBER = "+8801234567890";
+
+  const whatsAppMessage = useMemo(() => {
+    const price = currentVariant ? (currentVariant.salePrice || currentVariant.price) : (product.salePrice || product.price);
+    const sku = currentVariant ? currentVariant.sku : product.sku;
+    
+    let message = `Hello! GetMart, I'm interested in:\n`;
+    message += `Product: ${product.name}\n`;
+    if(currentVariant) {
+      const variantDetails = Object.values(currentVariant.attributes).join(' / ');
+      message += `Variant: ${variantDetails}\n`;
+    }
+    message += `Price: ${formatCurrency(price)}\n`;
+    if (sku) {
+        message += `SKU: ${sku}\n`;
+    }
+    message += `Product URL: ${window.location.href}`;
+    
+    return encodeURIComponent(message);
+  }, [product, currentVariant]);
+  
+  const whatsappUrl = `https://api.whatsapp.com/send/?phone=${WHATSAPP_NUMBER}&text=${whatsAppMessage}`;
 
   return (
     <>
@@ -112,13 +136,17 @@ export function ProductVariantSelector({ product, initialPriceDisplay }: Product
       )}
       <AddToCartButton product={product} selectedVariant={currentVariant} />
       <div className="mt-4 flex flex-col sm:flex-row gap-4">
-          <Button size="lg" className="w-full bg-[#25D366] hover:bg-[#1DA851] text-white">
-              <WhatsAppIcon className="mr-2 h-5 w-5" />
-              Order On WhatsApp
+          <Button size="lg" className="w-full bg-[#25D366] hover:bg-[#1DA851] text-white" asChild>
+              <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                <WhatsAppIcon className="mr-2 h-5 w-5" />
+                Order On WhatsApp
+              </a>
           </Button>
-          <Button size="lg" className="w-full bg-[#3b5998] hover:bg-[#2d4373] text-white">
-              <Phone className="mr-2 h-5 w-5" />
-              Call For Order
+          <Button size="lg" className="w-full bg-[#3b5998] hover:bg-[#2d4373] text-white" asChild>
+              <a href={`tel:${CALL_NUMBER}`}>
+                <Phone className="mr-2 h-5 w-5" />
+                Call For Order
+              </a>
           </Button>
       </div>
     </>
