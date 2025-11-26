@@ -71,7 +71,7 @@ export function ProductSearch() {
           <Input
             type="search"
             placeholder="Type Your Products..."
-            className="rounded-r-none border-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-black pr-8"
+            className="rounded-r-none border shadow-sm focus-visible:ring-0 focus-visible:ring-offset-0 text-black pr-8"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setShowResults(searchQuery.trim().length > 1)}
