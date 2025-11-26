@@ -99,7 +99,7 @@ export function Header() {
   }, [categories]);
 
   return (
-    <header className="w-full z-50">
+    <header className="w-full z-40">
       {/* Main Header */}
        <div className="bg-[hsl(var(--header-background))] text-white">
         <div className="container mx-auto px-4 flex h-20 items-center justify-between gap-8">
@@ -171,7 +171,7 @@ export function Header() {
       </div>
       
       {/* Bottom Nav */}
-      <div className="bg-background shadow-md hidden lg:block sticky top-0">
+      <div className="bg-background shadow-md hidden lg:block sticky top-0 z-50">
           <div className="container mx-auto px-4 flex h-12 items-center justify-between">
               <nav className="flex items-center gap-6 text-sm font-medium">
                 <DropdownMenu>
