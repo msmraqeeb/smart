@@ -1,3 +1,4 @@
+
 'use client';
 import Link from "next/link";
 import { Menu, ChevronDown, Phone, User, Heart } from "lucide-react";
@@ -99,7 +100,7 @@ export function Header() {
   }, [categories]);
 
   return (
-    <header className="w-full z-40">
+    <header className="w-full">
       {/* Main Header */}
        <div className="bg-[hsl(var(--header-background))] text-white">
         <div className="container mx-auto px-4 flex h-20 items-center justify-between gap-8">
