@@ -1,6 +1,6 @@
 'use client';
 import Link from "next/link";
-import { Menu, Phone, User, Heart } from "lucide-react";
+import { Menu, Phone, User } from "lucide-react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { CartSheet } from "@/components/cart-sheet";
@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/sheet";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useWishlist } from "@/context/wishlist-context";
 import { useAuth } from "@/firebase";
 import { Badge } from "../ui/badge";
 import { ProductSearch } from "../product-search";
@@ -24,7 +23,6 @@ const navLinks = [
 
 export function Header() {
   const { user } = useAuth();
-  const { wishlistItems } = useWishlist();
   const router = useRouter();
 
   return (
@@ -50,10 +48,6 @@ export function Header() {
                 </div>
 
                 <div className="flex items-center gap-4">
-                    <Link href="/account/wishlist" className="relative">
-                        <Heart className="w-6 h-6" />
-                        {wishlistItems.length > 0 && <Badge variant="destructive" className="absolute -right-2 -top-2 h-5 w-5 justify-center p-0">{wishlistItems.length}</Badge>}
-                    </Link>
                     <CartSheet />
 
                     {user ? (
