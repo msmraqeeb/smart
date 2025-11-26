@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -96,7 +97,10 @@ export function ProductVariantSelector({ product, initialPriceDisplay }: Product
     if (sku) {
         message += `SKU: ${sku}\n`;
     }
-    message += `Product URL: ${window.location.href}`;
+    // Check if window is defined before accessing it to prevent SSR errors
+    if (typeof window !== 'undefined') {
+      message += `Product URL: ${window.location.href}`;
+    }
     
     return encodeURIComponent(message);
   }, [product, currentVariant]);
