@@ -22,7 +22,7 @@ import { cn } from "@/lib/utils";
 
 const navLinks = [
   { href: "/account/orders", icon: Package, label: "My orders" },
-  { href: "/account/addresses", icon: MapPin, label: "Your addresses" },
+  { href: "/account/addresses", icon: MapPin, label: "My addresses" },
   { href: "/account/profile", icon: Lock, label: "Login & security" },
   { href: "/account/wishlist", icon: Heart, label: "Saved items" },
 ];

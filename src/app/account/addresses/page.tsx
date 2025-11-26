@@ -95,7 +95,7 @@ export default function AccountAddressesPage() {
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Your Addresses</CardTitle>
+                    <CardTitle>My Addresses</CardTitle>
                     <CardDescription>Manage your shipping and billing addresses.</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -108,7 +108,7 @@ export default function AccountAddressesPage() {
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Your Addresses</CardTitle>
+                <CardTitle>My Addresses</CardTitle>
                 <CardDescription>Manage your shipping and billing addresses.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6 md:grid-cols-2">
