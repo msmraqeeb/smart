@@ -67,7 +67,6 @@ const RecursiveCategoryMenu = ({ categories }: { categories: CategoryWithChildre
 
 export function Header() {
   const [categories, setCategories] = useState<Category[]>([]);
-  const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
   const { user } = useAuth();
   const { wishlistItems } = useWishlist();
@@ -75,12 +74,6 @@ export function Header() {
 
   useEffect(() => {
     getCategories().then(setCategories);
-
-    const handleScroll = () => {
-        setIsScrolled(window.scrollY > 80); // 80px is the height of the main header
-    };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const categoryTree = useMemo(() => {
@@ -106,12 +99,9 @@ export function Header() {
   }, [categories]);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-50 w-full border-b bg-background">
       {/* Main Header */}
-       <div className={cn(
-        "bg-[hsl(var(--header-background))] text-white transition-transform duration-300",
-        isScrolled && "-translate-y-full"
-       )}>
+       <div className="bg-[hsl(var(--header-background))] text-white">
         <div className="container mx-auto px-4 flex h-20 items-center justify-between gap-8">
             <Link href="/" className="flex-shrink-0">
               <Image src="/images/smart-logo.png" alt="SMart Logo" width={120} height={36} className="h-9 w-auto" />
