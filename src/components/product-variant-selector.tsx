@@ -26,6 +26,7 @@ interface ProductVariantSelectorProps {
 export function ProductVariantSelector({ product, initialPriceDisplay }: ProductVariantSelectorProps) {
   const [selectedOptions, setSelectedOptions] = useState<Record<string, string>>({});
   const [currentVariant, setCurrentVariant] = useState<ProductVariant | null>(null);
+  const [whatsappUrl, setWhatsappUrl] = useState('');
 
   // Initialize selected options with the first available option for each attribute
   useEffect(() => {
@@ -83,7 +84,7 @@ export function ProductVariantSelector({ product, initialPriceDisplay }: Product
   const WHATSAPP_NUMBER = "8801234567890";
   const CALL_NUMBER = "+8801234567890";
 
-  const whatsAppMessage = useMemo(() => {
+  useEffect(() => {
     const price = currentVariant ? (currentVariant.salePrice || currentVariant.price) : (product.salePrice || product.price);
     const sku = currentVariant ? currentVariant.sku : product.sku;
     
@@ -102,11 +103,10 @@ export function ProductVariantSelector({ product, initialPriceDisplay }: Product
       message += `Product URL: ${window.location.href}`;
     }
     
-    return encodeURIComponent(message);
+    const encodedMessage = encodeURIComponent(message);
+    setWhatsappUrl(`https://api.whatsapp.com/send/?phone=${WHATSAPP_NUMBER}&text=${encodedMessage}`);
   }, [product, currentVariant]);
   
-  const whatsappUrl = `https://api.whatsapp.com/send/?phone=${WHATSAPP_NUMBER}&text=${whatsAppMessage}`;
-
   return (
     <>
       <div className="h-10">{priceDisplay}</div>
