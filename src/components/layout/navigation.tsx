@@ -1,3 +1,4 @@
+
 'use client';
 import Link from "next/link";
 import { ChevronDown } from "lucide-react";
@@ -16,6 +17,7 @@ import type { Category } from "@/lib/types";
 import { useEffect, useState, useMemo } from "react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { ProductSearch } from "../product-search";
 
 interface CategoryWithChildren extends Category {
     children: CategoryWithChildren[];
@@ -49,10 +51,23 @@ const RecursiveCategoryMenu = ({ categories }: { categories: CategoryWithChildre
 
 export function Navigation() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
     getCategories().then(setCategories);
+
+    const handleScroll = () => {
+        // The main header has a height of h-20 (80px)
+        if (window.scrollY > 80) {
+            setIsScrolled(true);
+        } else {
+            setIsScrolled(false);
+        }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const categoryTree = useMemo(() => {
@@ -78,7 +93,7 @@ export function Navigation() {
   }, [categories]);
 
   return (
-      <div className="bg-background shadow-md hidden lg:block sticky top-0 z-50">
+      <div className="bg-background shadow-md hidden lg:block sticky top-0 z-50 border-b">
           <div className="container mx-auto px-4 flex h-12 items-center justify-between">
               <nav className="flex items-center gap-6 text-sm font-medium">
                 <DropdownMenu>
@@ -110,6 +125,12 @@ export function Navigation() {
                     My Account
                 </Link>
               </nav>
+
+              {isScrolled && (
+                <div className="flex-1 max-w-xl">
+                    <ProductSearch />
+                </div>
+              )}
           </div>
       </div>
   );
