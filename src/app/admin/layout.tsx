@@ -57,6 +57,9 @@ export default function AdminLayout({
     return pathname.startsWith(href);
   }
 
+  const currentNavLink = [...navLinks].reverse().find(l => pathname.startsWith(l.href));
+  const pageTitle = currentNavLink?.label || 'Dashboard';
+
   return (
     <div className="flex min-h-screen w-full bg-muted/40">
       <aside className="hidden w-64 flex-col border-r bg-background sm:flex">
@@ -93,7 +96,7 @@ export default function AdminLayout({
         <header className="flex h-14 lg:h-[60px] items-center gap-4 border-b bg-background px-6 sticky top-0 z-30">
              {/* Mobile Nav can be added here if needed */}
              <div className="flex-1">
-                <h1 className="font-semibold text-lg">{navLinks.find(l => pathname.startsWith(l.href))?.label || 'Dashboard'}</h1>
+                <h1 className="font-semibold text-lg">{pageTitle}</h1>
              </div>
              <div className="flex items-center gap-4">
                 <Button variant="outline" size="sm" asChild>
