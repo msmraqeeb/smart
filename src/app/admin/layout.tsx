@@ -50,6 +50,13 @@ export default function AdminLayout({
     return <>{children}</>;
   }
 
+  const isActive = (href: string) => {
+    if (href === '/admin') {
+      return pathname === href;
+    }
+    return pathname.startsWith(href);
+  }
+
   return (
     <div className="flex min-h-screen w-full bg-muted/40">
       <aside className="hidden w-64 flex-col border-r bg-background sm:flex">
@@ -66,7 +73,7 @@ export default function AdminLayout({
                 href={link.href}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                  pathname.startsWith(link.href) && "bg-muted text-primary"
+                  isActive(link.href) && "bg-muted text-primary"
                 )}
               >
                 <link.icon className="h-4 w-4" />
