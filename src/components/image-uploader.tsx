@@ -82,6 +82,7 @@ export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUpl
     const uploadedUrls = (await Promise.all(uploadPromises)).filter((url): url is string => url !== null);
     
     if (uploadedUrls.length > 0) {
+      // Create a new array to ensure react-hook-form detects the change. This is the fix.
       onChange([...urls, ...uploadedUrls]);
     }
 
@@ -97,6 +98,7 @@ export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUpl
   });
   
   const removeImage = (urlToRemove: string) => {
+    // Create a new array reference here as well for consistency and safety.
     onChange(urls.filter(url => url !== urlToRemove));
   };
   
