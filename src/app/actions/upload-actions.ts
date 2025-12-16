@@ -30,10 +30,6 @@ export async function saveFile(data: FormData) {
   await writeFile(path, buffer);
   console.log(`Open ${path} to see the uploaded file.`);
   
-  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-  const host = process.env.HOST || 'localhost:9002';
-  const fullUrl = `${protocol}://${host}/images/${filename}`;
-
-  // Return the public URL
-  return fullUrl;
+  // Return the public path
+  return `/images/${filename}`;
 }
