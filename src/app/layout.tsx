@@ -7,6 +7,7 @@ import { Navigation } from "@/components/layout/navigation";
 import { Footer } from "@/components/layout/footer";
 import { CartProvider } from "@/context/cart-context";
 import { WishlistProvider } from "@/context/wishlist-context";
+import { SettingsProvider } from "@/context/settings-context";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 import "./globals.css";
 
@@ -42,17 +43,19 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased">
         <FirebaseClientProvider>
-          <WishlistProvider>
-            <CartProvider>
-              <div className="flex min-h-screen flex-col">
-                {!isAdminPage && <Header />}
-                {!isAdminPage && <Navigation />}
-                <main className="flex-1">{children}</main>
-                {!isAdminPage && <Footer />}
-              </div>
-              <Toaster />
-            </CartProvider>
-          </WishlistProvider>
+          <SettingsProvider>
+            <WishlistProvider>
+              <CartProvider>
+                <div className="flex min-h-screen flex-col">
+                  {!isAdminPage && <Header />}
+                  {!isAdminPage && <Navigation />}
+                  <main className="flex-1">{children}</main>
+                  {!isAdminPage && <Footer />}
+                </div>
+                <Toaster />
+              </CartProvider>
+            </WishlistProvider>
+          </SettingsProvider>
         </FirebaseClientProvider>
       </body>
     </html>

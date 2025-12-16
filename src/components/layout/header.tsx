@@ -14,6 +14,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/firebase";
 import { Badge } from "../ui/badge";
 import { ProductSearch } from "../product-search";
+import { useSettings } from "@/context/settings-context";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -24,6 +25,7 @@ const navLinks = [
 export function Header() {
   const { user } = useAuth();
   const router = useRouter();
+  const { settings } = useSettings();
 
   return (
     <header className="w-full">
@@ -31,7 +33,7 @@ export function Header() {
        <div className="bg-[hsl(var(--header-background))] text-white">
         <div className="container mx-auto px-4 flex h-20 items-center justify-between gap-8">
             <Link href="/" className="flex-shrink-0">
-              <Image src="/images/smart-logo.png" alt="SMart Logo" width={120} height={36} className="h-9 w-auto" />
+              <Image src={settings?.logoUrl || "/images/smart-logo.png"} alt="SMart Logo" width={120} height={36} className="h-9 w-auto" />
             </Link>
             
             <div className="flex-1 max-w-xl hidden lg:block">
@@ -43,7 +45,7 @@ export function Header() {
                     <Phone className="w-8 h-8"/>
                     <div>
                         <p className="text-xs">Order inquiry</p>
-                        <p className="font-bold text-sm">+88012345647890</p>
+                        <p className="font-bold text-sm">{settings?.contactNumber || "+88012345647890"}</p>
                     </div>
                 </div>
 

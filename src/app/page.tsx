@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import type { Category } from "@/lib/types";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { CategoryProducts } from "@/components/category-products";
+import { useSettings } from "@/context/settings-context";
 
 const featureIcons = [
     { icon: Headset, label: "Online Support" },
@@ -24,15 +25,20 @@ const featureIcons = [
 
 export default function Home() {
   const [categories, setCategories] = useState<Category[]>([]);
+  const { settings } = useSettings();
 
   useEffect(() => {
     getCategories().then(setCategories);
   }, []);
 
-  const sliderImages = [
+  const sliderImages = settings?.slideBanners?.length ? settings.slideBanners : [
     '/images/6cZ4n1758523882.png',
-    '/images/6cZ4n1758523882.png',
-  ]
+  ];
+
+  const sideBanners = settings?.sideBanners?.length ? settings.sideBanners : [
+      "/images/nX5IF1758523833.png",
+      "/images/xHSRB1758523707.png",
+  ];
 
   const bannerImages = [
     "https://grocery-admin.getcommerce.xyz/banner/pwmR01758523026.png",
@@ -51,7 +57,7 @@ export default function Home() {
                 <CarouselContent>
                     {sliderImages.map((src, index) => (
                         <CarouselItem key={index}>
-                           <div className="relative aspect-[2/1] w-full">
+                           <div className="relative aspect-[872/468] w-full">
                              <Image
                                 src={src}
                                 alt={`Slider image ${index + 1}`}
@@ -67,22 +73,16 @@ export default function Home() {
             </Carousel>
         </div>
         <div className="flex flex-col gap-6">
-          <div className="relative w-full h-full">
-            <Image
-              src="/images/nX5IF1758523833.png"
-              alt="Snacks offer"
-              fill
-              className="rounded-lg object-cover"
-            />
-          </div>
-          <div className="relative w-full h-full">
-            <Image
-              src="/images/xHSRB1758523707.png"
-              alt="Eggs offer"
-              fill
-              className="rounded-lg object-cover"
-            />
-          </div>
+          {sideBanners.map((banner, index) => (
+            <div key={index} className="relative w-full h-full">
+              <Image
+                src={banner}
+                alt={`Side banner ${index + 1}`}
+                fill
+                className="rounded-lg object-cover"
+              />
+            </div>
+          ))}
         </div>
       </section>
 

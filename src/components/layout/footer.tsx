@@ -1,8 +1,10 @@
+'use client';
 import Link from "next/link";
 import { MapPin, Phone, Mail, Send, Facebook, Twitter, Instagram } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
+import { useSettings } from "@/context/settings-context";
 
 const companyLinks = [
   { href: "#", label: "Contact us" },
@@ -26,20 +28,15 @@ const accountLinks = [
   { href: "#", label: "Vendor Registration" },
 ];
 
-const customerCareLinks = [
-  { href: "#", label: "Customer Care" },
-  { href: "/account/orders", label: "Track my order" },
-  { href: "#", label: "Return & Refund" },
-  { href: "#", label: "Shipping & Delivery" },
-];
-
-const socialIcons = [
-    { href: "#", icon: Facebook, label: "Facebook" },
-    { href: "#", icon: Twitter, label: "Twitter" },
-    { href: "#", icon: Instagram, label: "Instagram" },
-]
-
 export function Footer() {
+  const { settings } = useSettings();
+  
+  const socialIcons = [
+    { href: settings?.social?.facebook || "#", icon: Facebook, label: "Facebook", enabled: !!settings?.social?.facebook },
+    { href: settings?.social?.twitter || "#", icon: Twitter, label: "Twitter", enabled: !!settings?.social?.twitter },
+    { href: settings?.social?.instagram || "#", icon: Instagram, label: "Instagram", enabled: !!settings?.social?.instagram },
+  ]
+
   return (
     <footer className="bg-gray-800 text-gray-300">
       <div className="container mx-auto px-4 pt-16 pb-8">
@@ -47,17 +44,17 @@ export function Footer() {
           {/* Column 1: SMart Info */}
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center mb-4">
-              <Image src="/images/smart-logo.png" alt="SMart Logo" width={120} height={36} className="h-9 w-auto" />
+              <Image src={settings?.logoUrl || "/images/smart-logo.png"} alt="SMart Logo" width={120} height={36} className="h-9 w-auto" />
             </Link>
-            <p className="text-sm mb-4">Top-rated online grocery store</p>
+            <p className="text-sm mb-4">{settings?.storeName || 'Top-rated online grocery store'}</p>
             <ul className="space-y-2 text-sm">
-                <li className="flex items-center gap-3"><MapPin className="h-4 w-4" /> Dhaka, Bangladesh</li>
-                <li className="flex items-center gap-3"><Phone className="h-4 w-4" /> +8801234567890</li>
-                <li className="flex items-center gap-3"><Mail className="h-4 w-4" /> sample@example.com</li>
+                <li className="flex items-center gap-3"><MapPin className="h-4 w-4" /> {settings?.address || 'Dhaka, Bangladesh'}</li>
+                <li className="flex items-center gap-3"><Phone className="h-4 w-4" /> {settings?.contactNumber || '+8801234567890'}</li>
+                <li className="flex items-center gap-3"><Mail className="h-4 w-4" /> {settings?.email || 'sample@example.com'}</li>
             </ul>
             <div className="flex gap-2 mt-4">
-                {socialIcons.map(social => (
-                    <a key={social.label} href={social.href} className="w-8 h-8 flex items-center justify-center bg-gray-700 rounded-full hover:bg-primary transition-colors">
+                {socialIcons.map(social => social.enabled && (
+                    <a key={social.label} href={social.href} target="_blank" rel="noopener noreferrer" className="w-8 h-8 flex items-center justify-center bg-gray-700 rounded-full hover:bg-primary transition-colors">
                         <social.icon className="h-4 w-4 text-white" />
                     </a>
                 ))}
@@ -107,7 +104,7 @@ export function Footer() {
         
         <div className="border-t border-gray-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
             <p className="text-center md:text-left mb-4 md:mb-0">
-                Copyright © {new Date().getFullYear()} SMart Powered by <Link href="#" className="text-primary hover:underline">SMart</Link>
+                Copyright © {new Date().getFullYear()} {settings?.storeName || 'SMart'} Powered by <Link href="#" className="text-primary hover:underline">SMart</Link>
             </p>
              <div className="max-w-xs">
                 <Image src="https://grocery-admin.getcommerce.xyz/company_logo/Y1tvJ1757408926.png" alt="Payment methods" width={300} height={25} />
