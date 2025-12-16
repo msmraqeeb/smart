@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
-  logoUrl: z.string().url("Invalid URL").optional().or(z.literal('')),
+  logoUrl: z.string().optional(),
   storeName: z.string().min(2, "Store name is required."),
   address: z.string().min(5, "Address is required."),
   contactNumber: z.string().min(10, "A valid contact number is required."),
@@ -27,8 +27,8 @@ const formSchema = z.object({
     twitter: z.string().url().or(z.literal('')).optional(),
     instagram: z.string().url().or(z.literal('')).optional(),
   }).optional(),
-  slideBanners: z.array(z.string().url()).optional(),
-  sideBanners: z.array(z.string().url()).optional(),
+  slideBanners: z.array(z.string()).optional(),
+  sideBanners: z.array(z.string()).optional(),
 });
 
 type SettingsFormValues = z.infer<typeof formSchema>;
@@ -58,21 +58,12 @@ function SettingsPage() {
 
     const form = useForm<SettingsFormValues>({
         resolver: zodResolver(formSchema),
-        defaultValues: initialValues,
+        defaultValues: settings || initialValues,
     });
     
     useEffect(() => {
         if (settings) {
-            form.reset({
-                logoUrl: settings.logoUrl || '',
-                storeName: settings.storeName || '',
-                address: settings.address || '',
-                contactNumber: settings.contactNumber || '',
-                email: settings.email || '',
-                social: settings.social || { facebook: '', twitter: '', instagram: '' },
-                slideBanners: settings.slideBanners || [],
-                sideBanners: settings.sideBanners || [],
-            });
+            form.reset(settings);
         }
     }, [settings, form]);
 
