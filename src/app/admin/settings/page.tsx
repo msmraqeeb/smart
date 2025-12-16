@@ -27,8 +27,8 @@ const formSchema = z.object({
     twitter: z.string().url().or(z.literal('')).optional(),
     instagram: z.string().url().or(z.literal('')).optional(),
   }).optional(),
-  slideBanners: z.array(z.string().url()).max(3, "You can add a maximum of 3 slide banners.").optional(),
-  sideBanners: z.array(z.string().url()).max(2, "You can add a maximum of 2 side banners.").optional(),
+  slideBanners: z.array(z.string().url()).optional(),
+  sideBanners: z.array(z.string().url()).optional(),
 });
 
 type SettingsFormValues = z.infer<typeof formSchema>;
@@ -260,12 +260,11 @@ function SettingsPage() {
                                 name="slideBanners"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Slider Banners (Max 3)</FormLabel>
+                                        <FormLabel>Slider Banners</FormLabel>
                                         <FormControl>
                                             <ImageUploader
                                                 value={field.value || []}
                                                 onChange={field.onChange}
-                                                maxFiles={3}
                                             />
                                         </FormControl>
                                         <FormDescription>Recommended size: 872x468 pixels.</FormDescription>
@@ -278,12 +277,11 @@ function SettingsPage() {
                                 name="sideBanners"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Side Banners (Max 2)</FormLabel>
+                                        <FormLabel>Side Banners</FormLabel>
                                         <FormControl>
                                             <ImageUploader
                                                 value={field.value || []}
                                                 onChange={field.onChange}
-                                                maxFiles={2}
                                             />
                                         </FormControl>
                                         <FormDescription>Recommended size: 424x226 pixels.</FormDescription>
