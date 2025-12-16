@@ -11,9 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 import withAdminAuth from '@/components/withAdminAuth';
 import { useFirestore, useDoc } from "@/firebase";
 import { doc, setDoc } from "firebase/firestore";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { ImageUploader } from "@/components/image-uploader";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 
 const formSchema = z.object({
   logoUrl: z.string().url("Invalid URL").optional().or(z.literal('')),
@@ -26,8 +27,8 @@ const formSchema = z.object({
     twitter: z.string().url().or(z.literal('')).optional(),
     instagram: z.string().url().or(z.literal('')).optional(),
   }).optional(),
-  slideBanners: z.array(z.string().url()).max(3).optional(),
-  sideBanners: z.array(z.string().url()).max(2).optional(),
+  slideBanners: z.array(z.string().url()).max(3, "You can add a maximum of 3 slide banners.").optional(),
+  sideBanners: z.array(z.string().url()).max(2, "You can add a maximum of 2 side banners.").optional(),
 });
 
 type SettingsFormValues = z.infer<typeof formSchema>;
@@ -127,7 +128,7 @@ function SettingsPage() {
                             <CardDescription>Update your store's logo and name.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <FormField
+                           <FormField
                                 control={form.control}
                                 name="logoUrl"
                                 render={({ field }) => (
@@ -170,7 +171,7 @@ function SettingsPage() {
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Address</FormLabel>
-                                        <FormControl><Input {...field} /></FormControl>
+                                        <FormControl><Textarea {...field} /></FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
@@ -229,3 +230,69 @@ function SettingsPage() {
                                 )}
                             />
                             <FormField
+                                control={form.control}
+                                name="social.instagram"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Instagram URL</FormLabel>
+                                        <FormControl><Input placeholder="https://instagram.com/yourprofile" {...field} value={field.value ?? ''} /></FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </CardContent>
+                    </Card>
+
+                     <Card>
+                        <CardHeader>
+                            <CardTitle>Homepage Banners</CardTitle>
+                            <CardDescription>Update the main slider and side banners on your homepage.</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                             <FormField
+                                control={form.control}
+                                name="slideBanners"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Slider Banners (Max 3)</FormLabel>
+                                        <FormControl>
+                                            <ImageUploader
+                                                value={field.value || []}
+                                                onChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                        <FormDescription>Recommended size: 872x468 pixels.</FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                             <FormField
+                                control={form.control}
+                                name="sideBanners"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Side Banners (Max 2)</FormLabel>
+                                        <FormControl>
+                                            <ImageUploader
+                                                value={field.value || []}
+                                                onChange={field.onChange}
+                                            />
+                                        </FormControl>
+                                         <FormDescription>Recommended size: 424x226 pixels.</FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </CardContent>
+                    </Card>
+
+                    <Button type="submit" disabled={form.formState.isSubmitting}>
+                        {form.formState.isSubmitting ? 'Saving...' : 'Save Settings'}
+                    </Button>
+                </form>
+            </Form>
+        </div>
+    );
+}
+
+export default withAdminAuth(SettingsPage);
