@@ -44,7 +44,13 @@ export function ImageUploader({ value: urls = [], onChange }: ImageUploaderProps
 
         setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress: 50 } : f));
 
-        const publicUrl = await saveFile(formData);
+        const result = await saveFile(formData);
+        
+        if (!result.success || !result.url) {
+            throw new Error(result.error || 'Upload failed');
+        }
+
+        const publicUrl = result.url;
         
         setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress: 100 } : f));
         
@@ -54,12 +60,12 @@ export function ImageUploader({ value: urls = [], onChange }: ImageUploaderProps
           setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
         }, 500);
 
-      } catch (error) {
+      } catch (error: any) {
         console.error("Upload Error:", error);
         toast({
           variant: 'destructive',
           title: 'Upload Failed',
-          description: `Could not upload ${upload.file.name}.`,
+          description: error.message || `Could not upload ${upload.file.name}.`,
         });
         setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
       }
