@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -11,7 +11,7 @@ import type { Product } from '@/lib/types';
 import { getProducts } from '@/lib/data';
 import { formatCurrency } from '@/lib/utils';
 
-export function ProductSearch() {
+function ProductSearchComponent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
@@ -133,4 +133,13 @@ export function ProductSearch() {
       )}
     </div>
   );
+}
+
+
+export function ProductSearch() {
+  return (
+    <Suspense fallback={<div>Loading search...</div>}>
+      <ProductSearchComponent />
+    </Suspense>
+  )
 }
