@@ -82,7 +82,8 @@ export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUpl
     const uploadedUrls = (await Promise.all(uploadPromises)).filter((url): url is string => url !== null);
     
     if (uploadedUrls.length > 0) {
-      onChange([...urls, ...uploadedUrls]);
+      const newUrls = [...urls, ...uploadedUrls];
+      onChange(newUrls);
     }
 
   }, [onChange, toast, urls, maxFiles]);
