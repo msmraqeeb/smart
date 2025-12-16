@@ -46,7 +46,7 @@ export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUpl
 
     setUploadingFiles(prev => [...prev, ...newUploads]);
 
-    const newUrls: string[] = [];
+    const uploadedUrls: string[] = [];
 
     for (const upload of newUploads) {
       try {
@@ -61,7 +61,7 @@ export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUpl
             throw new Error(result.error || 'Upload failed');
         }
         
-        newUrls.push(result.url);
+        uploadedUrls.push(result.url);
         
         setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress: 100 } : f));
         
@@ -80,8 +80,10 @@ export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUpl
       }
     }
 
-    if (newUrls.length > 0) {
-      onChange([...urls, ...newUrls]);
+    if (uploadedUrls.length > 0) {
+      // Create a new array to ensure react-hook-form detects the change
+      const newUrlList = [...urls, ...uploadedUrls];
+      onChange(newUrlList);
     }
 
   }, [onChange, toast, urls, maxFiles]);
