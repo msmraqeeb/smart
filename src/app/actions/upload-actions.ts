@@ -32,7 +32,7 @@ export async function saveFile(data: FormData) {
   
   const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
   const host = process.env.HOST || 'localhost:9002';
-  const fullUrl = `/images/${filename}`;
+  const fullUrl = `${protocol}://${host}/images/${filename}`;
 
   // Return the public URL
   return fullUrl;
