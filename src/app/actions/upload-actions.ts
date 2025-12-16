@@ -3,7 +3,6 @@
 
 import { writeFile, mkdir } from 'fs/promises'
 import { join } from 'path'
-import 'dotenv/config';
 
 export async function saveFile(data: FormData) {
   const file: File | null = data.get('file') as unknown as File
