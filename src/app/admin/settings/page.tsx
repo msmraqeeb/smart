@@ -44,7 +44,6 @@ const initialValues: SettingsFormValues = {
     sideBanners: [],
 };
 
-
 function SettingsPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
@@ -143,6 +142,7 @@ function SettingsPage() {
                                             <ImageUploader
                                                 value={field.value ? [field.value] : []}
                                                 onChange={(urls) => field.onChange(urls[0] || '')}
+                                                maxFiles={1}
                                             />
                                         </FormControl>
                                         <FormDescription>Recommended size: 200x50 pixels.</FormDescription>
@@ -264,6 +264,7 @@ function SettingsPage() {
                                             <ImageUploader
                                                 value={field.value || []}
                                                 onChange={field.onChange}
+                                                maxFiles={3}
                                             />
                                         </FormControl>
                                         <FormDescription>Recommended size: 872x468 pixels.</FormDescription>
@@ -281,6 +282,7 @@ function SettingsPage() {
                                             <ImageUploader
                                                 value={field.value || []}
                                                 onChange={field.onChange}
+                                                maxFiles={2}
                                             />
                                         </FormControl>
                                          <FormDescription>Recommended size: 424x226 pixels.</FormDescription>

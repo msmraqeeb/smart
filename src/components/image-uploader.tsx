@@ -6,7 +6,7 @@ import { useDropzone } from 'react-dropzone';
 import { saveFile } from '@/app/actions/upload-actions';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { X, UploadCloud, FileImage } from 'lucide-react';
+import { X, UploadCloud, FileImage, ShieldAlert } from 'lucide-react';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -21,14 +21,23 @@ interface ImageUploaderProps {
   value: string[];
   onChange: (urls: string[]) => void;
   folder?: string;
+  maxFiles?: number;
 }
 
-export function ImageUploader({ value: urls = [], onChange }: ImageUploaderProps) {
+export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUploaderProps) {
   const { toast } = useToast();
   
   const [uploadingFiles, setUploadingFiles] = useState<UploadingFile[]>([]);
   
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (maxFiles && (urls.length + acceptedFiles.length) > maxFiles) {
+        toast({
+            variant: 'destructive',
+            title: 'File limit exceeded',
+            description: `You can only upload a maximum of ${maxFiles} files.`,
+        });
+        return;
+    }
     
     const newUploads = acceptedFiles.map(file => ({
       id: `${file.name}-${Date.now()}`,
@@ -70,12 +79,15 @@ export function ImageUploader({ value: urls = [], onChange }: ImageUploaderProps
         setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
       }
     }
-  }, [onChange, toast, urls]);
+  }, [onChange, toast, urls, maxFiles]);
+  
+  const isLimitReached = maxFiles ? urls.length >= maxFiles : false;
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.gif', '.webp'] },
-    multiple: true
+    multiple: true,
+    disabled: isLimitReached
   });
   
   const removeImage = (urlToRemove: string) => {
@@ -84,14 +96,27 @@ export function ImageUploader({ value: urls = [], onChange }: ImageUploaderProps
   
   return (
     <div className="space-y-4">
-      <div {...getRootProps()} className={cn("group cursor-pointer rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 p-8 text-center transition-colors", isDragActive && "border-primary bg-primary/10")}>
+      <div {...getRootProps()} className={cn("group rounded-lg border-2 border-dashed border-muted-foreground/30 bg-muted/20 p-8 text-center transition-colors", 
+        !isLimitReached && "cursor-pointer hover:border-primary hover:bg-primary/10",
+        isDragActive && !isLimitReached && "border-primary bg-primary/10",
+        isLimitReached && "cursor-not-allowed opacity-50"
+      )}>
         <input {...getInputProps()} />
-        <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground">
-            <UploadCloud className={cn("h-12 w-12", isDragActive && "text-primary")} />
-            {isDragActive ? (
-                <p className="text-lg font-semibold text-primary">Drop the files here...</p>
+         <div className="flex flex-col items-center justify-center gap-4 text-muted-foreground">
+           {isLimitReached ? (
+                <>
+                    <ShieldAlert className="h-12 w-12 text-destructive" />
+                    <p className="text-lg font-semibold text-destructive">Maximum files reached</p>
+                    <p className="text-sm">{`You have uploaded the maximum of ${maxFiles} files.`}</p>
+                </>
+           ) : isDragActive ? (
+                <>
+                    <UploadCloud className="h-12 w-12 text-primary" />
+                    <p className="text-lg font-semibold text-primary">Drop the files here...</p>
+                </>
             ) : (
                 <>
+                    <UploadCloud className="h-12 w-12" />
                     <p className="text-lg font-semibold">Drag & drop images here, or click to select</p>
                     <p className="text-sm">Supports JPEG, PNG, GIF, WebP</p>
                 </>
