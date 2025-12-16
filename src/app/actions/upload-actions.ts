@@ -21,7 +21,10 @@ export async function saveFile(data: FormData) {
     const uploadDir = join(process.cwd(), 'public/images');
     const path = join(uploadDir, filename);
 
+    // Ensure the upload directory exists
     await mkdir(uploadDir, { recursive: true });
+    
+    // Write the file to the specified path
     await writeFile(path, buffer);
     
     const publicUrl = `/images/${filename}`;
