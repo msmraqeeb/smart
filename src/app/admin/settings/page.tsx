@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import withAdminAuth from '@/components/withAdminAuth';
 import { useFirestore, useDoc } from "@/firebase";
 import { doc, setDoc } from "firebase/firestore";
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ImageUploader } from "@/components/image-uploader";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
@@ -33,7 +33,6 @@ const formSchema = z.object({
 
 type SettingsFormValues = z.infer<typeof formSchema>;
 
-// Moved outside the component to prevent re-creation on every render
 const initialValues: SettingsFormValues = {
     logoUrl: '',
     storeName: '',
@@ -49,7 +48,12 @@ const initialValues: SettingsFormValues = {
 function SettingsPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
-    const settingsRef = firestore ? doc(firestore, 'settings', 'storeDetails') : null;
+
+    const settingsRef = useMemo(() => {
+        if (!firestore) return null;
+        return doc(firestore, 'settings', 'storeDetails');
+    }, [firestore]);
+
     const { data: settings, loading } = useDoc(settingsRef);
 
      const form = useForm<SettingsFormValues>({
@@ -70,7 +74,7 @@ function SettingsPage() {
                 sideBanners: settings.sideBanners || [],
             });
         }
-    }, [settings, form.reset]);
+    }, [settings, form]);
 
 
     const onSubmit = async (data: SettingsFormValues) => {
