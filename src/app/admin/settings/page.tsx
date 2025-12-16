@@ -98,7 +98,7 @@ function SettingsPage() {
                             <CardDescription>Update your store's logo and name.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <FormField
+                            <Controller
                                 control={form.control}
                                 name="logoUrl"
                                 render={({ field }) => (
@@ -219,7 +219,7 @@ function SettingsPage() {
                             <CardDescription>Manage the promotional banners on your homepage.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            <FormField
+                            <Controller
                                 control={form.control}
                                 name="slideBanners"
                                 render={({ field }) => (
@@ -233,7 +233,7 @@ function SettingsPage() {
                                     </FormItem>
                                 )}
                             />
-                            <FormField
+                            <Controller
                                 control={form.control}
                                 name="sideBanners"
                                 render={({ field }) => (
