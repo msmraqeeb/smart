@@ -43,9 +43,10 @@ export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUpl
       file,
       progress: 0,
     }));
+
     setUploadingFiles(prev => [...prev, ...newUploads]);
 
-    const uploadedUrls = [...urls];
+    const newUrls: string[] = [];
 
     for (const upload of newUploads) {
       try {
@@ -59,12 +60,10 @@ export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUpl
         if (!result.success || !result.url) {
             throw new Error(result.error || 'Upload failed');
         }
-
-        const publicUrl = result.url;
+        
+        newUrls.push(result.url);
         
         setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress: 100 } : f));
-        
-        uploadedUrls.push(publicUrl);
         
         setTimeout(() => {
           setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
@@ -80,8 +79,11 @@ export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUpl
         setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
       }
     }
-    // This is the key fix: call onChange with the complete new array.
-    onChange(uploadedUrls);
+
+    if (newUrls.length > 0) {
+      onChange([...urls, ...newUrls]);
+    }
+
   }, [onChange, toast, urls, maxFiles]);
   
   const isLimitReached = maxFiles ? urls.length >= maxFiles : false;
