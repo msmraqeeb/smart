@@ -20,7 +20,6 @@ interface UploadingFile {
 interface ImageUploaderProps {
   value: string[];
   onChange: (urls: string[]) => void;
-  folder?: string;
   maxFiles?: number;
 }
 
@@ -46,6 +45,8 @@ export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUpl
     }));
     setUploadingFiles(prev => [...prev, ...newUploads]);
 
+    const uploadedUrls = [...urls];
+
     for (const upload of newUploads) {
       try {
         const formData = new FormData();
@@ -63,7 +64,7 @@ export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUpl
         
         setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress: 100 } : f));
         
-        onChange([...urls, publicUrl]);
+        uploadedUrls.push(publicUrl);
         
         setTimeout(() => {
           setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
@@ -79,6 +80,7 @@ export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUpl
         setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
       }
     }
+    onChange(uploadedUrls);
   }, [onChange, toast, urls, maxFiles]);
   
   const isLimitReached = maxFiles ? urls.length >= maxFiles : false;

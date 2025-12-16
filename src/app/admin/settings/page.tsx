@@ -78,7 +78,7 @@ function SettingsPage() {
 
 
     const onSubmit = async (data: SettingsFormValues) => {
-        if (!firestore) return;
+        if (!firestore || !settingsRef) return;
         try {
             await setDoc(settingsRef, data, { merge: true });
             toast({
