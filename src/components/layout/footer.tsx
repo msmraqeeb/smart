@@ -104,7 +104,7 @@ export function Footer() {
         
         <div className="border-t border-gray-700 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
             <p className="text-center md:text-left mb-4 md:mb-0">
-                Copyright © {new Date().getFullYear()} {settings?.storeName || 'SMart'} Powered by <Link href="#" className="text-primary hover:underline">SMart</Link>
+                Copyright © 2025 <Link href="/" className="text-primary hover:underline">SMart</Link>. All rights reserved.
             </p>
              <div className="max-w-xs">
                 <Image src="https://grocery-admin.getcommerce.xyz/company_logo/Y1tvJ1757408926.png" alt="Payment methods" width={300} height={25} />
