@@ -33,6 +33,7 @@ const formSchema = z.object({
 
 type SettingsFormValues = z.infer<typeof formSchema>;
 
+// Moved outside the component to prevent re-creation on every render
 const initialValues: SettingsFormValues = {
     logoUrl: '',
     storeName: '',
@@ -69,7 +70,7 @@ function SettingsPage() {
                 sideBanners: settings.sideBanners || [],
             });
         }
-    }, [settings, form]);
+    }, [settings, form.reset]);
 
 
     const onSubmit = async (data: SettingsFormValues) => {
