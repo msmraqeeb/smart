@@ -80,6 +80,7 @@ export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUpl
         setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
       }
     }
+    // This is the key fix: call onChange with the complete new array.
     onChange(uploadedUrls);
   }, [onChange, toast, urls, maxFiles]);
   
