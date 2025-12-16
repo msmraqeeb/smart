@@ -11,11 +11,12 @@ import { useToast } from "@/hooks/use-toast";
 import withAdminAuth from '@/components/withAdminAuth';
 import { useFirestore, useDoc } from "@/firebase";
 import { doc, setDoc } from "firebase/firestore";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { ImageUploader } from "@/components/image-uploader";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const formSchema = z.object({
-  logoUrl: z.string().url("Invalid URL").optional(),
+  logoUrl: z.string().url("Invalid URL").optional().or(z.literal('')),
   storeName: z.string().min(2, "Store name is required."),
   address: z.string().min(5, "Address is required."),
   contactNumber: z.string().min(10, "A valid contact number is required."),
@@ -31,40 +32,198 @@ const formSchema = z.object({
 
 type SettingsFormValues = z.infer<typeof formSchema>;
 
+function SettingsForm({ defaultValues, onSubmit }: { defaultValues: SettingsFormValues, onSubmit: (data: SettingsFormValues) => void }) {
+    const form = useForm<SettingsFormValues>({
+        resolver: zodResolver(formSchema),
+        values: defaultValues,
+    });
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Store Identity</CardTitle>
+                        <CardDescription>Update your store's logo and name.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="logoUrl"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Store Logo</FormLabel>
+                                    <FormControl>
+                                        <ImageUploader
+                                            value={field.value ? [field.value] : []}
+                                            onChange={(urls) => field.onChange(urls[0] || '')}
+                                        />
+                                    </FormControl>
+                                    <FormDescription>Recommended size: 200x50 pixels.</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="storeName"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Store Name</FormLabel>
+                                    <FormControl><Input {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Store Details</CardTitle>
+                        <CardDescription>Update your store's contact information.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                         <FormField
+                            control={form.control}
+                            name="address"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Address</FormLabel>
+                                    <FormControl><Input {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="contactNumber"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Contact Number</FormLabel>
+                                    <FormControl><Input type="tel" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Contact Email</FormLabel>
+                                    <FormControl><Input type="email" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </CardContent>
+                </Card>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Social Media</CardTitle>
+                        <CardDescription>Links to your social media profiles.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                         <FormField
+                            control={form.control}
+                            name="social.facebook"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Facebook URL</FormLabel>
+                                    <FormControl><Input placeholder="https://facebook.com/yourpage" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="social.twitter"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Twitter (X) URL</FormLabel>
+                                    <FormControl><Input placeholder="https://x.com/yourprofile" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="social.instagram"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Instagram URL</FormLabel>
+                                    <FormControl><Input placeholder="https://instagram.com/yourprofile" {...field} /></FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </CardContent>
+                </Card>
+                
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Homepage Banners</CardTitle>
+                        <CardDescription>Manage the promotional banners on your homepage.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <FormField
+                            control={form.control}
+                            name="slideBanners"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Slide Banners</FormLabel>
+                                    <FormControl>
+                                        <ImageUploader value={field.value || []} onChange={field.onChange} />
+                                    </FormControl>
+                                    <FormDescription>Upload up to 3 banners. Recommended size: 872x468 pixels.</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="sideBanners"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Side Banners</FormLabel>
+                                    <FormControl>
+                                        <ImageUploader value={field.value || []} onChange={field.onChange} />
+                                    </FormControl>
+                                    <FormDescription>Upload up to 2 banners. Recommended size: 424x226 pixels.</FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </CardContent>
+                </Card>
+
+                <div className="flex justify-end">
+                    <Button type="submit">Save All Settings</Button>
+                </div>
+            </form>
+        </Form>
+    );
+}
+
+
 function SettingsPage() {
     const { toast } = useToast();
     const firestore = useFirestore();
     const settingsRef = firestore ? doc(firestore, 'settings', 'storeDetails') : null;
     const { data: settings, loading } = useDoc(settingsRef);
 
-    const form = useForm<SettingsFormValues>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            logoUrl: '',
-            storeName: '',
-            address: '',
-            contactNumber: '',
-            email: '',
-            social: { facebook: '', twitter: '', instagram: '' },
-            slideBanners: [],
-            sideBanners: [],
-        },
-    });
-    
-    useEffect(() => {
-        if (settings) {
-            form.reset({
-                logoUrl: settings.logoUrl || '',
-                storeName: settings.storeName || '',
-                address: settings.address || '',
-                contactNumber: settings.contactNumber || '',
-                email: settings.email || '',
-                social: settings.social || { facebook: '', twitter: '', instagram: '' },
-                slideBanners: settings.slideBanners || [],
-                sideBanners: settings.sideBanners || [],
-            });
-        }
-    }, [settings, form]);
+    const defaultValues: SettingsFormValues = useMemo(() => ({
+        logoUrl: settings?.logoUrl || '',
+        storeName: settings?.storeName || '',
+        address: settings?.address || '',
+        contactNumber: settings?.contactNumber || '',
+        email: settings?.email || '',
+        social: settings?.social || { facebook: '', twitter: '', instagram: '' },
+        slideBanners: settings?.slideBanners || [],
+        sideBanners: settings?.sideBanners || [],
+    }), [settings]);
 
     const onSubmit = async (data: SettingsFormValues) => {
         if (!settingsRef) return;
@@ -85,176 +244,36 @@ function SettingsPage() {
     };
 
     if (loading) {
-        return <p>Loading settings...</p>
+        return (
+             <div className="space-y-8">
+                <Card>
+                    <CardHeader>
+                        <Skeleton className="h-8 w-1/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Skeleton className="h-24 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </CardContent>
+                </Card>
+                 <Card>
+                    <CardHeader>
+                        <Skeleton className="h-8 w-1/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </CardContent>
+                </Card>
+             </div>
+        )
     }
 
     return (
         <div className="space-y-8">
-            <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Store Identity</CardTitle>
-                            <CardDescription>Update your store's logo and name.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            <FormField
-                                control={form.control}
-                                name="logoUrl"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Store Logo</FormLabel>
-                                        <FormControl>
-                                            <ImageUploader
-                                                value={field.value ? [field.value] : []}
-                                                onChange={(urls) => field.onChange(urls[0] || '')}
-                                            />
-                                        </FormControl>
-                                        <FormDescription>Recommended size: 200x50 pixels.</FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="storeName"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Store Name</FormLabel>
-                                        <FormControl><Input {...field} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Store Details</CardTitle>
-                            <CardDescription>Update your store's contact information.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                             <FormField
-                                control={form.control}
-                                name="address"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Address</FormLabel>
-                                        <FormControl><Input {...field} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="contactNumber"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Contact Number</FormLabel>
-                                        <FormControl><Input type="tel" {...field} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                             <FormField
-                                control={form.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Contact Email</FormLabel>
-                                        <FormControl><Input type="email" {...field} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Social Media</CardTitle>
-                            <CardDescription>Links to your social media profiles.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                             <FormField
-                                control={form.control}
-                                name="social.facebook"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Facebook URL</FormLabel>
-                                        <FormControl><Input placeholder="https://facebook.com/yourpage" {...field} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                             <FormField
-                                control={form.control}
-                                name="social.twitter"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Twitter (X) URL</FormLabel>
-                                        <FormControl><Input placeholder="https://x.com/yourprofile" {...field} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                             <FormField
-                                control={form.control}
-                                name="social.instagram"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Instagram URL</FormLabel>
-                                        <FormControl><Input placeholder="https://instagram.com/yourprofile" {...field} /></FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </CardContent>
-                    </Card>
-                    
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Homepage Banners</CardTitle>
-                            <CardDescription>Manage the promotional banners on your homepage.</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <FormField
-                                control={form.control}
-                                name="slideBanners"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Slide Banners</FormLabel>
-                                        <FormControl>
-                                            <ImageUploader value={field.value || []} onChange={field.onChange} />
-                                        </FormControl>
-                                        <FormDescription>Upload up to 3 banners. Recommended size: 872x468 pixels.</FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="sideBanners"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Side Banners</FormLabel>
-                                        <FormControl>
-                                            <ImageUploader value={field.value || []} onChange={field.onChange} />
-                                        </FormControl>
-                                        <FormDescription>Upload up to 2 banners. Recommended size: 424x226 pixels.</FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </CardContent>
-                    </Card>
-
-                    <div className="flex justify-end">
-                        <Button type="submit">Save All Settings</Button>
-                    </div>
-                </form>
-            </Form>
+           <SettingsForm defaultValues={defaultValues} onSubmit={onSubmit} />
         </div>
     );
 }
