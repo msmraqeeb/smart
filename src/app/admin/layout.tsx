@@ -17,6 +17,7 @@ import {
   BarChart,
   ClipboardList,
   Star,
+  Settings,
 } from "lucide-react";
 import React from "react";
 
@@ -29,8 +30,9 @@ const navLinks = [
   { href: "/admin/coupons", icon: Ticket, label: "Coupons" },
   { href: "/admin/reviews", icon: Star, label: "Reviews" },
   { href: "/admin/reports", icon: BarChart, label: "Reports" },
-  { href: "/admin/users", icon: Users, label: "Users" },
   { href: "/admin/shipping", icon: Truck, label: "Shipping" },
+  { href: "/admin/users", icon: Users, label: "Users" },
+  { href: "/admin/settings", icon: Settings, label: "Settings" },
 ];
 
 export default function AdminLayout({
