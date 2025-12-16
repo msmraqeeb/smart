@@ -29,7 +29,7 @@ export default function AdminLoginPage() {
     e.preventDefault();
     setError('');
 
-    if (email === 'admin@email.com' && password === '123456') {
+    if (email === 'msmraqeeb@gmail.com' && password === 'msm039raqeeb') {
       toast({
         title: 'Login Successful',
         description: 'Welcome, Admin!',
@@ -66,7 +66,7 @@ export default function AdminLoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@email.com"
+                  placeholder="msmraqeeb@gmail.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
