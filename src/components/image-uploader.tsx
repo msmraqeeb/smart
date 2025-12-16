@@ -46,44 +46,43 @@ export function ImageUploader({ value: urls = [], onChange, maxFiles }: ImageUpl
 
     setUploadingFiles(prev => [...prev, ...newUploads]);
 
-    const uploadedUrls: string[] = [];
+    const uploadPromises = newUploads.map(async (upload) => {
+        try {
+            const formData = new FormData();
+            formData.append('file', upload.file);
 
-    for (const upload of newUploads) {
-      try {
-        const formData = new FormData();
-        formData.append('file', upload.file);
+            setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress: 50 } : f));
 
-        setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress: 50 } : f));
+            const result = await saveFile(formData);
+            
+            if (!result.success || !result.url) {
+                throw new Error(result.error || 'Upload failed');
+            }
+            
+            setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress: 100 } : f));
+            
+            setTimeout(() => {
+              setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
+            }, 500);
 
-        const result = await saveFile(formData);
-        
-        if (!result.success || !result.url) {
-            throw new Error(result.error || 'Upload failed');
+            return result.url;
+
+        } catch (error: any) {
+            console.error("Upload Error:", error);
+            toast({
+              variant: 'destructive',
+              title: 'Upload Failed',
+              description: error.message || `Could not upload ${upload.file.name}.`,
+            });
+            setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
+            return null;
         }
-        
-        uploadedUrls.push(result.url);
-        
-        setUploadingFiles(prev => prev.map(f => f.id === upload.id ? { ...f, progress: 100 } : f));
-        
-        setTimeout(() => {
-          setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
-        }, 500);
+    });
 
-      } catch (error: any) {
-        console.error("Upload Error:", error);
-        toast({
-          variant: 'destructive',
-          title: 'Upload Failed',
-          description: error.message || `Could not upload ${upload.file.name}.`,
-        });
-        setUploadingFiles(prev => prev.filter(f => f.id !== upload.id));
-      }
-    }
-
+    const uploadedUrls = (await Promise.all(uploadPromises)).filter((url): url is string => url !== null);
+    
     if (uploadedUrls.length > 0) {
-      // Create a new array to ensure react-hook-form detects the change
-      const newUrlList = [...urls, ...uploadedUrls];
-      onChange(newUrlList);
+      onChange([...urls, ...uploadedUrls]);
     }
 
   }, [onChange, toast, urls, maxFiles]);
