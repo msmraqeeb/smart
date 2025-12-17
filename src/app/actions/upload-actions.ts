@@ -34,7 +34,8 @@ export async function saveFile(data: FormData): Promise<{ success: boolean; url?
   try {
     // Initialize Firebase Admin only when this action is called
     const app = initFirebaseAdmin();
-    const bucket = app.storage().bucket();
+    console.log(`[Upload] Using config bucket: ${firebaseConfig.storageBucket}`);
+    const bucket = app.storage().bucket(firebaseConfig.storageBucket);
 
     const file: File | null = data.get('file') as unknown as File;
     if (!file) {
@@ -49,7 +50,7 @@ export async function saveFile(data: FormData): Promise<{ success: boolean; url?
     const destination = `images/${filename}`;
 
     const blob = bucket.file(destination);
-    
+
     // Create a write stream and upload the buffer
     await new Promise((resolve, reject) => {
       const blobStream = blob.createWriteStream({
@@ -74,7 +75,7 @@ export async function saveFile(data: FormData): Promise<{ success: boolean; url?
     // Make the file public and get its URL
     await blob.makePublic();
     const downloadURL = blob.publicUrl();
-    
+
     return { success: true, url: downloadURL };
 
   } catch (e: any) {
