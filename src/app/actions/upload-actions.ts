@@ -5,22 +5,37 @@ import admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
 import { firebaseConfig } from '@/firebase/config';
 
-// Load service account credentials from environment variables
-// This is more secure than including the file directly
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!);
+// Lazy initialization function to safely get the Firebase Admin app
+function initFirebaseAdmin() {
+  if (admin.apps.length) {
+    return admin.app();
+  }
 
-// Initialize Firebase Admin SDK if not already initialized
-if (!admin.apps.length) {
-  admin.initializeApp({
+  const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+
+  if (!serviceAccountKey) {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set. Please configure it in your Vercel project settings.');
+  }
+
+  let serviceAccount;
+  try {
+    serviceAccount = JSON.parse(serviceAccountKey);
+  } catch (error) {
+    throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not a valid JSON string.');
+  }
+
+  return admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
     storageBucket: firebaseConfig.storageBucket
   });
 }
 
-const bucket = admin.storage().bucket();
-
 export async function saveFile(data: FormData): Promise<{ success: boolean; url?: string; error?: string }> {
   try {
+    // Initialize Firebase Admin only when this action is called
+    const app = initFirebaseAdmin();
+    const bucket = app.storage().bucket();
+
     const file: File | null = data.get('file') as unknown as File;
     if (!file) {
       return { success: false, error: 'No file uploaded.' };
@@ -63,7 +78,8 @@ export async function saveFile(data: FormData): Promise<{ success: boolean; url?
     return { success: true, url: downloadURL };
 
   } catch (e: any) {
-    console.error('File upload to Firebase Storage failed with Admin SDK:', e);
+    console.error('File upload to Firebase Storage failed:', e);
+    // Return the specific error message to the client
     return { success: false, error: e.message || 'File upload failed.' };
   }
 }
