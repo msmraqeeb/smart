@@ -1,86 +1,57 @@
 
 'use server'
 
-import admin from 'firebase-admin';
 import { v4 as uuidv4 } from 'uuid';
-import { firebaseConfig } from '@/firebase/config';
-
-// Lazy initialization function to safely get the Firebase Admin app
-function initFirebaseAdmin() {
-  if (admin.apps.length) {
-    return admin.app();
-  }
-
-  const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-
-  if (!serviceAccountKey) {
-    throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set. Please configure it in your Vercel project settings.');
-  }
-
-  let serviceAccount;
-  try {
-    serviceAccount = JSON.parse(serviceAccountKey);
-  } catch (error) {
-    throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not a valid JSON string.');
-  }
-
-  return admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    storageBucket: firebaseConfig.storageBucket
-  });
-}
 
 export async function saveFile(data: FormData): Promise<{ success: boolean; url?: string; error?: string }> {
   try {
-    // Initialize Firebase Admin only when this action is called
-    const app = initFirebaseAdmin();
-    console.log(`[Upload] Using config bucket: ${firebaseConfig.storageBucket}`);
-    const bucket = app.storage().bucket(firebaseConfig.storageBucket);
-
     const file: File | null = data.get('file') as unknown as File;
     if (!file) {
       return { success: false, error: 'No file uploaded.' };
     }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      return { success: false, error: 'Supabase credentials are not configured.' };
+    }
 
     const fileExtension = file.name.split('.').pop() || 'tmp';
     const filename = `${uuidv4()}.${fileExtension}`;
-    const destination = `images/${filename}`;
+    const bucket = 'images'; // Explicit bucket name
 
-    const blob = bucket.file(destination);
+    const bytes = await file.arrayBuffer();
+    const buffer = Buffer.from(bytes);
 
-    // Create a write stream and upload the buffer
-    await new Promise((resolve, reject) => {
-      const blobStream = blob.createWriteStream({
-        resumable: false,
-        metadata: {
-          contentType: file.type,
-        },
-      });
+    // upload via REST API
+    // https://supabase.com/docs/reference/api/storage-upload
+    const uploadUrl = `${supabaseUrl}/storage/v1/object/${bucket}/${filename}`;
 
-      blobStream.on('error', (err) => {
-        console.error('Blob stream error:', err);
-        reject(err);
-      });
-
-      blobStream.on('finish', () => {
-        resolve(true);
-      });
-
-      blobStream.end(buffer);
+    const response = await fetch(uploadUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': file.type,
+        'x-upsert': 'false'
+      },
+      body: buffer
     });
 
-    // Make the file public and get its URL
-    await blob.makePublic();
-    const downloadURL = blob.publicUrl();
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Supabase REST upload failed:', response.status, response.statusText, errorData);
+      return { success: false, error: errorData.message || `Upload failed with status ${response.status}` };
+    }
 
-    return { success: true, url: downloadURL };
+    // Construct public URL
+    // https://supabase.com/docs/guides/storage/serving/downloads#public-buckets
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/${bucket}/${filename}`;
+
+    return { success: true, url: publicUrl };
 
   } catch (e: any) {
-    console.error('File upload to Firebase Storage failed:', e);
-    // Return the specific error message to the client
+    console.error('File upload to Supabase Storage failed:', e);
     return { success: false, error: e.message || 'File upload failed.' };
   }
 }
